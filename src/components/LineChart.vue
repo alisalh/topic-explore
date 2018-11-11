@@ -58,6 +58,7 @@ export default {
       return topicsGroup
     },
     draw (data) {
+      const vm = this
       const margin = { top: 20, right: 20, bottom: 30, left: 40 }
       const svg = d3
         .select(this.$refs.root)
@@ -72,6 +73,7 @@ export default {
         .domain([0, maxY])
         .nice()
         .range([this.height - margin.bottom, margin.top])
+      console.log(maxY)
       const x = d3
         .scaleBand()
         .domain(this.versions)
@@ -91,7 +93,6 @@ export default {
         .curve(d3.curveBasis)
         // .defined(d => !isNaN(d))
         .x(d => {
-          console.log(d.key)
           return x(d.key)
         })
         .y(d => y(d.val.length))
@@ -113,6 +114,7 @@ export default {
       // 画坐标轴
       const path = svg
         .append('g')
+        .attr('transform', `translate(${x.bandwidth() / 2},0)`)
         .attr('fill', 'none')
         .attr('stroke-width', 1.5)
         .attr('stroke-linejoin', 'round')
@@ -124,9 +126,19 @@ export default {
         .attr('stroke', d => lineColorMap(parseInt(d.key)))
         // .style('mix-blend-mode', 'multiply')
         .attr('d', d => {
-          console.log(d.key)
           return line(d.val)
         })
+        .on('mouseenter', (d) => {
+          console.log('hover', d.key)
+        })
+      // 画点
+      const dot = svg.append('g').attr('display', 'none')
+      dot.append('circle').attr('r', 2.5)
+      dot
+        .append('text')
+        .style('font', '10px sans-serif')
+        .attr('text-anchor', 'middle')
+        .attr('y', -8)
     }
   },
   mounted () {
