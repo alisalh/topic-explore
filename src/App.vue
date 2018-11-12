@@ -1,6 +1,11 @@
 <template>
   <div id="app">
-    <line-chart></line-chart>
+    <div class="first-row">
+
+    </div>
+    <div class="second-row">
+      <line-chart></line-chart>
+    </div>
   </div>
 </template>
 
@@ -18,11 +23,19 @@ export default {
 
 <style lang="less">
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+/*   display: flex;
+  flex-direction: column;
+  .first-row{
+    flex:1;
+  }
+  .second-row{
+    flex:1;
+  } */
 }
 </style>

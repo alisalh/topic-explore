@@ -73,7 +73,6 @@ export default {
         .domain([0, maxY])
         .nice()
         .range([this.height - margin.bottom, margin.top])
-      console.log(maxY)
       const x = d3
         .scaleBand()
         .domain(this.versions)
@@ -94,7 +93,8 @@ export default {
               .text('版本号')
           )
           .call(g =>
-            g.selectAll('text:not(.x-label)')
+            g
+              .selectAll('text:not(.x-label)')
               .style('text-anchor', 'end')
               .attr('dx', '-.8em')
               .attr('dy', '.15em')
@@ -114,15 +114,13 @@ export default {
               .attr('font-weight', 'bold')
               .text('文件数(#)')
           )
-      svg
-        .append('g')
-        .call(xAxis)
+      svg.append('g').call(xAxis)
 
       svg.append('g').call(yAxis)
       // 画线
       const line = d3
         .line()
-        // .curve(d3.curveBasis)
+        .curve(d3.curveBasis)
         // .defined(d => !isNaN(d))
         .x(d => {
           return x(d.key)
@@ -161,7 +159,37 @@ export default {
           return line(d.val)
         })
         .on('mouseenter', d => {
-          console.log('hover', d.key)
+          // console.log('hover', d.key)
+        })
+      // 画x轴延长线
+      const gridLine = d3.line()
+      let xOffset = 0
+      svg
+        .append('g')
+        .attr('transform', `translate(${x.bandwidth() / 2},0)`)
+        .attr('fill', 'none')
+        .attr('stroke-width', 3)
+        .attr('stroke-linejoin', 'round')
+        .attr('stroke-linecap', 'round')
+        .attr('stroke', 'black')
+        .attr('stroke-dasharray', '5,5')
+        .selectAll('.x-grid-line')
+        .data(this.versions)
+        .enter()
+        .append('path')
+        .attr('opacity', 0)
+        .attr('d', (d, i) => {
+          xOffset = x(d)
+          return gridLine([[xOffset, margin.top], [xOffset, this.height - margin.bottom]])
+        })
+        .on('mouseenter', function () {
+          d3.select(this).attr('opacity', 0.7)
+        })
+        .on('mouseout', function () {
+          d3.select(this).attr('opacity', 0.0)
+        })
+        .on('click', (d) => {
+          this.$bus.$emit('version-selected', d)
         })
       // 画点
       const dot = svg.append('g').attr('display', 'none')
