@@ -59,7 +59,7 @@ export default {
     },
     draw (data) {
       const vm = this
-      const margin = { top: 20, right: 20, bottom: 30, left: 40 }
+      const margin = { top: 20, right: 20, bottom: 40, left: 40 }
       const svg = d3
         .select(this.$refs.root)
         .append('svg')
@@ -83,14 +83,46 @@ export default {
         g
           .attr('transform', `translate(0,${this.height - margin.bottom})`)
           .call(d3.axisBottom(x))
+          .call(g =>
+            g
+              .select('.tick:last-of-type text')
+              .clone()
+              .attr('text-anchor', 'end')
+              .attr('font-weight', 'bold')
+              .attr('class', 'x-label')
+              .attr('y', -10)
+              .text('版本号')
+          )
+          .call(g =>
+            g.selectAll('text:not(.x-label)')
+              .style('text-anchor', 'end')
+              .attr('dx', '-.8em')
+              .attr('dy', '.15em')
+              .attr('transform', 'rotate(-65)')
+          )
       const yAxis = g =>
-        g.attr('transform', `translate(${margin.left},0)`).call(d3.axisLeft(y))
-      svg.append('g').call(xAxis)
+        g
+          .attr('transform', `translate(${margin.left},0)`)
+          .call(d3.axisLeft(y))
+          .call(g => g.select('.domain').remove())
+          .call(g =>
+            g
+              .select('.tick:last-of-type text')
+              .clone()
+              .attr('x', 3)
+              .attr('text-anchor', 'start')
+              .attr('font-weight', 'bold')
+              .text('文件数(#)')
+          )
+      svg
+        .append('g')
+        .call(xAxis)
+
       svg.append('g').call(yAxis)
       // 画线
       const line = d3
         .line()
-        .curve(d3.curveBasis)
+        // .curve(d3.curveBasis)
         // .defined(d => !isNaN(d))
         .x(d => {
           return x(d.key)
@@ -128,7 +160,7 @@ export default {
         .attr('d', d => {
           return line(d.val)
         })
-        .on('mouseenter', (d) => {
+        .on('mouseenter', d => {
           console.log('hover', d.key)
         })
       // 画点
