@@ -5,6 +5,7 @@
 
 <script>
 import * as d3 from 'd3'
+import { TOPIC_COLOR } from '../utils/constant.js'
 export default {
   name: 'component_name',
   data () {
@@ -15,6 +16,7 @@ export default {
       versions: null
     }
   },
+  props: ['test'],
   methods: {
     groupBy (arr, prop) {
       const propType = typeof prop
@@ -58,6 +60,7 @@ export default {
       return topicsGroup
     },
     draw (data) {
+      console.log(this.test)
       const vm = this
       const margin = { top: 20, right: 20, bottom: 40, left: 40 }
       const svg = d3
@@ -129,18 +132,7 @@ export default {
       const lineColorMap = d3
         .scaleOrdinal()
         .domain(data.map(d => parseInt(d.key)).sort((a, b) => a - b))
-        .range([
-          '#8dd3c7',
-          '#ffffb3',
-          '#bebada',
-          '#fb8072',
-          '#80b1d3',
-          '#fdb462',
-          '#b3de69',
-          '#fccde5',
-          '#d9d9d9',
-          '#bc80bd'
-        ])
+        .range(TOPIC_COLOR)
       // 画坐标轴
       const path = svg
         .append('g')
@@ -189,6 +181,7 @@ export default {
           d3.select(this).attr('opacity', 0.0)
         })
         .on('click', (d) => {
+          console.log(d)
           this.$bus.$emit('version-selected', d)
         })
       // 画点
@@ -199,6 +192,11 @@ export default {
         .style('font', '10px sans-serif')
         .attr('text-anchor', 'middle')
         .attr('y', -8)
+    }
+  },
+  watch: {
+    test (val) {
+      console.log('watch', val)
     }
   },
   mounted () {

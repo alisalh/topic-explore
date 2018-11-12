@@ -1,10 +1,10 @@
 <template>
   <div id="app">
     <div class="first-row">
-
+      <sunburst></sunburst>
     </div>
     <div class="second-row">
-      <line-chart></line-chart>
+      <line-chart :test="test"></line-chart>
     </div>
   </div>
 </template>
@@ -12,11 +12,23 @@
 <script>
 import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart'
+import Sunburst from './components/Sunburst.vue'
 export default {
   name: 'app',
+  data () {
+    return {
+      test: null
+    }
+  },
   components: {
     HelloWorld,
-    LineChart
+    LineChart,
+    Sunburst
+  },
+  created () {
+    setTimeout(() => {
+      this.test = 3
+    }, 0)
   }
 }
 </script>
@@ -26,9 +38,9 @@ export default {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  // text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  // margin-top: 60px;
 /*   display: flex;
   flex-direction: column;
   .first-row{
