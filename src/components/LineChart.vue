@@ -5,7 +5,6 @@
 
 <script>
 import * as d3 from 'd3'
-import { TOPIC_COLOR } from '../utils/constant.js'
 export default {
   name: 'component_name',
   data () {
@@ -16,7 +15,7 @@ export default {
       versions: null
     }
   },
-  props: ['test'],
+  props: ['topicColormap'],
   methods: {
     groupBy (arr, prop) {
       const propType = typeof prop
@@ -60,7 +59,6 @@ export default {
       return topicsGroup
     },
     draw (data) {
-      console.log(this.test)
       const vm = this
       const margin = { top: 20, right: 20, bottom: 40, left: 40 }
       const svg = d3
@@ -129,10 +127,6 @@ export default {
           return x(d.key)
         })
         .y(d => y(d.val.length))
-      const lineColorMap = d3
-        .scaleOrdinal()
-        .domain(data.map(d => parseInt(d.key)).sort((a, b) => a - b))
-        .range(TOPIC_COLOR)
       // 画坐标轴
       const path = svg
         .append('g')
@@ -145,7 +139,7 @@ export default {
         .data(data)
         .enter()
         .append('path')
-        .attr('stroke', d => lineColorMap(parseInt(d.key)))
+        .attr('stroke', d => this.topicColormap(parseInt(d.key)))
         // .style('mix-blend-mode', 'multiply')
         .attr('d', d => {
           return line(d.val)
@@ -172,7 +166,10 @@ export default {
         .attr('opacity', 0)
         .attr('d', (d, i) => {
           xOffset = x(d)
-          return gridLine([[xOffset, margin.top], [xOffset, this.height - margin.bottom]])
+          return gridLine([
+            [xOffset, margin.top],
+            [xOffset, this.height - margin.bottom]
+          ])
         })
         .on('mouseenter', function () {
           d3.select(this).attr('opacity', 0.7)
@@ -180,7 +177,7 @@ export default {
         .on('mouseout', function () {
           d3.select(this).attr('opacity', 0.0)
         })
-        .on('click', (d) => {
+        .on('click', d => {
           console.log(d)
           this.$bus.$emit('version-selected', d)
         })
@@ -194,16 +191,24 @@ export default {
         .attr('y', -8)
     }
   },
-  watch: {
-    test (val) {
-      console.log('watch', val)
-    }
+  watch: {},
+  created () {
+    // 当所有异步数据都获取完以后才开始渲染(类Promise.all实现)
+    const requiredData = ['topicColormap', 'topicsGroup']
+    let cnt = 0
+    requiredData.forEach(d => {
+      this.$watch(d, () => {
+        cnt++
+        if (cnt === requiredData.length) {
+          this.draw(this.topicsGroup)
+        }
+      })
+    })
   },
   mounted () {
     this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
       this.versions = data.versions
       this.topicsGroup = this.dataAdapter(data.files)
-      this.draw(this.topicsGroup)
     })
   }
 }

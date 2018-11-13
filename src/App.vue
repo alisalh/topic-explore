@@ -1,23 +1,25 @@
 <template>
   <div id="app">
     <div class="first-row">
-      <sunburst></sunburst>
+      <sunburst :topicColormap="topicColormap"></sunburst>
     </div>
     <div class="second-row">
-      <line-chart :test="test"></line-chart>
+      <line-chart :topicColormap="topicColormap"></line-chart>
     </div>
   </div>
 </template>
 
 <script>
+import * as d3 from 'd3'
 import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart'
 import Sunburst from './components/Sunburst.vue'
+import { TOPIC_COLOR } from './utils/constant.js'
 export default {
   name: 'app',
   data () {
     return {
-      test: null
+      topicData: null
     }
   },
   components: {
@@ -25,10 +27,17 @@ export default {
     LineChart,
     Sunburst
   },
+  computed: {
+    topicColormap () {
+      if (this.topicData === null) return null
+      const domain = Array(this.topicData.length).map((d, i) => i)
+      return d3.scaleOrdinal().domain(domain).range(TOPIC_COLOR)
+    }
+  },
   created () {
-    setTimeout(() => {
-      this.test = 3
-    }, 0)
+    this.$axios.get('topics/getTopicData', {}).then(({ data }) => {
+      this.topicData = data
+    })
   }
 }
 </script>

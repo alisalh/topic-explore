@@ -13,6 +13,7 @@ export default {
       height: 300
     }
   },
+  props: ['topicColormap'],
   methods: {
     draw (data) {
       let root = d3.hierarchy(data)
@@ -32,10 +33,7 @@ export default {
         .scaleLinear()
         .range([0, this.height / 2])
         .domain([1, 0])
-      const topicColorMap = d3
-        .scaleOrdinal()
-        .domain(data.map(d => parseInt(d.key)).sort((a, b) => a - b))
-        .range(TOPIC_COLOR)
+
       var partition = d3.partition()
       var arc = d3
         .arc()
@@ -68,11 +66,11 @@ export default {
         .style('stroke', d => {
           return 'white'
         })
-        .style('fill', function (d) {
+        .style('fill', (d) => {
           if (d.data.type === 'dir') {
             return '#fed9a6'
           }
-          return '#e5d8bd' /* color((d.children ? d : d.parent).data.name); */
+          return this.topicColormap(parseInt(d.data.topic))
         })
         .on('click', d => {
           console.log(d)
