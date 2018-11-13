@@ -5,6 +5,7 @@
     </div>
     <div class="second-row">
       <line-chart :topicColormap="topicColormap"></line-chart>
+      <word-cloud :topicData="topicData"></word-cloud>
     </div>
   </div>
 </template>
@@ -14,6 +15,7 @@ import * as d3 from 'd3'
 import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart'
 import Sunburst from './components/Sunburst.vue'
+import WordCloud from './components/WordCloud.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 export default {
   name: 'app',
@@ -25,7 +27,8 @@ export default {
   components: {
     HelloWorld,
     LineChart,
-    Sunburst
+    Sunburst,
+    WordCloud
   },
   computed: {
     topicColormap () {
