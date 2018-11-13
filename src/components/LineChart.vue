@@ -10,7 +10,7 @@ export default {
   data () {
     return {
       topicsGroup: null,
-      height: 300,
+      height: 0,
       width: 800,
       versions: null
     }
@@ -147,6 +147,9 @@ export default {
         .on('mouseenter', d => {
           // console.log('hover', d.key)
         })
+        .on('click', d => {
+          this.$bus.$emit('topic-selected', d.key)
+        })
       // 画x轴延长线
       const gridLine = d3.line()
       let xOffset = 0
@@ -206,6 +209,7 @@ export default {
     })
   },
   mounted () {
+    this.height = Math.floor(this.$refs.root.clientHeight)
     this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
       this.versions = data.versions
       this.topicsGroup = this.dataAdapter(data.files)
@@ -214,5 +218,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="less">
+.line-chart{
+  height: 100%;
+}
 </style>

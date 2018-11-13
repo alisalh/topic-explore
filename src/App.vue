@@ -67,6 +67,13 @@ html {
   }
   .second-row{
     flex:1;
+    display: flex;
+    .line-chart{
+      flex:1;
+    }
+    .word-cloud{
+      flex:1
+    }
   }
 }
 </style>
