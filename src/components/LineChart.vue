@@ -60,7 +60,7 @@ export default {
     },
     draw (data) {
       const vm = this
-      const margin = { top: 20, right: 20, bottom: 40, left: 40 }
+      const margin = { top: 20, right: 20, bottom: 40, left: 50 }
       const svg = d3
         .select(this.$refs.root)
         .append('svg')

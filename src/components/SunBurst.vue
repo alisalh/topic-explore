@@ -1,16 +1,22 @@
 <template>
-  <div class='sunburst' ref='root'></div>
+  <div class='sunburst' ref='root'>
+    <!-- <svg></svg> -->
+  </div>
 </template>
 
 <script>
 import * as d3 from 'd3'
-import { TOPIC_COLOR } from '../utils/constant.js'
 export default {
   name: 'component_name',
   data () {
     return {
-      width: 300,
-      height: 300
+      // width: 600,
+      height: 0
+    }
+  },
+  computed: {
+    width () {
+      return this.height
     }
   },
   props: ['topicColormap'],
@@ -31,7 +37,7 @@ export default {
       var x = d3.scaleLinear().range([0, 2 * Math.PI])
       var y = d3
         .scaleLinear()
-        .range([0, this.height / 2])
+        .range([100, this.height / 2])
         .domain([1, 0])
 
       var partition = d3.partition()
@@ -64,20 +70,23 @@ export default {
         .attr('d', arc)
         .attr('id', d => d.data.filename)
         .style('stroke', d => {
-          return 'white'
+          return 'black'
         })
-        .style('fill', (d) => {
+        .style('fill', d => {
           if (d.data.type === 'dir') {
-            return '#fed9a6'
+            return 'white'
           }
           return this.topicColormap(parseInt(d.data.topic))
         })
         .on('click', d => {
           console.log(d)
         })
+      node.filter(d => d.data.type === 'dir').attr('stroke-dasharray', '5,5')
+        .attr('stroke-opacity', '0.6')
     }
   },
   mounted () {
+    this.height = Math.floor(this.$refs.root.clientHeight)
     this.$bus.$on('version-selected', d => {
       this.$axios
         .get('topics/getTopicDisByVersion', { version: d })
@@ -89,5 +98,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="less">
+.sunburst {
+  height: 100%;
+}
 </style>

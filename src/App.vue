@@ -43,20 +43,27 @@ export default {
 </script>
 
 <style lang="less">
+html {
+  height: 100%;
+  body {
+    height: 100%;
+  }
+}
 #app {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 80%;
   // text-align: center;
   color: #2c3e50;
   // margin-top: 60px;
-/*   display: flex;
+  display: flex;
   flex-direction: column;
   .first-row{
-    flex:1;
+    flex:2;
   }
   .second-row{
     flex:1;
-  } */
+  }
 }
 </style>
