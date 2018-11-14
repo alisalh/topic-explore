@@ -6,6 +6,7 @@
     <div class="second-row">
       <line-chart :topicColormap="topicColormap"></line-chart>
       <word-cloud :topicData="topicData"></word-cloud>
+      <bubble-chart :topicColormap="topicColormap"></bubble-chart>
     </div>
   </div>
 </template>
@@ -16,6 +17,7 @@ import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart'
 import Sunburst from './components/Sunburst.vue'
 import WordCloud from './components/WordCloud.vue'
+import BubbleChart from './components/BubbleChart.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 export default {
   name: 'app',
@@ -28,7 +30,8 @@ export default {
     HelloWorld,
     LineChart,
     Sunburst,
-    WordCloud
+    WordCloud,
+    BubbleChart
   },
   computed: {
     topicColormap () {
@@ -72,6 +75,9 @@ html {
       flex:1;
     }
     .word-cloud{
+      flex:1
+    }
+    .bubble-chart{
       flex:1
     }
   }
