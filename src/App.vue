@@ -1,28 +1,85 @@
 <template>
   <div id="app">
-    <line-chart></line-chart>
+    <div class="first-row">
+      <sunburst :topicColormap="topicColormap"></sunburst>
+    </div>
+    <div class="second-row">
+      <line-chart :topicColormap="topicColormap"></line-chart>
+      <word-cloud :topicData="topicData"></word-cloud>
+      <bubble-chart :topicColormap="topicColormap"></bubble-chart>
+    </div>
   </div>
 </template>
 
 <script>
+import * as d3 from 'd3'
 import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart'
+import Sunburst from './components/Sunburst.vue'
+import WordCloud from './components/WordCloud.vue'
+import BubbleChart from './components/BubbleChart.vue'
+import { TOPIC_COLOR } from './utils/constant.js'
 export default {
   name: 'app',
+  data () {
+    return {
+      topicData: null
+    }
+  },
   components: {
     HelloWorld,
-    LineChart
+    LineChart,
+    Sunburst,
+    WordCloud,
+    BubbleChart
+  },
+  computed: {
+    topicColormap () {
+      if (this.topicData === null) return null
+      const domain = Array(this.topicData.length).map((d, i) => i)
+      return d3.scaleOrdinal().domain(domain).range(TOPIC_COLOR)
+    }
+  },
+  created () {
+    this.$axios.get('topics/getTopicData', {}).then(({ data }) => {
+      this.topicData = data
+    })
   }
 }
 </script>
 
 <style lang="less">
+html {
+  height: 100%;
+  body {
+    height: 100%;
+  }
+}
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  height: 80%;
+  // text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  // margin-top: 60px;
+  display: flex;
+  flex-direction: column;
+  .first-row{
+    flex:2;
+  }
+  .second-row{
+    flex:1;
+    display: flex;
+    .line-chart{
+      flex:1;
+    }
+    .word-cloud{
+      flex:1
+    }
+    .bubble-chart{
+      flex:1
+    }
+  }
 }
 </style>
