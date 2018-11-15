@@ -36,6 +36,7 @@ export default {
   methods: {
     draw (data) {
       console.log('draw wordcloud', data)
+      d3.select('.word-cloud>svg *').remove()
       let fontSizeScale = d3.scaleLinear().range([10, 50])
       let fontWeightScale = d3
         .scaleQuantize()

@@ -2,9 +2,10 @@
   <div id="app">
     <div class="first-row">
       <sunburst :topicColormap="topicColormap"></sunburst>
+      <radar-chart :docVerData="docVerData">></radar-chart>
     </div>
     <div class="second-row">
-      <line-chart :topicColormap="topicColormap"></line-chart>
+      <line-chart :topicColormap="topicColormap" :docVerData="docVerData"></line-chart>
       <word-cloud :topicData="topicData"></word-cloud>
       <bubble-chart :topicColormap="topicColormap"></bubble-chart>
     </div>
@@ -18,12 +19,14 @@ import LineChart from './components/LineChart'
 import Sunburst from './components/Sunburst.vue'
 import WordCloud from './components/WordCloud.vue'
 import BubbleChart from './components/BubbleChart.vue'
+import RadarChart from './components/RadarChart.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 export default {
   name: 'app',
   data () {
     return {
-      topicData: null
+      topicData: null,
+      docVerData: null
     }
   },
   components: {
@@ -31,7 +34,8 @@ export default {
     LineChart,
     Sunburst,
     WordCloud,
-    BubbleChart
+    BubbleChart,
+    RadarChart
   },
   computed: {
     topicColormap () {
@@ -43,6 +47,9 @@ export default {
   created () {
     this.$axios.get('topics/getTopicData', {}).then(({ data }) => {
       this.topicData = data
+    })
+    this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
+      this.docVerData = data
     })
   }
 }
@@ -67,6 +74,13 @@ html {
   flex-direction: column;
   .first-row{
     flex:2;
+    display: flex;
+    .sunburst{
+      flex:1;
+    }
+    .radar-chart{
+      flex:1;
+    }
   }
   .second-row{
     flex:1;
