@@ -2,7 +2,7 @@
   <div id="app">
     <div class="first-row">
       <sunburst :topicColormap="topicColormap"></sunburst>
-      <radar-chart :docVerData="docVerData">></radar-chart>
+      <radar-chart-wrapper :docVerData="docVerData">></radar-chart-wrapper>
     </div>
     <div class="second-row">
       <line-chart :topicColormap="topicColormap" :docVerData="docVerData"></line-chart>
@@ -19,7 +19,7 @@ import LineChart from './components/LineChart'
 import Sunburst from './components/Sunburst.vue'
 import WordCloud from './components/WordCloud.vue'
 import BubbleChart from './components/BubbleChart.vue'
-import RadarChart from './components/RadarChart.vue'
+import RadarChartWrapper from './components/RadarChartWrapper.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 export default {
   name: 'app',
@@ -35,7 +35,7 @@ export default {
     Sunburst,
     WordCloud,
     BubbleChart,
-    RadarChart
+    RadarChartWrapper
   },
   computed: {
     topicColormap () {
@@ -78,7 +78,7 @@ html {
     .sunburst{
       flex:1;
     }
-    .radar-chart{
+    .radar-chart-wrapper{
       flex:1;
     }
   }

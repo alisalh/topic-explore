@@ -1,18 +1,32 @@
 <template>
-  <div class='radar-chart'></div>
+  <div class='radar-chart-wrapper'>
+    <div v-for='group in fileGroup' class='radar-group'>
+      <div class="title">
+        {{group.status}}
+      </div>
+      <div class="content">
+        <radar v-for="doc in group.docs" :doc='doc'></radar>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
-import { getVersion, getRelPath } from '../utils'
 import _ from 'lodash'
+import { getVersion, getRelPath } from '../utils'
+import Radar from './Radar.vue'
 export default {
   name: 'component_name',
   data () {
     return {
-      fileGroup: null
+      fileGroup: [],
+      height: null
     }
   },
   props: ['docVerData'],
+  components: {
+    Radar
+  },
   methods: {
     /**
      * 根据选中的版本获取将文件分为：修改的、新增的、删除的
@@ -34,9 +48,11 @@ export default {
       const editDocs = _.intersectionBy(prevDocs, curDocs, d =>
         getRelPath(d['filename'])
       )
-      console.log(addDocs)
-      console.log(delDocs)
-      console.log(editDocs)
+      return [
+        { status: '增加', docs: addDocs },
+        { status: '减少', docs: delDocs },
+        { status: '修改', docs: editDocs }
+      ]
     },
     getRelVersion (versions, curVer, step) {
       const idx = versions.indexOf(curVer)
@@ -52,4 +68,24 @@ export default {
 </script>
 
 <style lang="less">
+.radar-chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  .radar-group{
+    flex:1;
+    display: flex;
+    .title{
+      flex:none;
+    }
+    .content{
+      overflow:scroll;
+      flex:auto;
+      display: flex;
+      flex-wrap:wrap;
+      .radar{
+        flex:none;
+      }
+    }
+  }
+}
 </style>
