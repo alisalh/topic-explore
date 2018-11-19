@@ -39,15 +39,17 @@ export default {
       const curDocs = docs.filter(d => getVersion(d.filename) === curVer)
       const nextDocs = docs.filter(d => getVersion(d.filename) === nextVer)
       const prevDocs = docs.filter(d => getVersion(d.filename) === prevVer)
-      const addDocs = _.differenceBy(curDocs, prevDocs, d =>
+      let addDocs = _.differenceBy(curDocs, prevDocs, d =>
         getRelPath(d['filename'])
       )
+      addDocs = addDocs.map(d => [d])
       /*       curDocs.forEach(d => console.log(d.filename))
       console.log('--------')
       prevDocs.forEach(d => console.log(d.filename)) */
-      const delDocs = _.differenceBy(prevDocs, curDocs, d =>
+      let delDocs = _.differenceBy(prevDocs, curDocs, d =>
         getRelPath(d['filename'])
       )
+      delDocs = delDocs.map(d => [d])
       // console.log(curDocs.length, prevDocs.length, prevDocs.concat(curDocs).length)
       /*       const editDocs = _.intersectionBy(prevDocs, curDocs, d =>
         getRelPath(d['filename'])
@@ -63,16 +65,12 @@ export default {
           for (let i = 0; i < val.length; i++) {
             tmpArr.push({
               version: getVersion(val[i].filename) === prevVer ? 'pre' : 'next',
-              data: val[i]
+              ...val[i]
             })
           }
-          editDocs.push({
-            filename: key,
-            data: tmpArr
-          })
+          editDocs.push(tmpArr)
         }
       })
-      console.log(editDocs)
       return [
         { status: '增加', docs: addDocs },
         { status: '减少', docs: delDocs },
