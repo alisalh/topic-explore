@@ -42,12 +42,37 @@ export default {
       const addDocs = _.differenceBy(curDocs, prevDocs, d =>
         getRelPath(d['filename'])
       )
+      /*       curDocs.forEach(d => console.log(d.filename))
+      console.log('--------')
+      prevDocs.forEach(d => console.log(d.filename)) */
       const delDocs = _.differenceBy(prevDocs, curDocs, d =>
         getRelPath(d['filename'])
       )
-      const editDocs = _.intersectionBy(prevDocs, curDocs, d =>
+      // console.log(curDocs.length, prevDocs.length, prevDocs.concat(curDocs).length)
+      /*       const editDocs = _.intersectionBy(prevDocs, curDocs, d =>
         getRelPath(d['filename'])
-      )
+      ) */
+      // console.log(prevDocs.concat(curDocs).map(d => d.filename))
+      // 同名文件视为编辑状态
+      const editDocsObj = _.groupBy(prevDocs.concat(curDocs), d => getRelPath(d['filename']))
+      let editDocs = []; let val, tmpArr
+      Object.keys(editDocsObj).forEach(key => {
+        val = editDocsObj[key]
+        if (val.length === 2) {
+          tmpArr = []
+          for (let i = 0; i < val.length; i++) {
+            tmpArr.push({
+              version: getVersion(val[i].filename) === prevVer ? 'pre' : 'next',
+              data: val[i]
+            })
+          }
+          editDocs.push({
+            filename: key,
+            data: tmpArr
+          })
+        }
+      })
+      console.log(editDocs)
       return [
         { status: '增加', docs: addDocs },
         { status: '减少', docs: delDocs },
@@ -71,19 +96,19 @@ export default {
 .radar-chart-wrapper {
   display: flex;
   flex-direction: column;
-  .radar-group{
-    flex:1;
+  .radar-group {
+    flex: 1;
     display: flex;
-    .title{
-      flex:none;
+    .title {
+      flex: none;
     }
-    .content{
-      overflow:scroll;
-      flex:auto;
+    .content {
+      overflow: scroll;
+      flex: auto;
       display: flex;
-      flex-wrap:wrap;
-      .radar{
-        flex:none;
+      flex-wrap: wrap;
+      .radar {
+        flex: none;
       }
     }
   }
