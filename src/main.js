@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import axios from './utils/http'
-
+import './assets/common.less'
 Vue.config.productionTip = false
 Vue.prototype.$axios = axios
 Vue.prototype.$bus = new Vue()
