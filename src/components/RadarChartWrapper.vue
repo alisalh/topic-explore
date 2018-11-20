@@ -5,7 +5,7 @@
       <div class="title">
         {{group.status}}
       </div>
-      <div class="content bl-card-shadow">
+      <div class="content bl-card">
         <radar v-for="doc in group.docs"
                :doc='doc'
                :sizeColorMap='group.sizeColorMap'

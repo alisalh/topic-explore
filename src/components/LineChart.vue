@@ -11,7 +11,7 @@ export default {
     return {
       topicsGroup: null,
       height: 0,
-      width: 800,
+      width: 0,
       versions: null
     }
   },
@@ -213,6 +213,7 @@ export default {
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
+    this.width = Math.floor(this.$refs.root.clientWidth)
   }
 }
 </script>
