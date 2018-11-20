@@ -8,9 +8,10 @@ export default {
   name: 'component_name',
   data () {
     return {
-      width: 500,
+      width: 0,
       height: 0,
       svg: null,
+      centerG: null,
       topicCluster: null
     }
   },
@@ -20,8 +21,8 @@ export default {
       const pack = data =>
         d3
           .pack()
-          .size([this.width - 2, this.height - 2])
-          .padding(3)(
+          .size([this.width, this.height - 25])
+          .padding(10)(
             d3
               .hierarchy(data)
               .sum(d => d.size)
@@ -33,7 +34,7 @@ export default {
         .data(root.descendants())
         .enter()
         .append('g')
-        .attr('transform', d => `translate(${d.x + 1},${d.y + 1})`)
+        .attr('transform', d => `translate(${d.x + 1},${d.y + 10})`)
       node
         .append('circle')
         .attr('r', d => d.r)
@@ -64,11 +65,18 @@ export default {
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
+    this.width = Math.floor(this.$refs.root.clientWidth)
     this.svg = d3
       .select(this.$refs.root)
       .append('svg')
       .attr('width', this.width)
       .attr('height', this.height)
+    /*     this.centerG = this.svg
+      .append('g')
+      .attr(
+        'transform',
+        'translate(' + this.width / 2 + ',' + this.height / 2 + ')'
+      ) */
     this.$axios.get('topics/getTopicCluster', {}).then(({ data }) => {
       this.topicCluster = data
     })

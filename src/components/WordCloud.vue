@@ -9,7 +9,7 @@ export default {
   name: 'component_name',
   data () {
     return {
-      width: 500,
+      width: 0,
       height: 0,
       svg: null
     }
@@ -17,6 +17,7 @@ export default {
   props: ['topicData'],
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
+    this.width = Math.floor(this.$refs.root.clientWidth)
     this.svg = d3
       .select(this.$refs.root)
       .append('svg')
@@ -36,6 +37,7 @@ export default {
   methods: {
     draw (data) {
       console.log('draw wordcloud', data)
+      d3.select('.word-cloud>svg *').remove()
       let fontSizeScale = d3.scaleLinear().range([10, 50])
       let fontWeightScale = d3
         .scaleQuantize()

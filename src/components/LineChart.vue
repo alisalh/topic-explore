@@ -11,11 +11,11 @@ export default {
     return {
       topicsGroup: null,
       height: 0,
-      width: 800,
+      width: 0,
       versions: null
     }
   },
-  props: ['topicColormap'],
+  props: ['topicColormap', 'docVerData'],
   methods: {
     groupBy (arr, prop) {
       const propType = typeof prop
@@ -55,7 +55,6 @@ export default {
           this.verCompare
         )
       })
-      console.log(topicsGroup)
       return topicsGroup
     },
     draw (data) {
@@ -197,11 +196,15 @@ export default {
   watch: {},
   created () {
     // 当所有异步数据都获取完以后才开始渲染(类Promise.all实现)
-    const requiredData = ['topicColormap', 'topicsGroup']
+    const requiredData = ['topicColormap', 'docVerData']
     let cnt = 0
     requiredData.forEach(d => {
-      this.$watch(d, () => {
+      this.$watch(d, (val) => {
         cnt++
+        if (d === 'docVerData') {
+          this.versions = val.versions
+          this.topicsGroup = this.dataAdapter(val.files)
+        }
         if (cnt === requiredData.length) {
           this.draw(this.topicsGroup)
         }
@@ -210,16 +213,13 @@ export default {
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
-    this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
-      this.versions = data.versions
-      this.topicsGroup = this.dataAdapter(data.files)
-    })
+    this.width = Math.floor(this.$refs.root.clientWidth)
   }
 }
 </script>
 
 <style lang="less">
-.line-chart{
+.line-chart {
   height: 100%;
 }
 </style>
