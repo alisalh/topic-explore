@@ -31,6 +31,7 @@ export default {
               .sum(d => d.size)
               .sort((a, b) => b.value - a.value)
           )
+      const heightColorMap = d3.scaleSequential(d3.interpolateGreys).domain([0, 8])
       const root = pack(data)
       const node = this.svg
         .selectAll('g')
@@ -45,7 +46,7 @@ export default {
           if (!d.children) {
             return this.topicColormap(d.data.index[0])
           }
-          return '#fff'
+          return heightColorMap(d.height)
         })
         .attr('stroke', d => {
           if (!d.children) {
@@ -54,6 +55,7 @@ export default {
           return '#000'
         })
         .attr('stroke-width', 0.7)
+      this.circleSvg.each(d => console.log(d))
       node.filter(d => !d.children).attr('fill', d => {
         // console.log(d.data.index[0], this.topicColormap(d.data.index[0]))
         return this.topicColormap(d.data.index[0])

@@ -76,7 +76,7 @@ export default {
         })
         .style('fill', d => {
           if (d.data.type === 'dir') {
-            return 'white'
+            return '#f0f0f0'
           }
           // console.log(d.data.topic, this.topicColormap(parseInt(d.data.topic)))
           return this.topicColormap(parseInt(d.data.topic))
