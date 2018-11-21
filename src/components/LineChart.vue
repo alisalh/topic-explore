@@ -1,5 +1,6 @@
 <template>
-  <div class="line-chart" ref="root">
+  <div class="line-chart"
+       ref="root">
   </div>
 </template>
 
@@ -12,7 +13,9 @@ export default {
       topicsGroup: null,
       height: 0,
       width: 0,
-      versions: null
+      versions: null,
+      lineSvg: null,
+      strokeWidth: 1.5
     }
   },
   props: ['topicColormap', 'docVerData'],
@@ -126,19 +129,21 @@ export default {
           return x(d.key)
         })
         .y(d => y(d.val.length))
-      // 画坐标轴
-      const path = svg
+      this.lineSvg = svg
         .append('g')
         .attr('transform', `translate(${x.bandwidth() / 2},0)`)
         .attr('fill', 'none')
-        .attr('stroke-width', 1.5)
+        .attr('stroke-width', this.stokeWidth)
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
         .selectAll('path')
         .data(data)
         .enter()
         .append('path')
-        .attr('stroke', d => this.topicColormap(parseInt(d.key)))
+        .attr('stroke', d => {
+          // console.log(d.key, this.topicColormap(parseInt(d.key)))
+          return this.topicColormap(parseInt(d.key))
+        })
         // .style('mix-blend-mode', 'multiply')
         .attr('d', d => {
           return line(d.val)
@@ -191,6 +196,18 @@ export default {
         .style('font', '10px sans-serif')
         .attr('text-anchor', 'middle')
         .attr('y', -8)
+    },
+    resetLineStatus () {
+      this.lineSvg.attr('opacity', 1).attr('stroke-width', this.strokeWidth)
+    },
+    highlightLine (topicId) {
+      this.resetLineStatus()
+      this.lineSvg
+        .filter(d => parseInt(d.key) === topicId)
+        .attr('stroke-width', 3)
+      this.lineSvg
+        .filter(d => parseInt(d.key) !== topicId)
+        .attr('opacity', 0.1)
     }
   },
   watch: {},
@@ -199,7 +216,7 @@ export default {
     const requiredData = ['topicColormap', 'docVerData']
     let cnt = 0
     requiredData.forEach(d => {
-      this.$watch(d, (val) => {
+      this.$watch(d, val => {
         cnt++
         if (d === 'docVerData') {
           this.versions = val.versions
@@ -214,6 +231,10 @@ export default {
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.width = Math.floor(this.$refs.root.clientWidth)
+    this.$bus.$on('topic-selected', topicId => {
+      if (topicId === -1) this.resetLineStatus()
+      else this.highlightLine(topicId)
+    })
   }
 }
 </script>

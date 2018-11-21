@@ -76,6 +76,7 @@ export default {
           if (d.data.type === 'dir') {
             return 'white'
           }
+          // console.log(d.data.topic, this.topicColormap(parseInt(d.data.topic)))
           return this.topicColormap(parseInt(d.data.topic))
         })
         .on('click', d => {

@@ -1,5 +1,6 @@
 <template>
-    <div class='word-cloud' ref='root'></div>
+  <div class='word-cloud'
+       ref='root'></div>
 </template>
 
 <script>
@@ -24,6 +25,10 @@ export default {
       .attr('width', this.width)
       .attr('height', this.height)
     this.$bus.$on('topic-selected', topicIdx => {
+      d3.select('.word-cloud>svg *').remove()
+      if (topicIdx === -1) {
+        return
+      }
       // weight关键字被占用，改为cost代替
       let keywords = this.topicData
         .find(d => d.index === topicIdx)
@@ -37,8 +42,8 @@ export default {
   methods: {
     draw (data) {
       console.log('draw wordcloud', data)
-      d3.select('.word-cloud>svg *').remove()
-      let fontSizeScale = d3.scaleLinear().range([10, 50])
+
+      let fontSizeScale = d3.scaleLinear().range([10, 70])
       let fontWeightScale = d3
         .scaleQuantize()
         .range([100, 200, 300, 400, 500, 600, 700, 800, 900])
@@ -60,7 +65,7 @@ export default {
         .text(function (d) {
           return d.keyword
         })
-        .spiral('archimedean')
+        .spiral('rectangular')
         // .random(d => 0.5)
         .padding(d => 6)
         .on('end', this.drawWords)
