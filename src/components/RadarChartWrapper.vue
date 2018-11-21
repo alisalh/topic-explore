@@ -5,7 +5,7 @@
       <div class="title">
         {{group.status}}
       </div>
-      <div class="content bl-card">
+      <div class="content">
         <radar v-for="doc in group.docs"
                :doc='doc'
                :sizeColorMap='group.sizeColorMap'
@@ -164,7 +164,8 @@ export default {
       writing-mode: vertical-lr;
       align-items: center;
       justify-content: center;
-      border: 1px solid black;
+      border: 1px solid#ebeef5;
+      font-weight: bold;
     }
     .content {
       overflow: scroll;
@@ -174,6 +175,8 @@ export default {
       .radar {
         flex: none;
       }
+      border: 1px solid #ebeef5;
+      border-left: none;
     }
   }
 }

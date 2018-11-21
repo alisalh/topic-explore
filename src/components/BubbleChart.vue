@@ -1,9 +1,11 @@
 <template>
-    <div class='bubble-chart' ref='root'></div>
+  <div class='bubble-chart'
+       ref='root'></div>
 </template>
 
 <script>
 import * as d3 from 'd3'
+import _ from 'lodash'
 export default {
   name: 'component_name',
   data () {
@@ -12,7 +14,8 @@ export default {
       height: 0,
       svg: null,
       centerG: null,
-      topicCluster: null
+      topicCluster: null,
+      circleSvg: null
     }
   },
   props: ['topicColormap'],
@@ -28,6 +31,7 @@ export default {
               .sum(d => d.size)
               .sort((a, b) => b.value - a.value)
           )
+      const heightColorMap = d3.scaleSequential(d3.interpolateGreys).domain([0, 8])
       const root = pack(data)
       const node = this.svg
         .selectAll('g')
@@ -35,19 +39,38 @@ export default {
         .enter()
         .append('g')
         .attr('transform', d => `translate(${d.x + 1},${d.y + 10})`)
-      node
+      this.circleSvg = node
         .append('circle')
         .attr('r', d => d.r)
         .attr('fill', d => {
           if (!d.children) {
             return this.topicColormap(d.data.index[0])
           }
-          return '#fff'
+          return heightColorMap(d.height)
         })
-        .attr('stroke', '#000')
-      node
-        .filter(d => !d.children)
-        .attr('fill', d => this.topicColormap(d.data.index[0]))
+        .attr('stroke', d => {
+          if (!d.children) {
+            return this.topicColormap(d.data.index[0])
+          }
+          return '#000'
+        })
+        .attr('stroke-width', 0.7)
+      this.circleSvg.each(d => console.log(d))
+      node.filter(d => !d.children).attr('fill', d => {
+        // console.log(d.data.index[0], this.topicColormap(d.data.index[0]))
+        return this.topicColormap(d.data.index[0])
+      })
+    },
+    resetStatus () {
+      this.circleSvg.attr('opacity', 1)
+    },
+    highlightCircle (topicId) {
+      this.resetStatus()
+      this.circleSvg
+        .filter(d => {
+          return !d.children && d.data.index[0] !== topicId
+        })
+        .attr('opacity', 0.2)
     }
   },
   created () {
@@ -71,14 +94,15 @@ export default {
       .append('svg')
       .attr('width', this.width)
       .attr('height', this.height)
-    /*     this.centerG = this.svg
-      .append('g')
-      .attr(
-        'transform',
-        'translate(' + this.width / 2 + ',' + this.height / 2 + ')'
-      ) */
     this.$axios.get('topics/getTopicCluster', {}).then(({ data }) => {
       this.topicCluster = data
+    })
+    this.$bus.$on('topic-selected', topicId => {
+      if (topicId === -1) {
+        this.resetStatus()
+      } else {
+        this.highlightCircle(topicId)
+      }
     })
   }
 }

@@ -46,7 +46,7 @@ export default {
   computed: {
     topicColormap () {
       if (this.topicData === null) return null
-      const domain = Array(this.topicData.length).map((d, i) => i)
+      const domain = Array(this.topicData.length).fill(null).map((d, i) => i)
       return d3.scaleOrdinal().domain(domain).range(TOPIC_COLOR)
     }
   },

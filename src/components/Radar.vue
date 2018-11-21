@@ -104,6 +104,7 @@ export default {
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
         .attr('stroke', d => lineColorMap(d.version))
+        .attr('opacity', 0.5)
 
       this.drawDonut()
     },
