@@ -47,7 +47,13 @@ export default {
           }
           return '#fff'
         })
-        .attr('stroke', '#000')
+        .attr('stroke', d => {
+          if (!d.children) {
+            return this.topicColormap(d.data.index[0])
+          }
+          return '#000'
+        })
+        .attr('stroke-width', 0.7)
       node.filter(d => !d.children).attr('fill', d => {
         // console.log(d.data.index[0], this.topicColormap(d.data.index[0]))
         return this.topicColormap(d.data.index[0])

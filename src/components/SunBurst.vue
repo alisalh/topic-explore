@@ -1,5 +1,6 @@
 <template>
-  <div class='sunburst' ref='root'>
+  <div class='sunburst'
+       ref='root'>
     <!-- <svg></svg> -->
   </div>
 </template>
@@ -11,7 +12,8 @@ export default {
   data () {
     return {
       // width: 600,
-      height: 0
+      height: 0,
+      arcSvg: null
     }
   },
   computed: {
@@ -64,7 +66,7 @@ export default {
         )
         .enter()
         .append('g')
-      node
+      this.arcSvg = node
         .append('path')
         .attr('class', 'hierarchy-node')
         .attr('d', arc)
@@ -82,9 +84,27 @@ export default {
         .on('click', d => {
           console.log(d)
         })
-      node.filter(d => d.data.type === 'dir').attr('stroke-dasharray', '5,5')
+      node
+        .filter(d => d.data.type === 'dir')
+        .attr('stroke-dasharray', '5,5')
         .attr('stroke-opacity', '0.6')
+    },
+    resetStatus () {
+      this.arcSvg.attr('opacity', 1)
     }
+  },
+  created () {
+    this.$bus.$on('topic-selected', topicId => {
+      this.resetStatus()
+      if (topicId === -1) {
+        return
+      }
+      this.arcSvg
+        .filter(
+          d => d.data.type !== 'dir' && parseInt(d.data.topic) !== topicId
+        )
+        .attr('opacity', 0.1)
+    })
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
