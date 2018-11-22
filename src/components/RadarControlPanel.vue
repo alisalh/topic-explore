@@ -1,5 +1,6 @@
 <template>
-  <div class='radar-control-panel' @click='globalClickHandler'>
+  <div class='radar-control-panel'
+       @click='globalClickHandler'>
     <div class="topic-slider-control-panel">
       <div v-for="item in sliderData"
            class='slider-control-wrapper'>
@@ -14,10 +15,11 @@
                    class='topic-slider'
                    :step="0.1"></el-slider>
       </div>
-      <el-button type="info" plain class='reset-btn' @click='resetBtnClickHandler'>重置</el-button>
     </div>
-
-    <hr class='divide-line' />
+    <el-button type="info"
+               plain
+               class='reset-btn'
+               @click='resetBtnClickHandler'>重置</el-button>
     <div class="dominant-topic-control-panel">
       <span class="title">Dominant Topic：</span>
       <span>null</span>
@@ -60,9 +62,13 @@ export default {
 
 <style lang="less">
 .radar-control-panel {
+  display: flex;
+  flex-direction: column;
   padding: 0 10px;
   .topic-slider-control-panel {
     flex: 1;
+    overflow: scroll;
+    // border-bottom: 1px solid black;
     .slider-control-wrapper {
       display: flex;
       align-items: center;
@@ -79,12 +85,15 @@ export default {
         width: 50%;
       }
     }
-    .reset-btn{
-      width:100%;
+    .reset-btn {
+      width: 100%;
     }
   }
   .dominant-topic-control-panel {
+    margin:10px;
     flex: none;
+    border-top: 1px solid black;
+    padding-top:5px;
     .title {
       font-weight: bold;
     }

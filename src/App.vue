@@ -10,17 +10,19 @@
         </div>
       </div>
       <div class="second-row">
-        <bubble-chart :topicColormap="topicColormap"
-                      class="bl-card-shadow"></bubble-chart>
-        <word-cloud :topicData="topicData"
-                    class="bl-card-shadow"></word-cloud>
         <line-chart :topicColormap="topicColormap"
                     :topicsGroup="topicsGroup"
                     :versions="versions"
                     class="bl-card-shadow"></line-chart>
+        <word-cloud :topicData="topicData"
+                    class="bl-card-shadow"></word-cloud>
+        <bubble-chart :topicColormap="topicColormap"
+                      class="bl-card-shadow"></bubble-chart>
       </div>
     </div>
-    <div class="right-panel"></div>
+    <div class="right-panel bl-card-shadow">
+      <comment-charts-wrapper :docData="docVerData&&docVerData.files"></comment-charts-wrapper>
+    </div>
   </div>
 </template>
 
@@ -33,6 +35,8 @@ import WordCloud from './components/WordCloud.vue'
 import BubbleChart from './components/BubbleChart.vue'
 import RadarChartWrapper from './components/RadarChartWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
+import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
+import FileBarChart from './components/FileBarChart.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy } from './utils/index.js'
 export default {
@@ -51,7 +55,8 @@ export default {
     WordCloud,
     BubbleChart,
     RadarChartWrapper,
-    RadarControlPanel
+    RadarControlPanel,
+    CommentChartsWrapper
   },
   computed: {
     topicColormap () {
@@ -100,6 +105,10 @@ export default {
       this.topicData = data
     })
     this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
+      // 数据类型预处理
+      data.files.forEach(
+        d => (d['Perc_Contribution'] = Number(d['Perc_Contribution']))
+      )
       this.docVerData = data
       this.topicsGroup = this.getTopicsGroup(this.docVerData.files)
     })
@@ -125,6 +134,7 @@ html {
   // margin-top: 60px;
   display: flex;
   .left-panel {
+    margin-right: 10px;
     display: flex;
     flex-direction: column;
     flex: 4;

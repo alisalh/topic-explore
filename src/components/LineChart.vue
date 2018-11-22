@@ -18,18 +18,6 @@ export default {
   },
   props: ['topicColormap', 'topicsGroup', 'versions'],
   methods: {
-    verCompare ({ key: a }, { key: b }) {
-      let arr = a.split('.').map(d => parseInt(d))
-      let brr = b.split('.').map(d => parseInt(d))
-      for (let i = 0, len = arr.length; i < len; i++) {
-        if (arr[i] < brr[i]) {
-          return -1
-        } else if (arr[i] > brr[i]) {
-          return 1
-        }
-      }
-    },
-
     draw (data) {
       const vm = this
       const margin = { top: 20, right: 20, bottom: 40, left: 50 }
