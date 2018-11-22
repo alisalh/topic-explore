@@ -10,32 +10,14 @@ export default {
   name: 'component_name',
   data () {
     return {
-      topicsGroup: null,
       height: 0,
       width: 0,
-      versions: null,
       lineSvg: null,
       strokeWidth: 1.5
     }
   },
-  props: ['topicColormap', 'docVerData'],
+  props: ['topicColormap', 'topicsGroup', 'versions'],
   methods: {
-    groupBy (arr, prop) {
-      const propType = typeof prop
-      const cb = function (d) {
-        if (propType === 'string') return d[prop]
-        else return prop(d)
-      }
-      let propsCategory = [...new Set(arr.map(d => cb(d)))]
-      let res = []
-      propsCategory.forEach(p => {
-        res.push({
-          key: p,
-          val: arr.filter(d => cb(d) === p)
-        })
-      })
-      return res
-    },
     verCompare ({ key: a }, { key: b }) {
       let arr = a.split('.').map(d => parseInt(d))
       let brr = b.split('.').map(d => parseInt(d))
@@ -47,19 +29,7 @@ export default {
         }
       }
     },
-    dataAdapter (rawData) {
-      rawData.forEach(
-        d => (d['Dominant_Topic'] = parseInt(d['Dominant_Topic']))
-      )
-      let topicsGroup = this.groupBy(rawData, 'Dominant_Topic')
-      let verReg = /vue-(\d*\.\d*\.\d*)/
-      topicsGroup.forEach(d => {
-        d.val = this.groupBy(d.val, d => d.filename.match(verReg)[1]).sort(
-          this.verCompare
-        )
-      })
-      return topicsGroup
-    },
+
     draw (data) {
       const vm = this
       const margin = { top: 20, right: 20, bottom: 40, left: 50 }
@@ -213,15 +183,11 @@ export default {
   watch: {},
   created () {
     // 当所有异步数据都获取完以后才开始渲染(类Promise.all实现)
-    const requiredData = ['topicColormap', 'docVerData']
+    const requiredData = ['topicColormap', 'topicsGroup', 'versions']
     let cnt = 0
     requiredData.forEach(d => {
       this.$watch(d, val => {
-        cnt++
-        if (d === 'docVerData') {
-          this.versions = val.versions
-          this.topicsGroup = this.dataAdapter(val.files)
-        }
+        if (val) cnt++
         if (cnt === requiredData.length) {
           this.draw(this.topicsGroup)
         }
