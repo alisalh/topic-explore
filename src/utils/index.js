@@ -6,6 +6,10 @@ export function getRelPath (fileName) {
   let verReg = /vue-(\d*\.\d*\.\d*)(.*)/
   return fileName.match(verReg)[2]
 }
+export function getRelPathWithVersion (fileName) {
+  let verReg = /vue-(\d*\.\d*\.\d*)(.*)/
+  return fileName.match(verReg)[0]
+}
 export function groupBy (arr, prop) {
   const propType = typeof prop
   const cb = function (d) {

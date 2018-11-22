@@ -4,21 +4,23 @@
                     @doc-selected='docSelectedHandler'></file-bar-chart>
     <div class="comment-wrapper">
       <div class="title">
-        注释信息
+        注释信息(#{{selectedDoc&&selectedDoc.commentArr.length}})
       </div>
       <div class="content">
-        {{selectedDoc&&selectedDoc.comments}}
+        <div class="comment"
+             v-for="comment in selectedDoc.commentArr">
+          {{comment}}
+        </div>
       </div>
     </div>
-    <div class="identifier-wrapper"
-         :doc='selectedDoc'>
-      <div class="title">
-        变量信息
+    <div class="identifier-wrapper">
+        <div class="title">
+          变量信息(#{{selectedDoc&&selectedDoc.identifiers.split(' ').length}})
+        </div>
+        <div class="content">
+          {{selectedDoc&&selectedDoc.identifiers}}
+        </div>
       </div>
-      <div class="content">
-        {{selectedDoc&&selectedDoc.identifiers}}
-      </div>
-    </div>
   </div>
 </template>
 
@@ -29,14 +31,15 @@ export default {
   props: ['docData'],
   data () {
     return {
-      selectedDoc: null
+      selectedDoc: {
+        commentArr: [],
+        identifiers: ''
+      }
     }
   },
   methods: {
-    draw (data) {
-      console.log(data)
-    },
     docSelectedHandler (doc) {
+      console.log(doc)
       this.selectedDoc = doc
     }
   },
@@ -63,11 +66,14 @@ export default {
     .title {
       font-weight: bold;
       margin-bottom: 10px;
-      flex:none;
+      flex: none;
     }
     .content {
-      flex:1;
+      flex: 1;
       overflow: scroll;
+      .comment {
+        border-bottom: 1px solid black;
+      }
     }
   }
 }

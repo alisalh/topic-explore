@@ -105,10 +105,6 @@ export default {
       this.topicData = data
     })
     this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
-      // 数据类型预处理
-      data.files.forEach(
-        d => (d['Perc_Contribution'] = Number(d['Perc_Contribution']))
-      )
       this.docVerData = data
       this.topicsGroup = this.getTopicsGroup(this.docVerData.files)
     })
