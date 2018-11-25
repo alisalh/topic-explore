@@ -1,6 +1,6 @@
 <template>
   <div class='radar-chart-wrapper'>
-    <div v-for='group in fileGroup'
+    <div v-for='group in radarData'
          class='radar-group'>
       <div class="title">
         {{group.status}}
@@ -24,31 +24,18 @@ export default {
   name: 'component_name',
   data () {
     return {
-      fileGroup: [],
-      height: null
+      height: null,
+      radarData: []
     }
   },
-  props: ['docVerData'],
+  props: ['fileGroup', 'prevVer'],
   components: {
     Radar
   },
-  methods: {
-    /**
-     * 根据选中的版本获取将文件分为：修改的、新增的、删除的
-     */
-    groupFileByStatus (curVer) {
-      const docs = this.docVerData.files
-      const versions = this.docVerData.versions
-      const prevVer = this.getRelVersion(versions, curVer, -1)
-      const nextVer = this.getRelVersion(versions, curVer, 1)
-      const curDocs = docs.filter(d => getVersion(d.filename) === curVer)
-      const nextDocs = docs.filter(d => getVersion(d.filename) === nextVer)
-      const prevDocs = docs.filter(d => getVersion(d.filename) === prevVer)
-      let addDocs = _.differenceBy(curDocs, prevDocs, d =>
-        getRelPath(d['filename'])
-      )
-      console.log(addDocs)
-      addDocs = addDocs.map(d => ({
+  watch: {
+    fileGroup () {
+      console.log(this.fileGroup, this.prevVer)
+      const addDocs = this.fileGroup.addDocs.map(d => ({
         size: d.size,
         funcNum: d['func_Num'],
         data: [
@@ -58,13 +45,7 @@ export default {
           }
         ]
       }))
-      /*       curDocs.forEach(d => console.log(d.filename))
-      console.log('--------')
-      prevDocs.forEach(d => console.log(d.filename)) */
-      let delDocs = _.differenceBy(prevDocs, curDocs, d =>
-        getRelPath(d['filename'])
-      )
-      delDocs = delDocs.map(d => ({
+      const delDocs = this.fileGroup.delDocs.map(d => ({
         size: d.size,
         funcNum: d['func_Num'],
         data: [
@@ -74,28 +55,19 @@ export default {
           }
         ]
       }))
-      // console.log(curDocs.length, prevDocs.length, prevDocs.concat(curDocs).length)
-      /*       const editDocs = _.intersectionBy(prevDocs, curDocs, d =>
-        getRelPath(d['filename'])
-      ) */
-      // console.log(prevDocs.concat(curDocs).map(d => d.filename))
-      // 同名文件视为编辑状态
-      const editDocsObj = _.groupBy(prevDocs.concat(curDocs), d =>
-        getRelPath(d['filename'])
-      )
       let editDocs = []
       let val, tmpArr, preData, nextData, version
-      Object.keys(editDocsObj).forEach(key => {
-        val = editDocsObj[key]
+      Object.keys(this.fileGroup.editDocsObj).forEach(key => {
+        val = this.fileGroup.editDocsObj[key]
         if (val.length === 2) {
           tmpArr = []
           for (let i = 0; i < val.length; i++) {
             version = getVersion(val[i].filename)
             tmpArr.push({
-              version: version === prevVer ? 'pre' : 'next',
+              version: version === this.prevVer ? 'pre' : 'next',
               ...val[i]
             })
-            if (version === prevVer) preData = val[i]
+            if (version === this.prevVer) preData = val[i]
             else nextData = val[i]
           }
           editDocs.push({
@@ -105,8 +77,7 @@ export default {
           })
         }
       })
-      console.log(editDocs)
-      return [
+      this.radarData = [
         {
           status: '增加',
           docs: addDocs,
@@ -126,11 +97,9 @@ export default {
           funcNumColorMap: this.getColorMap(editDocs, 'funcNum')
         }
       ]
-    },
-    getRelVersion (versions, curVer, step) {
-      const idx = versions.indexOf(curVer)
-      return versions[idx + step]
-    },
+    }
+  },
+  methods: {
     getColorMap (docs, attr) {
       const [minVal, maxVal] = d3.extent(docs, d => d[attr])
       return d3
@@ -138,16 +107,23 @@ export default {
         .domain([minVal, maxVal])
         .range(['#d73027', '#1a9850'])
         .interpolate(d3.interpolateHcl)
+    },
+    calDiffVec (a, b) {
+      return a.map((val, idx) => b[idx] - val)
     }
   },
   created () {
-    this.$bus.$on('version-selected', selectedVer => {
+    /*     this.$bus.$on('version-selected', selectedVer => {
       this.fileGroup = this.groupFileByStatus(selectedVer)
-      const { docs: allDocs } = this.fileGroup.reduce(
-        ({ docs: a }, { docs: b }) => ({
+      const allDocs = this.fileGroup
+        .reduce(({ docs: a }, { docs: b }) => ({
           docs: a.concat(b)
-        })
-      )
+        }))
+        .docs.map(d => ({
+          fileName: d['relFileName'],
+          vec: d['diffVec'],
+          type: d['type']
+        }))
       this.$axios
         .post('http://localhost:5000/topic/', allDocs)
         .then(() => {
@@ -157,7 +133,7 @@ export default {
         .catch(e => {
           console.log(e)
         })
-    })
+    }) */
   }
 }
 </script>
