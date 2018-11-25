@@ -4,6 +4,7 @@
       <div class="first-row">
         <sunburst :topicColormap="topicColormap"
                   class="bl-card-shadow"></sunburst>
+        <scatter-plot></scatter-plot>
         <div class="right-panel bl-card-shadow">
           <radar-chart-wrapper :docVerData="docVerData">></radar-chart-wrapper>
           <radar-control-panel class="bl-card"></radar-control-panel>
@@ -36,7 +37,7 @@ import BubbleChart from './components/BubbleChart.vue'
 import RadarChartWrapper from './components/RadarChartWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
-import FileBarChart from './components/FileBarChart.vue'
+import ScatterPlot from './components/ScatterPlot.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy } from './utils/index.js'
 export default {
@@ -56,7 +57,8 @@ export default {
     BubbleChart,
     RadarChartWrapper,
     RadarControlPanel,
-    CommentChartsWrapper
+    CommentChartsWrapper,
+    ScatterPlot
   },
   computed: {
     topicColormap () {
@@ -133,13 +135,16 @@ html {
     margin-right: 10px;
     display: flex;
     flex-direction: column;
-    flex: 4;
+    flex: 5;
     .first-row {
       flex: 2;
       display: flex;
       .sunburst {
         flex: 1;
         margin-right: 10px;
+      }
+      .scatter-plot{
+        flex:0.5;
       }
       .right-panel {
         flex: 2;

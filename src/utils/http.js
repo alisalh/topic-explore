@@ -15,10 +15,11 @@ export default {
       // timeout: 5000,
       baseURL: 'http://localhost:3000',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        'Content-Type': 'application/json; charset=UTF-8'
       },
       transformRequest: [function (data) {
-        return qs.stringify(data, { arrayFormat: 'repeat' })
+        return JSON.stringify(data)
+        // return qs.stringify(data, { arrayFormat: 'repeat' })
       }]
     })
   },
