@@ -4,8 +4,13 @@
       <div class="first-row">
         <sunburst :topicColormap="topicColormap"
                   class="bl-card-shadow"></sunburst>
+        <div class="scatter-xx-wrapper">
+          <scatter-plot class="bl-card-shadow"></scatter-plot>
+          <div class="xx-chart"></div>
+        </div>
         <div class="right-panel bl-card-shadow">
-          <radar-chart-wrapper :docVerData="docVerData">></radar-chart-wrapper>
+          <radar-chart-wrapper :fileGroup="fileGroup"
+                               :prevVer='prevVer'></radar-chart-wrapper>
           <radar-control-panel class="bl-card"></radar-control-panel>
         </div>
       </div>
@@ -28,6 +33,7 @@
 
 <script>
 import * as d3 from 'd3'
+import _ from 'lodash'
 import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart'
 import Sunburst from './components/Sunburst.vue'
@@ -36,16 +42,18 @@ import BubbleChart from './components/BubbleChart.vue'
 import RadarChartWrapper from './components/RadarChartWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
-import FileBarChart from './components/FileBarChart.vue'
+import ScatterPlot from './components/ScatterPlot.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
-import { groupBy } from './utils/index.js'
+import { groupBy, getVersion, getRelPath } from './utils/index.js'
 export default {
   name: 'app',
   data () {
     return {
       topicData: null,
       docVerData: null,
-      topicsGroup: null
+      topicsGroup: null,
+      fileGroup: null,
+      prevVer: null
     }
   },
   components: {
@@ -56,7 +64,8 @@ export default {
     BubbleChart,
     RadarChartWrapper,
     RadarControlPanel,
-    CommentChartsWrapper
+    CommentChartsWrapper,
+    ScatterPlot
   },
   computed: {
     topicColormap () {
@@ -75,6 +84,36 @@ export default {
     }
   },
   methods: {
+    /**
+     * 根据选中的版本获取将文件分为：修改的、新增的、删除的
+     */
+    groupFileByStatus (curVer) {
+      const docs = this.docVerData.files
+      const versions = this.docVerData.versions
+      const prevVer = this.getRelVersion(versions, curVer, -1)
+      const curDocs = docs.filter(d => getVersion(d.filename) === curVer)
+      const prevDocs = docs.filter(d => getVersion(d.filename) === prevVer)
+      this.prevVer = prevVer
+      let addDocs = _.differenceBy(curDocs, prevDocs, d =>
+        getRelPath(d['filename'])
+      )
+      let delDocs = _.differenceBy(prevDocs, curDocs, d =>
+        getRelPath(d['filename'])
+      )
+      // 同名文件视为编辑状态
+      const editDocsObj = _.groupBy(prevDocs.concat(curDocs), d =>
+        getRelPath(d['filename'])
+      )
+      return {
+        addDocs,
+        delDocs,
+        editDocsObj
+      }
+    },
+    getRelVersion (versions, curVer, step) {
+      const idx = versions.indexOf(curVer)
+      return versions[idx + step]
+    },
     verCompare ({ key: a }, { key: b }) {
       let arr = a.split('.').map(d => parseInt(d))
       let brr = b.split('.').map(d => parseInt(d))
@@ -101,6 +140,9 @@ export default {
     }
   },
   created () {
+    this.$bus.$on('version-selected', selectedVer => {
+      this.fileGroup = this.groupFileByStatus(selectedVer)
+    })
     this.$axios.get('topics/getTopicData', {}).then(({ data }) => {
       this.topicData = data
     })
@@ -133,7 +175,7 @@ html {
     margin-right: 10px;
     display: flex;
     flex-direction: column;
-    flex: 4;
+    flex: 5;
     .first-row {
       flex: 2;
       display: flex;
@@ -141,8 +183,18 @@ html {
         flex: 1;
         margin-right: 10px;
       }
+      .scatter-xx-wrapper {
+        flex: 0.8;
+        margin-right: 10px;
+        display: flex;
+        flex-direction: column;
+        .xx-chart,
+        .scatter-plot {
+          flex: 1;
+        }
+      }
       .right-panel {
-        flex: 2;
+        flex: 1.5;
         display: flex;
         padding: 10px;
         .radar-chart-wrapper {
