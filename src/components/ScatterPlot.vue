@@ -14,7 +14,8 @@ export default {
     return {
       height: 0,
       width: 0,
-      clusterNum: 0
+      clusterNum: 0,
+      markerG: null
     }
   },
   props: ['fileGroup', 'topicData', 'prevVer'],
@@ -114,7 +115,7 @@ export default {
         del: '#marker-circle',
         edit: '#marker-triangle'
       }
-      svg
+      this.markerG = svg
         .append('g')
         .selectAll('marker')
         .data(data)
@@ -125,6 +126,20 @@ export default {
         .attr('y', d => y(d.y))
         .attr('fill', d => this.clusterColormap(d.cluster))
         .attr('opacity', 0.5)
+        .on('mouseenter', d => {
+          this.resetStatus()
+          this.highlightMarker(d.cluster)
+        })
+        .on('mouseleave', d => {
+          this.resetStatus()
+        })
+    },
+    resetStatus () {
+      this.markerG.attr('opacity', 0.5)
+    },
+    highlightMarker (selectedCluster) {
+      this.markerG.attr('opacity', 0.1)
+      this.markerG.filter(d => d.cluster === selectedCluster).attr('opacity', 1)
     },
     fieldAdapter (doc) {
       return {
