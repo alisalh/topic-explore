@@ -10,8 +10,8 @@ export default {
   name: 'component_name',
   data () {
     return {
-      width: 150,
-      height: 150,
+      width: 135,
+      height: 135,
       svg: null,
       centerG: null
     }

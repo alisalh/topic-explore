@@ -5,8 +5,10 @@
         <sunburst :topicColormap="topicColormap"
                   class="bl-card-shadow"></sunburst>
         <div class="scatter-xx-wrapper">
-          <scatter-plot class="bl-card-shadow"></scatter-plot>
-          <div class="xx-chart"></div>
+          <bubble-chart :topicColormap="topicColormap"
+                        class="bl-card-shadow"></bubble-chart>
+          <word-cloud :topicData="topicData"
+                      class="bl-card-shadow"></word-cloud>
         </div>
         <div class="right-panel bl-card-shadow">
           <radar-chart-wrapper :fileGroup="fileGroup"
@@ -19,10 +21,12 @@
                     :topicsGroup="topicsGroup"
                     :versions="versions"
                     class="bl-card-shadow"></line-chart>
-        <word-cloud :topicData="topicData"
-                    class="bl-card-shadow"></word-cloud>
-        <bubble-chart :topicColormap="topicColormap"
-                      class="bl-card-shadow"></bubble-chart>
+
+        <scatter-plot class="bl-card-shadow"
+                      :fileGroup="fileGroup"
+                      :topicData="topicData"
+                      :prevVer="prevVer"></scatter-plot>
+
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
@@ -32,19 +36,19 @@
 </template>
 
 <script>
-import * as d3 from 'd3'
-import _ from 'lodash'
-import HelloWorld from './components/HelloWorld.vue'
-import LineChart from './components/LineChart'
-import Sunburst from './components/Sunburst.vue'
-import WordCloud from './components/WordCloud.vue'
-import BubbleChart from './components/BubbleChart.vue'
-import RadarChartWrapper from './components/RadarChartWrapper.vue'
-import RadarControlPanel from './components/RadarControlPanel.vue'
-import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
-import ScatterPlot from './components/ScatterPlot.vue'
-import { TOPIC_COLOR } from './utils/constant.js'
-import { groupBy, getVersion, getRelPath } from './utils/index.js'
+import * as d3 from 'd3';
+import _ from 'lodash';
+import HelloWorld from './components/HelloWorld.vue';
+import LineChart from './components/LineChart';
+import Sunburst from './components/Sunburst.vue';
+import WordCloud from './components/WordCloud.vue';
+import BubbleChart from './components/BubbleChart.vue';
+import RadarChartWrapper from './components/RadarChartWrapper.vue';
+import RadarControlPanel from './components/RadarControlPanel.vue';
+import CommentChartsWrapper from './components/CommentChartsWrapper.vue';
+import ScatterPlot from './components/ScatterPlot.vue';
+import { TOPIC_COLOR } from './utils/constant.js';
+import { groupBy, getVersion, getRelPath } from './utils/index.js';
 export default {
   name: 'app',
   data () {
@@ -188,8 +192,8 @@ html {
         margin-right: 10px;
         display: flex;
         flex-direction: column;
-        .xx-chart,
-        .scatter-plot {
+        .word-cloud,
+        .bubble-chart {
           flex: 1;
         }
       }
@@ -218,7 +222,7 @@ html {
         flex: 1;
         margin-right: 10px;
       }
-      .bubble-chart {
+      .scatter-plot {
         flex: 1;
       }
     }

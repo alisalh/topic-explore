@@ -18,7 +18,7 @@
 <script>
 import _ from 'lodash'
 import * as d3 from 'd3'
-import { getVersion, getRelPath } from '../utils'
+import { getVersion } from '../utils'
 import Radar from './Radar.vue'
 export default {
   name: 'component_name',
@@ -107,9 +107,6 @@ export default {
         .domain([minVal, maxVal])
         .range(['#d73027', '#1a9850'])
         .interpolate(d3.interpolateHcl)
-    },
-    calDiffVec (a, b) {
-      return a.map((val, idx) => b[idx] - val)
     }
   },
   created () {
