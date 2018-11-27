@@ -17,7 +17,8 @@ export default {
   },
   props: ['topicData'],
   mounted () {
-    this.height = Math.floor(this.$refs.root.clientHeight)
+    // note: 10 offset?
+    this.height = Math.floor(this.$refs.root.clientHeight - 10)
     this.width = Math.floor(this.$refs.root.clientWidth)
     this.svg = d3
       .select(this.$refs.root)

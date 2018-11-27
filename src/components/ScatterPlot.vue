@@ -125,7 +125,7 @@ export default {
         .attr('x', d => x(d.x))
         .attr('y', d => y(d.y))
         .attr('fill', d => this.clusterColormap(d.cluster))
-        .attr('opacity', 0.5)
+        .attr('opacity', 0.7)
         .on('mouseenter', d => {
           this.resetStatus()
           this.highlightMarker(d.cluster)

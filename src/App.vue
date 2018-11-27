@@ -36,19 +36,19 @@
 </template>
 
 <script>
-import * as d3 from 'd3';
-import _ from 'lodash';
-import HelloWorld from './components/HelloWorld.vue';
-import LineChart from './components/LineChart';
-import Sunburst from './components/Sunburst.vue';
-import WordCloud from './components/WordCloud.vue';
-import BubbleChart from './components/BubbleChart.vue';
-import RadarChartWrapper from './components/RadarChartWrapper.vue';
-import RadarControlPanel from './components/RadarControlPanel.vue';
-import CommentChartsWrapper from './components/CommentChartsWrapper.vue';
-import ScatterPlot from './components/ScatterPlot.vue';
-import { TOPIC_COLOR } from './utils/constant.js';
-import { groupBy, getVersion, getRelPath } from './utils/index.js';
+import * as d3 from 'd3'
+import _ from 'lodash'
+import HelloWorld from './components/HelloWorld.vue'
+import LineChart from './components/LineChart'
+import Sunburst from './components/Sunburst.vue'
+import WordCloud from './components/WordCloud.vue'
+import BubbleChart from './components/BubbleChart.vue'
+import RadarChartWrapper from './components/RadarChartWrapper.vue'
+import RadarControlPanel from './components/RadarControlPanel.vue'
+import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
+import ScatterPlot from './components/ScatterPlot.vue'
+import { TOPIC_COLOR } from './utils/constant.js'
+import { groupBy, getVersion, getRelPath } from './utils/index.js'
 export default {
   name: 'app',
   data () {
@@ -169,7 +169,7 @@ html {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  height: 90%;
+  height: 95%;
   width: 100%;
   // text-align: center;
   color: #2c3e50;
@@ -195,6 +195,9 @@ html {
         .word-cloud,
         .bubble-chart {
           flex: 1;
+        }
+        .bubble-chart{
+          margin-bottom: 10px;
         }
       }
       .right-panel {

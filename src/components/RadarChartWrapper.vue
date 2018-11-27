@@ -110,27 +110,6 @@ export default {
     }
   },
   created () {
-    /*     this.$bus.$on('version-selected', selectedVer => {
-      this.fileGroup = this.groupFileByStatus(selectedVer)
-      const allDocs = this.fileGroup
-        .reduce(({ docs: a }, { docs: b }) => ({
-          docs: a.concat(b)
-        }))
-        .docs.map(d => ({
-          fileName: d['relFileName'],
-          vec: d['diffVec'],
-          type: d['type']
-        }))
-      this.$axios
-        .post('http://localhost:5000/topic/', allDocs)
-        .then(() => {
-          console.log('hey123')
-          // console.log(data)
-        })
-        .catch(e => {
-          console.log(e)
-        })
-    }) */
   }
 }
 </script>
