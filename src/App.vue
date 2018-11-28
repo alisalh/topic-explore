@@ -4,12 +4,7 @@
       <div class="first-row">
         <sunburst :topicColormap="topicColormap"
                   class="bl-card-shadow"></sunburst>
-        <div class="scatter-xx-wrapper">
-          <bubble-chart :topicColormap="topicColormap"
-                        class="bl-card-shadow"></bubble-chart>
-          <word-cloud :topicData="topicData"
-                      class="bl-card-shadow"></word-cloud>
-        </div>
+        <parallel-coordinate></parallel-coordinate>
         <div class="right-panel bl-card-shadow">
           <radar-chart-wrapper :fileGroup="fileGroup"
                                :prevVer='prevVer'></radar-chart-wrapper>
@@ -21,12 +16,16 @@
                     :topicsGroup="topicsGroup"
                     :versions="versions"
                     class="bl-card-shadow"></line-chart>
-
+        <div class="scatter-xx-wrapper">
+          <bubble-chart :topicColormap="topicColormap"
+                        class="bl-card-shadow"></bubble-chart>
+          <word-cloud :topicData="topicData"
+                      class="bl-card-shadow"></word-cloud>
+        </div>
         <scatter-plot class="bl-card-shadow"
                       :fileGroup="fileGroup"
                       :topicData="topicData"
                       :prevVer="prevVer"></scatter-plot>
-
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
@@ -47,6 +46,7 @@ import RadarChartWrapper from './components/RadarChartWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
+import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
 export default {
@@ -69,7 +69,8 @@ export default {
     RadarChartWrapper,
     RadarControlPanel,
     CommentChartsWrapper,
-    ScatterPlot
+    ScatterPlot,
+    ParallelCoordinate
   },
   computed: {
     topicColormap () {
@@ -169,7 +170,7 @@ html {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  height: 95%;
+  height: 98%;
   width: 100%;
   // text-align: center;
   color: #2c3e50;
@@ -181,27 +182,17 @@ html {
     flex-direction: column;
     flex: 5;
     .first-row {
-      flex: 2;
+      flex: 1.3;
       display: flex;
       .sunburst {
         flex: 1;
         margin-right: 10px;
       }
-      .scatter-xx-wrapper {
-        flex: 0.8;
-        margin-right: 10px;
-        display: flex;
-        flex-direction: column;
-        .word-cloud,
-        .bubble-chart {
-          flex: 1;
-        }
-        .bubble-chart{
-          margin-bottom: 10px;
-        }
+      .parallel-coordinate{
+        flex:0.5
       }
       .right-panel {
-        flex: 1.5;
+        flex: 1.2;
         display: flex;
         padding: 10px;
         .radar-chart-wrapper {
@@ -215,15 +206,24 @@ html {
       margin-bottom: 10px;
     }
     .second-row {
-      flex: 1.5;
+      flex: 1;
       display: flex;
       .line-chart {
         flex: 2;
         margin-right: 10px;
       }
-      .word-cloud {
-        flex: 1;
+      .scatter-xx-wrapper {
+        flex: 0.8;
         margin-right: 10px;
+        display: flex;
+        flex-direction: column;
+        .word-cloud,
+        .bubble-chart {
+          flex: 1;
+        }
+        .bubble-chart {
+          margin-bottom: 10px;
+        }
       }
       .scatter-plot {
         flex: 1;
@@ -231,7 +231,7 @@ html {
     }
   }
   .right-panel {
-    flex: 1;
+    flex: 0.8;
   }
 }
 </style>

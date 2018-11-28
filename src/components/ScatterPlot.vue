@@ -133,19 +133,31 @@ export default {
         .on('mouseleave', d => {
           this.resetStatus()
         })
+        .on('click', ({ cluster: selectedCluster }) => {
+          let clusters = []
+          this.markerG
+            .filter(d => d.cluster === selectedCluster)
+            .each(d => {
+              clusters = clusters.concat(d['fileIds'])
+            })
+          this.$bus.$emit('cluster-selected', clusters)
+        })
     },
     resetStatus () {
       this.markerG.attr('opacity', 0.5)
     },
     highlightMarker (selectedCluster) {
       this.markerG.attr('opacity', 0.1)
-      this.markerG.filter(d => d.cluster === selectedCluster).attr('opacity', 1)
+      this.markerG
+        .filter(d => d.cluster === selectedCluster)
+        .attr('opacity', 1)
     },
     fieldAdapter (doc) {
       return {
         fileName: doc['relFileName'],
+        vec: doc['diffVec'],
         type: doc['type'],
-        vec: doc['diffVec']
+        fileIds: doc['fileIds']
       }
     },
     getDocData (data) {
@@ -156,7 +168,8 @@ export default {
           Array(topicNum).fill(0),
           doc['Topic_Contribution'].map(topic => topic['percent'])
         ),
-        type: 'add'
+        type: 'add',
+        fileIds: [doc.id]
       }))
       const delDocs = this.fileGroup.delDocs.map(doc => ({
         relFileName: getRelPath(doc.filename),
@@ -164,7 +177,8 @@ export default {
           doc['Topic_Contribution'].map(topic => topic['percent']),
           Array(topicNum).fill(0)
         ),
-        type: 'del'
+        type: 'del',
+        fileIds: [doc.id]
       }))
       let editDocs = []
       let val, preData, nextData, version
@@ -182,7 +196,8 @@ export default {
               preData['Topic_Contribution'].map(topic => topic['percent']),
               nextData['Topic_Contribution'].map(topic => topic['percent'])
             ),
-            type: 'edit'
+            type: 'edit',
+            fileIds: [preData.id, nextData.id]
           })
         }
       })
