@@ -4,7 +4,8 @@
       <div class="first-row">
         <sunburst :topicColormap="topicColormap"
                   class="bl-card-shadow"></sunburst>
-        <parallel-coordinate></parallel-coordinate>
+        <parallel-coordinate :topicData="topicData"
+                             :docVerData="docVerData" class="bl-card-shadow"></parallel-coordinate>
         <div class="right-panel bl-card-shadow">
           <radar-chart-wrapper :fileGroup="fileGroup"
                                :prevVer='prevVer'></radar-chart-wrapper>
@@ -185,11 +186,12 @@ html {
       flex: 1.3;
       display: flex;
       .sunburst {
-        flex: 1;
+        flex: 0.8;
         margin-right: 10px;
       }
-      .parallel-coordinate{
-        flex:0.5
+      .parallel-coordinate {
+        flex: 0.5;
+        margin-right: 10px;
       }
       .right-panel {
         flex: 1.2;

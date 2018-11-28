@@ -52,7 +52,6 @@ export default {
   },
   methods: {
     draw (data) {
-      console.log(data)
       const margin = { top: 20, right: 30, bottom: 30, left: 40 }
       const height = this.height
       const width = this.width
