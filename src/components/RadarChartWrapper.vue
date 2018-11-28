@@ -1,6 +1,6 @@
 <template>
   <div class='radar-chart-wrapper'>
-    <div v-for='group in radarData'
+    <div v-for='group in filteredRadarData'
          class='radar-group'>
       <div class="title">
         {{group.status}}
@@ -25,7 +25,8 @@ export default {
   data () {
     return {
       height: null,
-      radarData: []
+      radarData: [],
+      filteredRadarData: []
     }
   },
   props: ['fileGroup', 'prevVer'],
@@ -38,6 +39,7 @@ export default {
       const addDocs = this.fileGroup.addDocs.map(d => ({
         size: d.size,
         funcNum: d['func_Num'],
+        fileIds: [d.id],
         data: [
           {
             version: 'next',
@@ -48,6 +50,7 @@ export default {
       const delDocs = this.fileGroup.delDocs.map(d => ({
         size: d.size,
         funcNum: d['func_Num'],
+        fileIds: [d.id],
         data: [
           {
             version: 'pre',
@@ -72,6 +75,7 @@ export default {
           }
           editDocs.push({
             size: nextData.size - preData.size,
+            fileIds: [preData.id, nextData.id],
             funcNum: nextData['func_Num'] - preData['func_Num'],
             data: tmpArr
           })
@@ -97,6 +101,7 @@ export default {
           funcNumColorMap: this.getColorMap(editDocs, 'funcNum')
         }
       ]
+      this.filteredRadarData = this.radarData.slice()
     }
   },
   methods: {
@@ -110,6 +115,21 @@ export default {
     }
   },
   created () {
+    this.$bus.$on('cluster-selected', ids => {
+      if (ids === null) {
+        console.log('reset')
+        this.filteredRadarData = this.radarData.slice()
+        return
+      }
+      this.radarData.forEach((group, groupId) => {
+        this.$set(this.filteredRadarData, groupId, {
+          ...group,
+          docs: group.docs.filter(doc =>
+            doc['fileIds'].some(id => ids.indexOf(id) !== -1)
+          )
+        })
+      })
+    })
   }
 }
 </script>

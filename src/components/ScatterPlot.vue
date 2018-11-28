@@ -15,7 +15,8 @@ export default {
       height: 0,
       width: 0,
       clusterNum: 0,
-      markerG: null
+      markerG: null,
+      selectedCluster: -1
     }
   },
   props: ['fileGroup', 'topicData', 'prevVer'],
@@ -60,6 +61,11 @@ export default {
         .append('svg')
         .attr('width', width)
         .attr('height', height)
+      svg.on('click', () => {
+        this.selectedCluster = -1
+        this.$bus.$emit('cluster-selected', null)
+        this.resetStatus()
+      })
       const x = d3
         .scaleLinear()
         .domain(d3.extent(data, d => d.x))
@@ -126,19 +132,23 @@ export default {
         .attr('fill', d => this.clusterColormap(d.cluster))
         .attr('opacity', 0.7)
         .on('mouseenter', d => {
+          if (this.selectedCluster !== -1) return
           this.resetStatus()
           this.highlightMarker(d.cluster)
         })
         .on('mouseleave', d => {
-          this.resetStatus()
+          if (this.selectedCluster === -1) this.resetStatus()
         })
         .on('click', ({ cluster: selectedCluster }) => {
+          this.selectedCluster = selectedCluster
           let clusters = []
           this.markerG
             .filter(d => d.cluster === selectedCluster)
             .each(d => {
               clusters = clusters.concat(d['fileIds'])
             })
+          d3.event.stopPropagation()
+          this.highlightMarker(selectedCluster)
           this.$bus.$emit('cluster-selected', clusters)
         })
     },

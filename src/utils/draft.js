@@ -9,3 +9,6 @@ let obj = {
 obj[3] = 2
 obj['3'] = 4
 console.log(obj[3], obj['3'])
+let arr = [1, 2, 3]
+console.log(arr.slice())
+console.log(null == null)
