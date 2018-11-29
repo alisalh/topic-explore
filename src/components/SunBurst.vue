@@ -84,6 +84,10 @@ export default {
         .on('click', d => {
           console.log(d)
         })
+      this.arcSvg
+        .append('title')
+        // .text(function(d) { return d.data.name.slice(d.data.name.lastIndexOf('/') + 1) })
+        .text(d => d.data.name)
       node
         .filter(d => d.data.type === 'dir')
         .attr('stroke-dasharray', '5,5')

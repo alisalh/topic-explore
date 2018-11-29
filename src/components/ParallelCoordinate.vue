@@ -11,7 +11,8 @@ export default {
     return {
       svgHeight: 0,
       svgWidth: 0,
-      clusterFiles: null
+      clusterFiles: null,
+      svg: null
     }
   },
   computed: {
@@ -32,6 +33,7 @@ export default {
   props: ['docVerData', 'topicData'],
   methods: {
     draw (data) {
+      d3.select('.parallel-coordinate>svg *').remove()
       var margin = { top: 10, right: 30, bottom: 20, left: 40 }
       var width = this.svgWidth - margin.left - margin.right
       var height = this.svgHeight - margin.top - margin.bottom
@@ -42,11 +44,7 @@ export default {
           })
         )
       }
-      var svg = d3
-        .select(this.$refs.root)
-        .append('svg')
-        .attr('width', this.svgWidth)
-        .attr('height', this.svgHeight)
+      const svg = this.svg
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
       const dimensions = Array(this.topicData.length)
@@ -103,16 +101,24 @@ export default {
   },
   created () {
     this.$bus.$on('cluster-selected', ids => {
-      this.clusterFiles = this.docVerData.files.filter(
-        d => ids.indexOf(d['id']) !== -1
-      )
+      if (ids === null) {
+        this.clusterFiles = []
+      } else {
+        this.clusterFiles = this.docVerData.files.filter(
+          d => ids.indexOf(d['id']) !== -1
+        )
+      }
       this.draw(this.clusterFiles)
-      console.log(this.clusterFiles)
     })
   },
   mounted () {
     this.svgWidth = Math.floor(this.$refs.root.clientWidth)
     this.svgHeight = Math.floor(this.$refs.root.clientHeight)
+    this.svg = d3
+      .select(this.$refs.root)
+      .append('svg')
+      .attr('width', this.svgWidth)
+      .attr('height', this.svgHeight)
   }
 }
 </script>

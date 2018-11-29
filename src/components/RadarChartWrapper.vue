@@ -6,10 +6,11 @@
         {{group.status}}
       </div>
       <div class="content">
-        <radar v-for="doc in group.docs"
+        <radar v-for="(doc,id) in group.docs"
                :doc='doc'
                :sizeColorMap='group.sizeColorMap'
-               :funcNumColorMap='group.funcNumColorMap'></radar>
+               :funcNumColorMap='group.funcNumColorMap'
+               :key="id"></radar>
       </div>
     </div>
   </div>
@@ -126,6 +127,27 @@ export default {
           ...group,
           docs: group.docs.filter(doc =>
             doc['fileIds'].some(id => ids.indexOf(id) !== -1)
+          )
+        })
+      })
+    })
+    this.$bus.$on('topic-selected', selectedTopic => {
+      this.radarData.forEach((group, groupId) => {
+        console.log(
+          group.docs.filter(doc =>
+            doc['data'].some(d => {
+              // console.log(d)
+              return d['Dominant_Topic'] === selectedTopic
+            })
+          )
+        )
+        this.$set(this.filteredRadarData, groupId, {
+          ...group,
+          docs: group.docs.filter(doc =>
+            doc['data'].some(d => {
+              // console.log(d)
+              return d['Dominant_Topic'] === selectedTopic
+            })
           )
         })
       })
