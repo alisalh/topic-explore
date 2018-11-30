@@ -164,6 +164,9 @@ export default {
     this.centerG = this.svg
       .append('g')
       .attr('transform', `translate(${this.width / 2},${this.height / 2})`)
+      .on('click', d => {
+        console.log(this.doc)
+      })
     this.draw()
   }
 }
