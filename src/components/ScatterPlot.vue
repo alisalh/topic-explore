@@ -25,9 +25,9 @@ export default {
       return d3
         .scaleOrdinal()
         .domain(
-          Array(this.clusterNum)
+          Array(this.clusterNum + 1)
             .fill(null)
-            .map((d, i) => i)
+            .map((d, i) => i - 1)
         )
         .range(CLUSTER_COLOR)
     }
@@ -140,6 +140,7 @@ export default {
           if (this.selectedCluster === -1) this.resetStatus()
         })
         .on('click', ({ cluster: selectedCluster }) => {
+          console.log('selected cluster:', selectedCluster)
           this.selectedCluster = selectedCluster
           let clusters = []
           this.markerG

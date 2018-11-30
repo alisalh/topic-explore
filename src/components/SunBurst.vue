@@ -109,6 +109,15 @@ export default {
         )
         .attr('opacity', 0.1)
     })
+    this.$bus.$on('cluster-selected', ids => {
+      this.resetStatus()
+      if (ids === null) {
+        return
+      }
+      this.arcSvg
+        .filter(d => d.data.type !== 'dir' && ids.indexOf(d.data.id) === -1)
+        .attr('opacity', 0.1)
+    })
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)

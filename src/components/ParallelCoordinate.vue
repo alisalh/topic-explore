@@ -40,7 +40,8 @@ export default {
       function path (d) {
         return line(
           dimensions.map(function (dim) {
-            return [x[dim](d['Topic_Contribution'][dim].percent), y(dim)]
+            // return [x[dim](d['Topic_Contribution'][dim].percent), y(dim)]
+            return [x(d['Topic_Contribution'][dim].percent), y(dim)]
           })
         )
       }
@@ -56,8 +57,8 @@ export default {
         .range([0, height])
         .paddingInner(1)
         .paddingOuter(0.3)
-      const x = {}
-      dimensions.forEach(d => {
+      // const x = {}
+      /*       dimensions.forEach(d => {
         x[d] = d3
           .scaleLinear()
           .domain(
@@ -66,7 +67,14 @@ export default {
             })
           )
           .range([width, 0])
-      })
+      }) */
+      const maxVal = d3.max(data, doc =>
+        d3.max(doc['Topic_Contribution'], topic => topic.percent)
+      )
+      const x = d3
+        .scaleLinear()
+        .domain([0, maxVal])
+        .range([0, width])
       var g = svg
         .selectAll('.dimension')
         .data(dimensions)
@@ -79,7 +87,7 @@ export default {
       g.append('g')
         .attr('class', 'axis')
         .each(function (d) {
-          d3.select(this).call(d3.axisBottom(x[d]))
+          d3.select(this).call(d3.axisBottom(x))
         })
         .append('text')
         .attr('fill', 'black')
