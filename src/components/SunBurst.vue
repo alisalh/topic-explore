@@ -84,6 +84,10 @@ export default {
         .on('click', d => {
           console.log(d)
         })
+      this.arcSvg
+        .append('title')
+        // .text(function(d) { return d.data.name.slice(d.data.name.lastIndexOf('/') + 1) })
+        .text(d => d.data.name)
       node
         .filter(d => d.data.type === 'dir')
         .attr('stroke-dasharray', '5,5')
@@ -103,6 +107,15 @@ export default {
         .filter(
           d => d.data.type !== 'dir' && parseInt(d.data.topic) !== topicId
         )
+        .attr('opacity', 0.1)
+    })
+    this.$bus.$on('cluster-selected', ids => {
+      this.resetStatus()
+      if (ids === null) {
+        return
+      }
+      this.arcSvg
+        .filter(d => d.data.type !== 'dir' && ids.indexOf(d.data.id) === -1)
         .attr('opacity', 0.1)
     })
   },

@@ -1,15 +1,16 @@
 <template>
-    <div class='file-bar-chart'
-         ref='root'>
-        <div class="title">主题相关文件(#{{filteredDocData.length}})</div>
-        <div><span class="title">当前选中文件: </span><span>{{selectedDocName}}</span></div>
-        <div class="content">
-            <div v-for="doc in filteredDocData"
-                 :style='getRectStyle(doc)'
-                 class='file-rect'
-                 @click="rectClickHandler(doc)"></div>
-        </div>
+  <div class='file-bar-chart'
+       ref='root'>
+    <div class="title">主题相关文件(#{{filteredDocData.length}})</div>
+    <div class="title">当前选中文件: </div>
+    <div class="selected-file">{{selectedDocName}}</div>
+    <div class="content">
+      <div v-for="doc in filteredDocData"
+           :style='getRectStyle(doc)'
+           class='file-rect'
+           @click="rectClickHandler(doc)"></div>
     </div>
+  </div>
 </template>
 
 <script>
@@ -69,6 +70,9 @@ export default {
 .file-bar-chart {
   display: flex;
   flex-direction: column;
+  .selected-file {
+    word-wrap: break-word;
+  }
   .title {
     font-weight: bold;
     flex: none;

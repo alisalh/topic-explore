@@ -1,38 +1,32 @@
 <template>
-  <div class='radar-chart-wrapper'>
-    <div v-for='group in filteredRadarData'
-         class='radar-group'>
-      <div class="title">
-        {{group.status}}
-      </div>
-      <div class="content">
-        <radar v-for="(doc,id) in group.docs"
-               :doc='doc'
-               :sizeColorMap='group.sizeColorMap'
-               :funcNumColorMap='group.funcNumColorMap'
-               :key="id"></radar>
-      </div>
+  <div class='diff-files-wrapper'>
+    <diff-file-table-wrapper :filteredDiffFileGroup="filteredDiffFileGroup"
+                             @file-selected="fileSelectedHandler"></diff-file-table-wrapper>
+    <div class="file-bubble-chart-wrapper">
+      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[0]"></file-bubble-chart>
+      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[1]"></file-bubble-chart>
     </div>
   </div>
 </template>
 
 <script>
-import _ from 'lodash'
 import * as d3 from 'd3'
 import { getVersion } from '../utils'
-import Radar from './Radar.vue'
+import DiffFileTableWrapper from './DiffFileTableWrapper.vue'
+import FileBubbleChart from './FileBubbleChart.vue'
 export default {
   name: 'component_name',
   data () {
     return {
-      height: null,
-      radarData: [],
-      filteredRadarData: []
+      diffFileGroup: [],
+      filteredDiffFileGroup: [],
+      selectedFile: null
     }
   },
   props: ['fileGroup', 'prevVer'],
   components: {
-    Radar
+    DiffFileTableWrapper,
+    FileBubbleChart
   },
   watch: {
     fileGroup () {
@@ -82,7 +76,7 @@ export default {
           })
         }
       })
-      this.radarData = [
+      this.diffFileGroup = [
         {
           status: '增加',
           docs: addDocs,
@@ -102,7 +96,7 @@ export default {
           funcNumColorMap: this.getColorMap(editDocs, 'funcNum')
         }
       ]
-      this.filteredRadarData = this.radarData.slice()
+      this.filteredDiffFileGroup = this.diffFileGroup.slice()
     }
   },
   methods: {
@@ -113,78 +107,27 @@ export default {
         .domain([minVal, maxVal])
         .range(['#d73027', '#1a9850'])
         .interpolate(d3.interpolateHcl)
+    },
+    fileSelectedHandler (diffFile) {
+      this.selectedFile = diffFile
+      console.log(diffFile)
     }
-  },
-  created () {
-    this.$bus.$on('cluster-selected', ids => {
-      if (ids === null) {
-        console.log('reset')
-        this.filteredRadarData = this.radarData.slice()
-        return
-      }
-      this.radarData.forEach((group, groupId) => {
-        this.$set(this.filteredRadarData, groupId, {
-          ...group,
-          docs: group.docs.filter(doc =>
-            doc['fileIds'].some(id => ids.indexOf(id) !== -1)
-          )
-        })
-      })
-    })
-    this.$bus.$on('topic-selected', selectedTopic => {
-      this.radarData.forEach((group, groupId) => {
-        console.log(
-          group.docs.filter(doc =>
-            doc['data'].some(d => {
-              // console.log(d)
-              return d['Dominant_Topic'] === selectedTopic
-            })
-          )
-        )
-        this.$set(this.filteredRadarData, groupId, {
-          ...group,
-          docs: group.docs.filter(doc =>
-            doc['data'].some(d => {
-              // console.log(d)
-              return d['Dominant_Topic'] === selectedTopic
-            })
-          )
-        })
-      })
-    })
   }
 }
 </script>
 
 <style lang="less">
-.radar-chart-wrapper {
+.diff-files-wrapper {
   display: flex;
-  flex-direction: column;
-  .radar-group {
-    &:nth-child(n + 2) {
-      margin-top: 20px;
-    }
+  .diff-file-table-wrapper {
+    flex: 1;
+  }
+  .file-bubble-chart-wrapper {
     flex: 1;
     display: flex;
-    .title {
-      flex: none;
-      display: flex;
-      writing-mode: vertical-lr;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid#ebeef5;
-      font-weight: bold;
-    }
-    .content {
-      overflow: scroll;
-      flex: auto;
-      display: flex;
-      flex-wrap: wrap;
-      .radar {
-        flex: none;
-      }
-      border: 1px solid #ebeef5;
-      border-left: none;
+    flex-direction: column;
+    .file-bubble-chart {
+      flex: 1;
     }
   }
 }

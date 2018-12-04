@@ -81,7 +81,7 @@ export default {
       // 画线
       const line = d3
         .line()
-        .curve(d3.curveBasis)
+        // .curve(d3.curveBasis)
         // .defined(d => !isNaN(d))
         .x(d => {
           return x(d.key)

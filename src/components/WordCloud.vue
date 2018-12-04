@@ -17,7 +17,8 @@ export default {
   },
   props: ['topicData'],
   mounted () {
-    this.height = Math.floor(this.$refs.root.clientHeight)
+    // note: 10 offset?
+    this.height = Math.floor(this.$refs.root.clientHeight - 10)
     this.width = Math.floor(this.$refs.root.clientWidth)
     this.svg = d3
       .select(this.$refs.root)
@@ -43,7 +44,7 @@ export default {
     draw (data) {
       console.log('draw wordcloud', data)
 
-      let fontSizeScale = d3.scaleLinear().range([10, 70])
+      let fontSizeScale = d3.scaleLinear().range([10, 40])
       let fontWeightScale = d3
         .scaleQuantize()
         .range([100, 200, 300, 400, 500, 600, 700, 800, 900])

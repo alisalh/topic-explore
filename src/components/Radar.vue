@@ -10,15 +10,21 @@ export default {
   name: 'component_name',
   data () {
     return {
-      width: 150,
-      height: 150,
+      width: 125,
+      height: 125,
       svg: null,
       centerG: null
     }
   },
   props: ['doc', 'funcNumColorMap', 'sizeColorMap'],
+  watch: {
+    doc () {
+      this.draw()
+    }
+  },
   methods: {
     draw () {
+      // console.log('draw radar')
       const topicCon = this.doc.data[0]['Topic_Contribution']
       const levelNumArr = [0, 0.2, 0.4, 0.6, 0.8, 1]
       const axisLine = d3.line()
@@ -89,14 +95,18 @@ export default {
         .append('path')
         .attr('d', (d, i) => {
           levelLinePoints = []
-          radiusOffset = levelScale(d)
+          // radiusOffset = levelScale(d)
           for (let i = 0; i < topicCon.length; i++) {
             levelLinePoints.push([
               i * angleStep,
-              levelScale(topicCon[i].percent)
+              levelScale(d['Topic_Contribution'][i].percent)
             ])
           }
-          levelLinePoints.push([0, levelScale(topicCon[0].percent)])
+          // console.log(d, levelLinePoints)
+          levelLinePoints.push([
+            0,
+            levelScale(d['Topic_Contribution'][0].percent)
+          ])
           return levelLine(levelLinePoints)
         })
         .attr('fill', 'none')
@@ -105,6 +115,9 @@ export default {
         .attr('stroke-linecap', 'round')
         .attr('stroke', d => lineColorMap(d.version))
         .attr('opacity', 0.5)
+        .on('click', d => {
+          console.log(d)
+        })
 
       this.drawDonut()
     },
@@ -151,6 +164,9 @@ export default {
     this.centerG = this.svg
       .append('g')
       .attr('transform', `translate(${this.width / 2},${this.height / 2})`)
+      .on('click', d => {
+        console.log(this.doc)
+      })
     this.draw()
   }
 }

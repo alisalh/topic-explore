@@ -4,13 +4,14 @@
       <div class="first-row">
         <sunburst :topicColormap="topicColormap"
                   class="bl-card-shadow"></sunburst>
-        <div class="scatter-xx-wrapper">
-          <scatter-plot class="bl-card-shadow"></scatter-plot>
-          <div class="xx-chart"></div>
-        </div>
+        <parallel-coordinate :topicData="topicData"
+                             :docVerData="docVerData"
+                             class="bl-card-shadow"></parallel-coordinate>
         <div class="right-panel bl-card-shadow">
-          <radar-chart-wrapper :fileGroup="fileGroup"
-                               :prevVer='prevVer'></radar-chart-wrapper>
+          <!--           <radar-chart-wrapper :fileGroup="fileGroup"
+                               :prevVer='prevVer'></radar-chart-wrapper> -->
+          <diff-files-wrapper :fileGroup="fileGroup"
+                              :prevVer="prevVer"></diff-files-wrapper>
           <radar-control-panel class="bl-card"></radar-control-panel>
         </div>
       </div>
@@ -19,10 +20,16 @@
                     :topicsGroup="topicsGroup"
                     :versions="versions"
                     class="bl-card-shadow"></line-chart>
-        <word-cloud :topicData="topicData"
-                    class="bl-card-shadow"></word-cloud>
-        <bubble-chart :topicColormap="topicColormap"
-                      class="bl-card-shadow"></bubble-chart>
+        <div class="scatter-xx-wrapper">
+          <bubble-chart :topicColormap="topicColormap"
+                        class="bl-card-shadow"></bubble-chart>
+          <word-cloud :topicData="topicData"
+                      class="bl-card-shadow"></word-cloud>
+        </div>
+        <scatter-plot class="bl-card-shadow"
+                      :fileGroup="fileGroup"
+                      :topicData="topicData"
+                      :prevVer="prevVer"></scatter-plot>
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
@@ -40,9 +47,11 @@ import Sunburst from './components/Sunburst.vue'
 import WordCloud from './components/WordCloud.vue'
 import BubbleChart from './components/BubbleChart.vue'
 import RadarChartWrapper from './components/RadarChartWrapper.vue'
+import DiffFilesWrapper from './components/DiffFilesWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
+import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
 export default {
@@ -65,7 +74,9 @@ export default {
     RadarChartWrapper,
     RadarControlPanel,
     CommentChartsWrapper,
-    ScatterPlot
+    ScatterPlot,
+    ParallelCoordinate,
+    DiffFilesWrapper
   },
   computed: {
     topicColormap () {
@@ -165,7 +176,7 @@ html {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  height: 90%;
+  height: 98%;
   width: 100%;
   // text-align: center;
   color: #2c3e50;
@@ -177,27 +188,25 @@ html {
     flex-direction: column;
     flex: 5;
     .first-row {
-      flex: 2;
+      flex: 1.3;
       display: flex;
       .sunburst {
-        flex: 1;
-        margin-right: 10px;
-      }
-      .scatter-xx-wrapper {
         flex: 0.8;
         margin-right: 10px;
-        display: flex;
-        flex-direction: column;
-        .xx-chart,
-        .scatter-plot {
-          flex: 1;
-        }
+      }
+      .parallel-coordinate {
+        flex: 0.5;
+        margin-right: 10px;
       }
       .right-panel {
-        flex: 1.5;
+        flex: 1.2;
         display: flex;
         padding: 10px;
         .radar-chart-wrapper {
+          flex: 3;
+          margin-right: 10px;
+        }
+        .diff-files-wrapper {
           flex: 3;
           margin-right: 10px;
         }
@@ -208,23 +217,32 @@ html {
       margin-bottom: 10px;
     }
     .second-row {
-      flex: 1.5;
+      flex: 1;
       display: flex;
       .line-chart {
         flex: 2;
         margin-right: 10px;
       }
-      .word-cloud {
-        flex: 1;
+      .scatter-xx-wrapper {
+        flex: 0.8;
         margin-right: 10px;
+        display: flex;
+        flex-direction: column;
+        .word-cloud,
+        .bubble-chart {
+          flex: 1;
+        }
+        .bubble-chart {
+          margin-bottom: 10px;
+        }
       }
-      .bubble-chart {
+      .scatter-plot {
         flex: 1;
       }
     }
   }
   .right-panel {
-    flex: 1;
+    flex: 0.8;
   }
 }
 </style>
