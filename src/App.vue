@@ -5,10 +5,13 @@
         <sunburst :topicColormap="topicColormap"
                   class="bl-card-shadow"></sunburst>
         <parallel-coordinate :topicData="topicData"
-                             :docVerData="docVerData" class="bl-card-shadow"></parallel-coordinate>
+                             :docVerData="docVerData"
+                             class="bl-card-shadow"></parallel-coordinate>
         <div class="right-panel bl-card-shadow">
-          <radar-chart-wrapper :fileGroup="fileGroup"
-                               :prevVer='prevVer'></radar-chart-wrapper>
+          <!--           <radar-chart-wrapper :fileGroup="fileGroup"
+                               :prevVer='prevVer'></radar-chart-wrapper> -->
+          <diff-files-wrapper :fileGroup="fileGroup"
+                              :prevVer="prevVer"></diff-files-wrapper>
           <radar-control-panel class="bl-card"></radar-control-panel>
         </div>
       </div>
@@ -44,6 +47,7 @@ import Sunburst from './components/Sunburst.vue'
 import WordCloud from './components/WordCloud.vue'
 import BubbleChart from './components/BubbleChart.vue'
 import RadarChartWrapper from './components/RadarChartWrapper.vue'
+import DiffFilesWrapper from './components/DiffFilesWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
@@ -71,7 +75,8 @@ export default {
     RadarControlPanel,
     CommentChartsWrapper,
     ScatterPlot,
-    ParallelCoordinate
+    ParallelCoordinate,
+    DiffFilesWrapper
   },
   computed: {
     topicColormap () {
@@ -198,6 +203,10 @@ html {
         display: flex;
         padding: 10px;
         .radar-chart-wrapper {
+          flex: 3;
+          margin-right: 10px;
+        }
+        .diff-files-wrapper {
           flex: 3;
           margin-right: 10px;
         }
