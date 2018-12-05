@@ -1,7 +1,10 @@
 <template>
   <div class='diff-files-wrapper'>
-    <diff-file-table-wrapper :filteredDiffFileGroup="filteredDiffFileGroup"
-                             @file-selected="fileSelectedHandler"></diff-file-table-wrapper>
+    <div class="left-panel">
+      <diff-file-table :tableData="allDiffFiles"
+                       @file-selected="fileSelectedHandler"></diff-file-table>
+    </div>
+
     <div class="file-bubble-chart-wrapper">
       <file-bubble-chart v-for="id in fileBubbleChartIdxArr"
                          :fileData="selectedFile"
@@ -17,7 +20,7 @@
 <script>
 import * as d3 from 'd3'
 import { getVersion } from '../utils'
-import DiffFileTableWrapper from './DiffFileTableWrapper.vue'
+import DiffFileTable from './DiffFileTable.vue'
 import FileBubbleChart from './FileBubbleChart.vue'
 export default {
   name: 'component_name',
@@ -28,12 +31,13 @@ export default {
       selectedFile: null,
       sizeColorMap: null,
       funcNumColorMap: null,
-      fileBubbleChartIdxArr: [0, 1]
+      fileBubbleChartIdxArr: [0, 1],
+      allDiffFiles: []
     }
   },
   props: ['fileGroup', 'prevVer', 'topicColormap'],
   components: {
-    DiffFileTableWrapper,
+    DiffFileTable,
     FileBubbleChart
   },
   watch: {
@@ -48,7 +52,8 @@ export default {
             version: 'next',
             ...d
           }
-        ]
+        ],
+        type: 'add'
       }))
       const delDocs = this.fileGroup.delDocs.map(d => ({
         size: d.size,
@@ -59,7 +64,8 @@ export default {
             version: 'pre',
             ...d
           }
-        ]
+        ],
+        type: 'del'
       }))
       let editDocs = []
       let val, tmpArr, preData, nextData, version
@@ -80,7 +86,8 @@ export default {
             size: nextData.size - preData.size,
             fileIds: [preData.id, nextData.id],
             funcNum: nextData['func_Num'] - preData['func_Num'],
-            data: tmpArr
+            data: tmpArr,
+            type: 'edit'
           })
         }
       })
@@ -100,6 +107,7 @@ export default {
       ]
       this.filteredDiffFileGroup = this.diffFileGroup.slice()
       const allDocs = addDocs.concat(delDocs).concat(editDocs)
+      this.allDiffFiles = allDocs
       this.sizeColorMap = this.getColorMap(allDocs, 'size')
       this.funcNumColorMap = this.getColorMap(allDocs, 'funcNum')
     }
@@ -124,8 +132,14 @@ export default {
 <style lang="less">
 .diff-files-wrapper {
   display: flex;
-  .diff-file-table-wrapper {
-    flex: 1;
+  .left-panel {
+    flex: 1 !important;
+    margin-right: 10px;
+    display: flex;
+    flex-direction: column;
+    .diff-file-table{
+      flex:1;
+    }
   }
   .file-bubble-chart-wrapper {
     flex: 1;
