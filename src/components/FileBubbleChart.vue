@@ -9,13 +9,16 @@
 import * as d3 from 'd3'
 export default {
   name: 'component_name',
-  props: ['fileData', 'topicColormap'],
+  props: ['fileData', 'topicColormap', 'id', 'funcNumColorMap', 'sizeColorMap'],
   data () {
     return {
       width: null,
       height: null,
       svg: null,
-      centerG: null
+      centerG: null,
+      donutOuterOffset: 15,
+      donutInnerOffset: 25,
+      pieChartOffset: 30
     }
   },
   mounted () {
@@ -30,13 +33,16 @@ export default {
       .append('g')
       .attr('transform', `translate(${this.width / 2},${this.height / 2})`)
       .attr('class', 'center-g')
-      // .append('circle')
   },
   watch: {
     fileData (val) {
       this.clear()
-      if (!val) return
-      this.drawPieChart(val)
+      if (!val.data[this.id]) return
+      this.drawPieChart(val.data[this.id]['Topic_Contribution'])
+      this.drawDonut({
+        size: val.size,
+        funcNum: val.funcNum
+      })
     }
   },
   methods: {
@@ -54,8 +60,10 @@ export default {
       const arc = d3
         .arc()
         .innerRadius(0)
-        .outerRadius(Math.min(this.width, this.height) / 2 - 1)
-      const arcs = pie(data['Topic_Contribution'])
+        .outerRadius(
+          Math.min(this.width, this.height) / 2 - this.pieChartOffset
+        )
+      const arcs = pie(data)
       this.centerG
         .selectAll('path')
         .data(arcs)
@@ -68,10 +76,10 @@ export default {
         .attr('stroke', 'white')
         .attr('d', arc)
     },
-    drawDonut () {
+    drawDonut (data) {
       const pieData = [
-        { name: 'size', value: this.doc.size, ratio: 1 },
-        { name: 'funcNum', value: this.doc.funcNum, ratio: 1 }
+        { name: 'size', value: data.size, ratio: 1 },
+        { name: 'funcNum', value: data.funcNum, ratio: 1 }
       ]
       const pie = d3
         .pie()
@@ -97,8 +105,12 @@ export default {
           'd',
           d3
             .arc()
-            .innerRadius(this.width / 2 - 20)
-            .outerRadius(this.width / 2 - 16)
+            .innerRadius(
+              Math.min(this.width, this.height) / 2 - this.donutInnerOffset
+            )
+            .outerRadius(
+              Math.min(this.width, this.height) / 2 - this.donutOuterOffset
+            )
         )
     }
   }

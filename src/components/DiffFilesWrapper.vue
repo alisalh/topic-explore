@@ -3,12 +3,13 @@
     <diff-file-table-wrapper :filteredDiffFileGroup="filteredDiffFileGroup"
                              @file-selected="fileSelectedHandler"></diff-file-table-wrapper>
     <div class="file-bubble-chart-wrapper">
-      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[0]"
+      <file-bubble-chart v-for="id in fileBubbleChartIdxArr"
+                         :fileData="selectedFile"
                          class="bl-card"
-                         :topicColormap="topicColormap"></file-bubble-chart>
-      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[1]"
-                         class="bl-card"
-                         :topicColormap="topicColormap"></file-bubble-chart>
+                         :topicColormap="topicColormap"
+                         :sizeColorMap="sizeColorMap"
+                         :funcNumColorMap="funcNumColorMap"
+                         :id="id"></file-bubble-chart>
     </div>
   </div>
 </template>
@@ -24,7 +25,10 @@ export default {
     return {
       diffFileGroup: [],
       filteredDiffFileGroup: [],
-      selectedFile: null
+      selectedFile: null,
+      sizeColorMap: null,
+      funcNumColorMap: null,
+      fileBubbleChartIdxArr: [0, 1]
     }
   },
   props: ['fileGroup', 'prevVer', 'topicColormap'],
@@ -83,24 +87,21 @@ export default {
       this.diffFileGroup = [
         {
           status: '增加',
-          docs: addDocs,
-          sizeColorMap: this.getColorMap(addDocs, 'size'),
-          funcNumColorMap: this.getColorMap(addDocs, 'funcNum')
+          docs: addDocs
         },
         {
           status: '减少',
-          docs: delDocs,
-          sizeColorMap: this.getColorMap(delDocs, 'size'),
-          funcNumColorMap: this.getColorMap(delDocs, 'funcNum')
+          docs: delDocs
         },
         {
           status: '修改',
-          docs: editDocs,
-          sizeColorMap: this.getColorMap(editDocs, 'size'),
-          funcNumColorMap: this.getColorMap(editDocs, 'funcNum')
+          docs: editDocs
         }
       ]
       this.filteredDiffFileGroup = this.diffFileGroup.slice()
+      const allDocs = addDocs.concat(delDocs).concat(editDocs)
+      this.sizeColorMap = this.getColorMap(allDocs, 'size')
+      this.funcNumColorMap = this.getColorMap(allDocs, 'funcNum')
     }
   },
   methods: {
