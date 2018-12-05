@@ -11,7 +11,8 @@
           <!--           <radar-chart-wrapper :fileGroup="fileGroup"
                                :prevVer='prevVer'></radar-chart-wrapper> -->
           <diff-files-wrapper :fileGroup="fileGroup"
-                              :prevVer="prevVer"></diff-files-wrapper>
+                              :prevVer="prevVer"
+                              :topicColormap="topicColormap"></diff-files-wrapper>
           <radar-control-panel class="bl-card"></radar-control-panel>
         </div>
       </div>

@@ -3,8 +3,12 @@
     <diff-file-table-wrapper :filteredDiffFileGroup="filteredDiffFileGroup"
                              @file-selected="fileSelectedHandler"></diff-file-table-wrapper>
     <div class="file-bubble-chart-wrapper">
-      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[0]"></file-bubble-chart>
-      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[1]"></file-bubble-chart>
+      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[0]"
+                         class="bl-card"
+                         :topicColormap="topicColormap"></file-bubble-chart>
+      <file-bubble-chart :fileData="selectedFile&&selectedFile.data[1]"
+                         class="bl-card"
+                         :topicColormap="topicColormap"></file-bubble-chart>
     </div>
   </div>
 </template>
@@ -23,7 +27,7 @@ export default {
       selectedFile: null
     }
   },
-  props: ['fileGroup', 'prevVer'],
+  props: ['fileGroup', 'prevVer', 'topicColormap'],
   components: {
     DiffFileTableWrapper,
     FileBubbleChart
@@ -127,6 +131,9 @@ export default {
     display: flex;
     flex-direction: column;
     .file-bubble-chart {
+      &:nth-child(n + 2) {
+        margin-top: 10px;
+      }
       flex: 1;
     }
   }
