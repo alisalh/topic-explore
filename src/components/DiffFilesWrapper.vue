@@ -1,8 +1,11 @@
 <template>
   <div class='diff-files-wrapper'>
     <div class="left-panel">
+      <diff-file-type-bar-chart class="bl-card"
+                                :diffFileGroup="filteredDiffFileGroup"></diff-file-type-bar-chart>
       <diff-file-table :tableData="allDiffFiles"
                        @file-selected="fileSelectedHandler"></diff-file-table>
+
     </div>
 
     <div class="file-bubble-chart-wrapper">
@@ -22,6 +25,7 @@ import * as d3 from 'd3'
 import { getVersion } from '../utils'
 import DiffFileTable from './DiffFileTable.vue'
 import FileBubbleChart from './FileBubbleChart.vue'
+import DiffFileTypeBarChart from './DiffFileTypeBarChart.vue'
 export default {
   name: 'component_name',
   data () {
@@ -31,14 +35,14 @@ export default {
       selectedFile: null,
       sizeColorMap: null,
       funcNumColorMap: null,
-      fileBubbleChartIdxArr: [0, 1],
-      allDiffFiles: []
+      fileBubbleChartIdxArr: [0, 1]
     }
   },
   props: ['fileGroup', 'prevVer', 'topicColormap'],
   components: {
     DiffFileTable,
-    FileBubbleChart
+    FileBubbleChart,
+    DiffFileTypeBarChart
   },
   watch: {
     fileGroup () {
@@ -93,23 +97,29 @@ export default {
       })
       this.diffFileGroup = [
         {
-          status: '增加',
+          type: 'add',
           docs: addDocs
         },
         {
-          status: '减少',
+          type: 'del',
           docs: delDocs
         },
         {
-          status: '修改',
+          type: 'edit',
           docs: editDocs
         }
       ]
       this.filteredDiffFileGroup = this.diffFileGroup.slice()
       const allDocs = addDocs.concat(delDocs).concat(editDocs)
-      this.allDiffFiles = allDocs
       this.sizeColorMap = this.getColorMap(allDocs, 'size')
       this.funcNumColorMap = this.getColorMap(allDocs, 'funcNum')
+    }
+  },
+  computed: {
+    allDiffFiles () {
+      return this.filteredDiffFileGroup.reduce((a, b) => ({
+        docs: a.docs.concat(b.docs)
+      }), { docs: [] }).docs
     }
   },
   methods: {
@@ -125,6 +135,21 @@ export default {
       this.selectedFile = diffFile
       console.log(diffFile)
     }
+  },
+  created () {
+    this.$bus.$on('topic-selected', selectedTopic => {
+      this.diffFileGroup.forEach((group, groupId) => {
+        this.$set(this.filteredDiffFileGroup, groupId, {
+          ...group,
+          docs: group.docs.filter(doc =>
+            doc['data'].some(d => {
+              // console.log(d)
+              return d['Dominant_Topic'] === selectedTopic
+            })
+          )
+        })
+      })
+    })
   }
 }
 </script>
@@ -137,8 +162,12 @@ export default {
     margin-right: 10px;
     display: flex;
     flex-direction: column;
-    .diff-file-table{
-      flex:1;
+    .diff-file-table {
+      flex: 3;
+    }
+    .diff-file-type-bar-chart {
+      flex: 1;
+      margin-bottom: 10px;
     }
   }
   .file-bubble-chart-wrapper {
