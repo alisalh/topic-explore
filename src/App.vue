@@ -8,7 +8,7 @@
                              :docVerData="docVerData"
                              class="bl-card-shadow"></parallel-coordinate>
         <div class="right-panel bl-card-shadow">
-          <!--           <radar-chart-wrapper :fileGroup="fileGroup"
+<!--                  <radar-chart-wrapper :fileGroup="fileGroup"
                                :prevVer='prevVer'></radar-chart-wrapper> -->
           <diff-files-wrapper :fileGroup="fileGroup"
                               :prevVer="prevVer"

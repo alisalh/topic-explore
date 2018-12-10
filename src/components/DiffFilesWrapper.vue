@@ -150,6 +150,22 @@ export default {
         })
       })
     })
+    this.$bus.$on('cluster-selected', ids => {
+      if (ids === null) {
+        console.log('reset')
+        this.filteredDiffFileGroup = this.diffFileGroup.slice()
+        return
+      }
+      console.log('cluster-selected', ids, this.diffFileGroup)
+      this.diffFileGroup.forEach((group, groupId) => {
+        this.$set(this.filteredDiffFileGroup, groupId, {
+          ...group,
+          docs: group.docs.filter(doc =>
+            doc['fileIds'].some(id => ids.indexOf(id) !== -1)
+          )
+        })
+      })
+    })
   }
 }
 </script>

@@ -40,6 +40,7 @@ export default {
         .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
           this.clusterNum = clusterNum
           // console.log(this.clusterNum)
+          console.log('chartData:', chartData)
           this.draw(chartData)
         })
         .catch(e => {
