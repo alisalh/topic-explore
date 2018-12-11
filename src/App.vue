@@ -34,7 +34,7 @@
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
-      <comment-charts-wrapper :docData="docVerData&&docVerData.files"></comment-charts-wrapper>
+      <comment-charts-wrapper :docData="docVerData&&docVerData.files" :topicData="topicData"></comment-charts-wrapper>
     </div>
   </div>
 </template>
