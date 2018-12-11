@@ -12,8 +12,13 @@
       </div>
       <div class="content">
         <div class="comment"
-             v-for="comment in selectedDoc.commentArr">
-          {{comment}}
+             v-if="processedComments"
+             v-for="comment in processedComments">
+          <div v-for="token in comment"
+               :style="getWordStyle(token)"
+               class="token">
+            {{token.word}}
+          </div>
         </div>
       </div>
     </div>
@@ -47,48 +52,68 @@ export default {
         identifiers: ''
       },
       selectedTopicKeywords: null,
-      uniqueIdentifiers: []
+      uniqueIdentifiers: [],
+      processedComments: null
     }
   },
   methods: {
     docSelectedHandler (doc) {
       console.log(doc)
       this.selectedDoc = doc
-      this.uniqueIdentifiers = this.getIdCnt(doc.identifiers)
-      console.log(this.uniqueIdentifiers)
+      this.getIdCnt(doc.identifiers).then(data => {
+        this.uniqueIdentifiers = data
+      })
+      // 获得处理后的评论
+      this.$axios
+        .post(
+          'http://localhost:5000/topic/getPreprocessedComments',
+          this.selectedDoc.commentArr
+        )
+        .then(({ data }) => {
+          // console.log(data)
+          this.processedComments = data
+        })
     },
     getWordStyle (word) {
+      // console.log(word)
       if (!this.selectedTopicKeywords) return null
-      const styleObj = {
-        fontWeight: this.fontWeightScale(word.cnt)
-      }
+      const styleObj = {}
+      // 将单词出现次数映射为字体粗细
+      word.hasOwnProperty('cnt') &&
+        (styleObj['fontWeight'] = this.fontWeightScale(word.cnt))
+      // 若单词是主题关键词，则将关键词权重映射为背景色
       const keyword = this.selectedTopicKeywords.find(
         d => d.keyword === word.identifier
       )
-      if (keyword) {
-        styleObj['backgroundColor'] = this.bgColorScale(keyword.cost)
-      }
+      keyword &&
+        (styleObj['backgroundColor'] = this.bgColorScale(keyword.cost))
       return styleObj
     },
     getIdCnt (idStr) {
-      const ids = idStr.split(' ')
-      const id2Cnt = {}
-      ids.forEach(id => {
-        if (!id2Cnt[id]) id2Cnt[id] = 1
-        else id2Cnt[id]++
-      })
-      // 对象转数组
-      let val = null
-
-      let resArr = []
-      Object.keys(id2Cnt).forEach(key => {
-        val = id2Cnt[key]
-        resArr.push({
-          identifier: key,
-          cnt: val
+      return this.$axios
+        .post('http://localhost:5000/topic/getPreprocessedIds', idStr)
+        .then(({ data }) => {
+          /*           if (ids.length !== data.length) {
+            console.error('different size')
+            console.error(ids, data)
+          } */
+          const id2Cnt = {}
+          data.forEach((val, idx) => {
+            if (!id2Cnt.hasOwnProperty(val)) id2Cnt[val] = 1
+            else id2Cnt[val]++
+          })
+          // 对象转数组
+          let val = null
+          let resArr = []
+          Object.keys(id2Cnt).forEach(key => {
+            val = id2Cnt[key]
+            resArr.push({
+              identifier: key,
+              cnt: val
+            })
+          })
+          return Promise.resolve(resArr)
         })
-      })
-      return resArr
     }
   },
   components: {
@@ -171,6 +196,11 @@ export default {
     .content {
       .comment {
         border-bottom: 1px solid black;
+        .token {
+          display: inline-block;
+          margin: 0 5px;
+          border-radius: 5px;
+        }
       }
     }
   }
@@ -179,6 +209,7 @@ export default {
       .variable {
         display: inline-block;
         margin: 0 5px;
+        border-radius: 5px;
       }
     }
   }

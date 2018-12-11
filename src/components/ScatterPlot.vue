@@ -36,7 +36,7 @@ export default {
     fileGroup () {
       const allDocs = this.getDocData(this.fileGroup)
       this.$axios
-        .post('http://localhost:5000/topic/', allDocs)
+        .post('http://localhost:5000/topic/getClusterDrInfo', allDocs)
         .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
           this.clusterNum = clusterNum
           // console.log(this.clusterNum)

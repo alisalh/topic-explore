@@ -35,7 +35,8 @@ export default {
       selectedFile: null,
       sizeColorMap: null,
       funcNumColorMap: null,
-      fileBubbleChartIdxArr: [0, 1]
+      fileBubbleChartIdxArr: [0, 1],
+      mutation: false
     }
   },
   props: ['fileGroup', 'prevVer', 'topicColormap'],
@@ -117,9 +118,12 @@ export default {
   },
   computed: {
     allDiffFiles () {
-      return this.filteredDiffFileGroup.reduce((a, b) => ({
-        docs: a.docs.concat(b.docs)
-      }), { docs: [] }).docs
+      return this.filteredDiffFileGroup.reduce(
+        (a, b) => ({
+          docs: a.docs.concat(b.docs)
+        }),
+        { docs: [] }
+      ).docs
     }
   },
   methods: {
@@ -138,6 +142,7 @@ export default {
   },
   created () {
     this.$bus.$on('topic-selected', selectedTopic => {
+      if (this.mutation) return
       this.diffFileGroup.forEach((group, groupId) => {
         this.$set(this.filteredDiffFileGroup, groupId, {
           ...group,
@@ -154,9 +159,11 @@ export default {
       if (ids === null) {
         console.log('reset')
         this.filteredDiffFileGroup = this.diffFileGroup.slice()
+        this.mutation = false
         return
       }
       console.log('cluster-selected', ids, this.diffFileGroup)
+      this.mutation = true
       this.diffFileGroup.forEach((group, groupId) => {
         this.$set(this.filteredDiffFileGroup, groupId, {
           ...group,
