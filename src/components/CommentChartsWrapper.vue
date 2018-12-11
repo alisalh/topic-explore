@@ -4,7 +4,7 @@
                     @doc-selected='docSelectedHandler'></file-bar-chart>
     <div class="selected-file-wrapper">
       <div class="title">当前选中文件: </div>
-      <div class="selected-file">{{relFilename}}</div>
+      <div class="content">{{relFilename}}</div>
     </div>
     <div class="comment-wrapper">
       <div class="title">
@@ -141,17 +141,19 @@ export default {
   .file-bar-chart {
     flex: 2;
   }
-  .selected-file-wrapper{
-    padding: 10px;
-    .title {
-      font-weight: bold;
-      margin-bottom: 10px;
-      flex: none;
+  .selected-file-wrapper {
+    flex: none;
+    .content {
+      word-break: break-all;
     }
   }
   .comment-wrapper,
   .identifier-wrapper {
     flex: 1;
+  }
+  .selected-file-wrapper,
+  .comment-wrapper,
+  .identifier-wrapper {
     display: flex;
     flex-direction: column;
     padding: 10px;
