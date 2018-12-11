@@ -49,6 +49,7 @@ export default {
     },
     rowClickHandler (row) {
       this.$emit('file-selected', row)
+      this.$bus.$emit('file-selected', row.data[0])
     }
   },
   mounted () {

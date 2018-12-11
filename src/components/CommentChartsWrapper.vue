@@ -2,6 +2,10 @@
   <div class='comment-charts-wrapper'>
     <file-bar-chart :docData="docData"
                     @doc-selected='docSelectedHandler'></file-bar-chart>
+    <div class="selected-file-wrapper">
+      <div class="title">当前选中文件: </div>
+      <div class="selected-file">{{relFilename}}</div>
+    </div>
     <div class="comment-wrapper">
       <div class="title">
         注释信息(#{{selectedDoc&&selectedDoc.commentArr.length}})
@@ -15,7 +19,7 @@
     </div>
     <div class="identifier-wrapper">
       <div class="title">
-        变量信息(#{{selectedDoc&&selectedDoc.identifiers.split(' ').length}})
+        变量信息(#{{uniqueIdentifiers.length}})
       </div>
       <div class="content">
         <div v-for="word in uniqueIdentifiers"
@@ -23,15 +27,16 @@
              class="variable">
           {{word.identifier}}
         </div>
-        {{selectedDoc&&selectedDoc.identifiers}}
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import FileBarChart from './FileBarChart.vue'
 import * as d3 from 'd3'
+import { getRelPathWithVersion } from '../utils/index.js'
+import FileBarChart from './FileBarChart.vue'
+
 export default {
   name: 'component_name',
   props: ['docData', 'topicData'],
@@ -60,7 +65,9 @@ export default {
       const keyword = this.selectedTopicKeywords.find(
         d => d.keyword === word.identifier
       )
-      if (keyword) styleObj['backgroundColor'] = this.bgColorScale(keyword.cost)
+      if (keyword) {
+        styleObj['backgroundColor'] = this.bgColorScale(keyword.cost)
+      }
       return styleObj
     },
     getIdCnt (idStr) {
@@ -102,6 +109,12 @@ export default {
         .scaleQuantize()
         .range([100, 200, 300, 400, 500, 600, 700, 800, 900])
         .domain([0, maxVal])
+    },
+    relFilename () {
+      return (
+        this.selectedDoc.filename &&
+        getRelPathWithVersion(this.selectedDoc.filename)
+      )
     }
   },
   created () {
@@ -112,6 +125,9 @@ export default {
           keyword: d.keyword,
           cost: d.weight
         }))
+    })
+    this.$bus.$on('file-selected', selectedDoc => {
+      this.docSelectedHandler(selectedDoc)
     })
   }
 }
@@ -124,6 +140,14 @@ export default {
   flex-direction: column;
   .file-bar-chart {
     flex: 2;
+  }
+  .selected-file-wrapper{
+    padding: 10px;
+    .title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      flex: none;
+    }
   }
   .comment-wrapper,
   .identifier-wrapper {

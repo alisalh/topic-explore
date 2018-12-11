@@ -2,8 +2,6 @@
   <div class='file-bar-chart'
        ref='root'>
     <div class="title">主题相关文件(#{{filteredDocData.length}})</div>
-    <div class="title">当前选中文件: </div>
-    <div class="selected-file">{{selectedDocName}}</div>
     <div class="content">
       <div v-for="doc in filteredDocData"
            :style='getRectStyle(doc)'
@@ -24,8 +22,8 @@ export default {
       filteredDocData: [],
       height: 0,
       width: 0,
-      paddingLeft: 20,
-      selectedDocName: null
+      paddingLeft: 20
+      // selectedDocName: null
     }
   },
   computed: {
@@ -45,7 +43,7 @@ export default {
       }
     },
     rectClickHandler (doc) {
-      this.selectedDocName = getRelPathWithVersion(doc.filename)
+      // this.selectedDocName = getRelPathWithVersion(doc.filename)
       this.$emit('doc-selected', doc)
     }
   },
@@ -76,7 +74,7 @@ export default {
   .title {
     font-weight: bold;
     flex: none;
-    // margin-bottom: 10px;
+    margin-bottom: 10px;
   }
   padding: 10px 10px 0 10px;
   .content {
