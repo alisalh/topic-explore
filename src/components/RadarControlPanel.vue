@@ -23,7 +23,7 @@
                @click='resetBtnClickHandler'>重置</el-button>
     <div class="dominant-topic-control-panel">
       <span class="title">Dominant Topic：</span>
-      <span>null</span>
+      <span>{{selectedTopic}}</span>
     </div>
   </div>
 </template>
@@ -39,7 +39,8 @@ export default {
         value: 0,
         topicId: i,
         isSelected: false
-      }))
+      })),
+      selectedTopic: null
     }
   },
   methods: {
@@ -49,6 +50,7 @@ export default {
         .forEach(d => (d.isSelected = false))
       selectedTopic.isSelected = true
       this.$bus.$emit('topic-selected', selectedTopic.topicId)
+      this.selectedTopic = selectedTopic.topicId
     },
     globalClickHandler () {
       console.log('global click')
@@ -56,6 +58,7 @@ export default {
     resetBtnClickHandler () {
       this.sliderData.forEach(d => (d.isSelected = false))
       this.$bus.$emit('topic-selected', -1)
+      this.selectedTopic = null
     }
   }
 }
@@ -73,9 +76,9 @@ export default {
     .slider-control-wrapper {
       display: flex;
       align-items: center;
-      .cluster-idx{
+      .cluster-idx {
         // flex:none;
-        flex:0 0 20px;
+        flex: 0 0 20px;
         text-align: right;
         margin-right: 10px;
       }
@@ -97,10 +100,10 @@ export default {
     }
   }
   .dominant-topic-control-panel {
-    margin:10px;
+    margin: 10px;
     flex: none;
     border-top: 1px solid black;
-    padding-top:5px;
+    padding-top: 5px;
     .title {
       font-weight: bold;
     }

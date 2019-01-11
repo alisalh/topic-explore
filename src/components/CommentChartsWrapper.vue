@@ -174,7 +174,7 @@ export default {
   }
   .comment-wrapper,
   .identifier-wrapper {
-    flex: 1;
+    flex: 2;
   }
   .selected-file-wrapper,
   .comment-wrapper,

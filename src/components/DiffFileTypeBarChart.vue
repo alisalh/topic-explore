@@ -42,17 +42,17 @@ export default {
       var g = svg
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-      var x = d3
+      var y = d3
         .scaleBand()
-        .rangeRound([0, width])
-        .padding(0.1)
-      var y = d3.scaleLinear().rangeRound([height, 0])
-      x.domain(
+        .rangeRound([0, height])
+        .padding(0.3)
+      var x = d3.scaleLinear().rangeRound([0, width])
+      y.domain(
         data.map(function (d) {
           return d.type
         })
       )
-      y.domain([
+      x.domain([
         0,
         d3.max(data, function (d) {
           return d.num
@@ -73,15 +73,15 @@ export default {
         .enter()
         .append('rect')
         .attr('class', 'bar')
-        .attr('x', function (d) {
-          return x(d.type)
-        })
+      /*         .attr('x', function (d) {
+          return x(d.num)
+        }) */
         .attr('y', function (d) {
-          return y(d.num)
+          return y(d.type)
         })
-        .attr('width', x.bandwidth())
-        .attr('height', function (d) {
-          return height - y(d.num)
+        .attr('height', y.bandwidth())
+        .attr('width', function (d) {
+          return x(d.num)
         })
         .attr('fill', d => colorMap(d.type))
     }
