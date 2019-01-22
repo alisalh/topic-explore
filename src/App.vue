@@ -8,10 +8,11 @@
                              :docVerData="docVerData"
                              class="bl-card-shadow"></parallel-coordinate>
         <div class="right-panel bl-card-shadow">
-          <!--           <radar-chart-wrapper :fileGroup="fileGroup"
+<!--                  <radar-chart-wrapper :fileGroup="fileGroup"
                                :prevVer='prevVer'></radar-chart-wrapper> -->
           <diff-files-wrapper :fileGroup="fileGroup"
-                              :prevVer="prevVer"></diff-files-wrapper>
+                              :prevVer="prevVer"
+                              :topicColormap="topicColormap"></diff-files-wrapper>
           <radar-control-panel class="bl-card"></radar-control-panel>
         </div>
       </div>
@@ -33,7 +34,7 @@
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
-      <comment-charts-wrapper :docData="docVerData&&docVerData.files"></comment-charts-wrapper>
+      <comment-charts-wrapper :docData="docVerData&&docVerData.files" :topicData="topicData"></comment-charts-wrapper>
     </div>
   </div>
 </template>

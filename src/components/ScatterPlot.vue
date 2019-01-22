@@ -36,10 +36,11 @@ export default {
     fileGroup () {
       const allDocs = this.getDocData(this.fileGroup)
       this.$axios
-        .post('http://localhost:5000/topic/', allDocs)
+        .post('http://localhost:5000/topic/getClusterDrInfo', allDocs)
         .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
           this.clusterNum = clusterNum
           // console.log(this.clusterNum)
+          console.log('chartData:', chartData)
           this.draw(chartData)
         })
         .catch(e => {
@@ -81,11 +82,13 @@ export default {
           .attr('transform', `translate(0,${height - margin.bottom})`)
           .call(d3.axisBottom(x))
           .call(g => g.select('.domain').remove())
+          .call(g => g.selectAll('text').remove())
       const yAxis = g =>
         g
           .attr('transform', `translate(${margin.left},0)`)
           .call(d3.axisLeft(y))
           .call(g => g.select('.domain').remove())
+          .call(g => g.selectAll('text').remove())
       svg.append('g').call(xAxis)
       svg.append('g').call(yAxis)
       // 添加marker形状定义

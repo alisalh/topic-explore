@@ -38,6 +38,7 @@ export default {
       var width = this.svgWidth - margin.left - margin.right
       var height = this.svgHeight - margin.top - margin.bottom
       function path (d) {
+        console.log(d)
         return line(
           dimensions.map(function (dim) {
             // return [x[dim](d['Topic_Contribution'][dim].percent), y(dim)]
