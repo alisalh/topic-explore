@@ -3,38 +3,39 @@
     <div class="left-panel">
       <div class="first-row">
         <sunburst :topicColormap="topicColormap"
-                  class="bl-card-shadow"></sunburst>
+          class="bl-card-shadow"></sunburst>
         <parallel-coordinate :topicData="topicData"
-                             :docVerData="docVerData"
-                             class="bl-card-shadow"></parallel-coordinate>
+          :docVerData="docVerData"
+          class="bl-card-shadow"></parallel-coordinate>
         <div class="right-panel bl-card-shadow">
-<!--                  <radar-chart-wrapper :fileGroup="fileGroup"
-                               :prevVer='prevVer'></radar-chart-wrapper> -->
+          <!--                  <radar-chart-wrapper :fileGroup="fileGroup"
+          :prevVer='prevVer'></radar-chart-wrapper>-->
           <diff-files-wrapper :fileGroup="fileGroup"
-                              :prevVer="prevVer"
-                              :topicColormap="topicColormap"></diff-files-wrapper>
+            :prevVer="prevVer"
+            :topicColormap="topicColormap"></diff-files-wrapper>
           <radar-control-panel class="bl-card"></radar-control-panel>
         </div>
       </div>
       <div class="second-row">
         <line-chart :topicColormap="topicColormap"
-                    :topicsGroup="topicsGroup"
-                    :versions="versions"
-                    class="bl-card-shadow"></line-chart>
+          :topicsGroup="topicsGroup"
+          :versions="versions"
+          class="bl-card-shadow"></line-chart>
         <div class="scatter-xx-wrapper">
           <bubble-chart :topicColormap="topicColormap"
-                        class="bl-card-shadow"></bubble-chart>
+            class="bl-card-shadow"></bubble-chart>
           <word-cloud :topicData="topicData"
-                      class="bl-card-shadow"></word-cloud>
+            class="bl-card-shadow"></word-cloud>
         </div>
         <scatter-plot class="bl-card-shadow"
-                      :fileGroup="fileGroup"
-                      :topicData="topicData"
-                      :prevVer="prevVer"></scatter-plot>
+          :fileGroup="fileGroup"
+          :topicData="topicData"
+          :prevVer="prevVer"></scatter-plot>
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
-      <comment-charts-wrapper :docData="docVerData&&docVerData.files" :topicData="topicData"></comment-charts-wrapper>
+      <comment-charts-wrapper :docData="docVerData&&docVerData.files"
+        :topicData="topicData"></comment-charts-wrapper>
     </div>
   </div>
 </template>
@@ -42,12 +43,12 @@
 <script>
 import * as d3 from 'd3'
 import _ from 'lodash'
-import HelloWorld from './components/HelloWorld.vue'
+// import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart'
-import Sunburst from './components/Sunburst.vue'
+import Sunburst from './components/SunBurst.vue'
 import WordCloud from './components/WordCloud.vue'
 import BubbleChart from './components/BubbleChart.vue'
-import RadarChartWrapper from './components/RadarChartWrapper.vue'
+// import RadarChartWrapper from './components/RadarChartWrapper.vue'
 import DiffFilesWrapper from './components/DiffFilesWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
@@ -57,7 +58,7 @@ import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
 export default {
   name: 'app',
-  data () {
+  data() {
     return {
       topicData: null,
       docVerData: null,
@@ -67,12 +68,12 @@ export default {
     }
   },
   components: {
-    HelloWorld,
+    // HelloWorld,
     LineChart,
     Sunburst,
     WordCloud,
     BubbleChart,
-    RadarChartWrapper,
+    // RadarChartWrapper,
     RadarControlPanel,
     CommentChartsWrapper,
     ScatterPlot,
@@ -80,7 +81,7 @@ export default {
     DiffFilesWrapper
   },
   computed: {
-    topicColormap () {
+    topicColormap() {
       if (this.topicData === null) return null
       const domain = Array(this.topicData.length)
         .fill(null)
@@ -90,7 +91,7 @@ export default {
         .domain(domain)
         .range(TOPIC_COLOR)
     },
-    versions () {
+    versions() {
       if (this.docVerData) return this.docVerData.versions
       return null
     }
@@ -99,7 +100,7 @@ export default {
     /**
      * 根据选中的版本获取将文件分为：修改的、新增的、删除的
      */
-    groupFileByStatus (curVer) {
+    groupFileByStatus(curVer) {
       const docs = this.docVerData.files
       const versions = this.docVerData.versions
       const prevVer = this.getRelVersion(versions, curVer, -1)
@@ -122,11 +123,11 @@ export default {
         editDocsObj
       }
     },
-    getRelVersion (versions, curVer, step) {
+    getRelVersion(versions, curVer, step) {
       const idx = versions.indexOf(curVer)
       return versions[idx + step]
     },
-    verCompare ({ key: a }, { key: b }) {
+    verCompare({ key: a }, { key: b }) {
       let arr = a.split('.').map(d => parseInt(d))
       let brr = b.split('.').map(d => parseInt(d))
       for (let i = 0, len = arr.length; i < len; i++) {
@@ -137,7 +138,7 @@ export default {
         }
       }
     },
-    getTopicsGroup (rawData) {
+    getTopicsGroup(rawData) {
       rawData.forEach(
         d => (d['Dominant_Topic'] = parseInt(d['Dominant_Topic']))
       )
@@ -151,7 +152,7 @@ export default {
       return topicsGroup
     }
   },
-  created () {
+  created() {
     this.$bus.$on('version-selected', selectedVer => {
       this.fileGroup = this.groupFileByStatus(selectedVer)
     })

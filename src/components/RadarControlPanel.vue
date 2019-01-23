@@ -1,26 +1,27 @@
 <template>
   <div class='radar-control-panel'
-       @click='globalClickHandler'>
+    @click='globalClickHandler'>
     <div class="topic-slider-control-panel">
       <div v-for="(item,idx) in sliderData"
-           class='slider-control-wrapper'>
+        :key="item.id"
+        class='slider-control-wrapper'>
         <div class="cluster-idx">{{idx}}</div>
         <div class="legend"
-             :style="{background:item.color}"
-             @click='legendClickHandler(item)'
-             :class='{selected:item.isSelected}'>
+          :style="{background:item.color}"
+          @click='legendClickHandler(item)'
+          :class='{selected:item.isSelected}'>
         </div>
         <el-slider v-model="item.value"
-                   :min="0"
-                   :max="1"
-                   class='topic-slider'
-                   :step="0.1"></el-slider>
+          :min="0"
+          :max="1"
+          class='topic-slider'
+          :step="0.1"></el-slider>
       </div>
     </div>
     <el-button type="info"
-               plain
-               class='reset-btn'
-               @click='resetBtnClickHandler'>重置</el-button>
+      plain
+      class='reset-btn'
+      @click='resetBtnClickHandler'>重置</el-button>
     <div class="dominant-topic-control-panel">
       <span class="title">Dominant Topic：</span>
       <span>{{selectedTopic}}</span>
@@ -32,7 +33,7 @@
 import { TOPIC_COLOR } from '../utils/constant.js'
 export default {
   name: 'component_name',
-  data () {
+  data() {
     return {
       sliderData: TOPIC_COLOR.map((d, i) => ({
         color: d,
@@ -44,7 +45,7 @@ export default {
     }
   },
   methods: {
-    legendClickHandler (selectedTopic) {
+    legendClickHandler(selectedTopic) {
       this.sliderData
         .filter(d => d !== selectedTopic)
         .forEach(d => (d.isSelected = false))
@@ -52,10 +53,10 @@ export default {
       this.$bus.$emit('topic-selected', selectedTopic.topicId)
       this.selectedTopic = selectedTopic.topicId
     },
-    globalClickHandler () {
+    globalClickHandler() {
       console.log('global click')
     },
-    resetBtnClickHandler () {
+    resetBtnClickHandler() {
       this.sliderData.forEach(d => (d.isSelected = false))
       this.$bus.$emit('topic-selected', -1)
       this.selectedTopic = null
