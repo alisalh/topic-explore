@@ -71,7 +71,7 @@ export default {
         .attr('class', 'hierarchy-node')
         .attr('d', arc)
         .attr('id', d => d.data.filename)
-        .style('stroke', d => {
+        .style('stroke', function() {
           return 'black'
         })
         .style('fill', d => {

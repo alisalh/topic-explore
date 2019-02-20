@@ -1,36 +1,41 @@
 <template>
   <div id="app">
     <div class="left-panel">
+      <radar-control-panel class="bl-card-shadow"></radar-control-panel>
+        <word-cloud :topicData="topicData"
+            class="bl-card-shadow"></word-cloud>
+    </div>
+    <div class="center-panel">
       <div class="first-row">
-        <sunburst :topicColormap="topicColormap"
-          class="bl-card-shadow"></sunburst>
-        <parallel-coordinate :topicData="topicData"
-          :docVerData="docVerData"
-          class="bl-card-shadow"></parallel-coordinate>
-        <div class="right-panel bl-card-shadow">
-          <!--                  <radar-chart-wrapper :fileGroup="fileGroup"
-          :prevVer='prevVer'></radar-chart-wrapper>-->
-          <diff-files-wrapper :fileGroup="fileGroup"
-            :prevVer="prevVer"
-            :topicColormap="topicColormap"></diff-files-wrapper>
-          <radar-control-panel class="bl-card"></radar-control-panel>
-        </div>
-      </div>
-      <div class="second-row">
         <line-chart :topicColormap="topicColormap"
           :topicsGroup="topicsGroup"
           :versions="versions"
           class="bl-card-shadow"></line-chart>
-        <div class="scatter-xx-wrapper">
+        <!-- <div class="scatter-xx-wrapper">
           <bubble-chart :topicColormap="topicColormap"
             class="bl-card-shadow"></bubble-chart>
           <word-cloud :topicData="topicData"
             class="bl-card-shadow"></word-cloud>
-        </div>
+        </div> -->
         <scatter-plot class="bl-card-shadow"
           :fileGroup="fileGroup"
           :topicData="topicData"
           :prevVer="prevVer"></scatter-plot>
+      </div>
+      <div class="second-row">
+        <sunburst :topicColormap="topicColormap"
+          class="bl-card-shadow"></sunburst>
+        <div class="panel bl-card-shadow">
+        </div>
+        <!-- <parallel-coordinate :topicData="topicData"
+          :docVerData="docVerData"
+          class="bl-card-shadow"></parallel-coordinate>
+        <div class="right-panel bl-card-shadow">
+          <diff-files-wrapper :fileGroup="fileGroup"
+            :prevVer="prevVer"
+            :topicColormap="topicColormap"></diff-files-wrapper>
+          <radar-control-panel class="bl-card"></radar-control-panel>
+        </div> -->
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
@@ -47,13 +52,13 @@ import _ from 'lodash'
 import LineChart from './components/LineChart'
 import Sunburst from './components/SunBurst.vue'
 import WordCloud from './components/WordCloud.vue'
-import BubbleChart from './components/BubbleChart.vue'
+// import BubbleChart from './components/BubbleChart.vue'
 // import RadarChartWrapper from './components/RadarChartWrapper.vue'
-import DiffFilesWrapper from './components/DiffFilesWrapper.vue'
+// import DiffFilesWrapper from './components/DiffFilesWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
-import ParallelCoordinate from './components/ParallelCoordinate.vue'
+// import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
 export default {
@@ -72,13 +77,13 @@ export default {
     LineChart,
     Sunburst,
     WordCloud,
-    BubbleChart,
+    // BubbleChart,
     // RadarChartWrapper,
     RadarControlPanel,
     CommentChartsWrapper,
     ScatterPlot,
-    ParallelCoordinate,
-    DiffFilesWrapper
+    // ParallelCoordinate,
+    // DiffFilesWrapper
   },
   computed: {
     topicColormap() {
@@ -171,7 +176,7 @@ export default {
 html {
   height: 100%;
   body {
-    height: 100%;
+    height: 90%;
   }
 }
 #app {
@@ -184,63 +189,78 @@ html {
   color: #2c3e50;
   // margin-top: 60px;
   display: flex;
-  .left-panel {
-    margin-right: 10px;
+  .left-panel{
+    flex:0.8;
+    margin-right:5px;
+    display: flex;
+    flex-direction: column;
+    .radar-control-panel{
+      flex:5;
+    }
+    .word-cloud{
+      flex:1.5;
+    }
+  }
+  .center-panel {
+    margin-right: 5px;
     display: flex;
     flex-direction: column;
     flex: 5;
     .first-row {
-      flex: 1.3;
-      display: flex;
-      .sunburst {
-        flex: 0.8;
-        margin-right: 10px;
-      }
-      .parallel-coordinate {
-        flex: 0.5;
-        margin-right: 10px;
-      }
-      .right-panel {
-        flex: 1.2;
-        display: flex;
-        padding: 10px;
-        .radar-chart-wrapper {
-          flex: 3;
-          margin-right: 10px;
-        }
-        .diff-files-wrapper {
-          flex: 3;
-          margin-right: 10px;
-        }
-        .radar-control-panel {
-          flex: 1;
-        }
-      }
-      margin-bottom: 10px;
-    }
-    .second-row {
       flex: 1;
       display: flex;
       .line-chart {
-        flex: 2;
-        margin-right: 10px;
+        flex: 1.5;
+        margin-right: 5px;
       }
-      .scatter-xx-wrapper {
-        flex: 0.8;
-        margin-right: 10px;
-        display: flex;
-        flex-direction: column;
-        .word-cloud,
-        .bubble-chart {
-          flex: 1;
-        }
-        .bubble-chart {
-          margin-bottom: 10px;
-        }
-      }
+      // .scatter-xx-wrapper {
+      //   flex: 0.8;
+      //   margin-right: 10px;
+      //   display: flex;
+      //   flex-direction: column;
+      //   .word-cloud,
+      //   .bubble-chart {
+      //     flex: 1;
+      //   }
+      //   .bubble-chart {
+      //     margin-bottom: 10px;
+      //   }
+      // }
       .scatter-plot {
         flex: 1;
       }
+    }
+    .second-row {
+      flex: 1.3;
+      display: flex;
+      margin-top: 5px;
+      .sunburst {
+        flex: 1;
+        margin-right: 5px;
+      }
+      .panel{
+        flex:1.5;
+      }
+      // .parallel-coordinate {
+      //   flex: 0.5;
+      //   margin-right: 10px;
+      // }
+      // .right-panel {
+      //   flex: 1.2;
+      //   display: flex;
+      //   padding: 10px;
+      //   .radar-chart-wrapper {
+      //     flex: 3;
+      //     margin-right: 10px;
+      //   }
+      //   .diff-files-wrapper {
+      //     flex: 3;
+      //     margin-right: 10px;
+      //   }
+      //   .radar-control-panel {
+      //     flex: 1;
+      //   }
+      // }
     }
   }
   .right-panel {
