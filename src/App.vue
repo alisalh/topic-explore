@@ -1,9 +1,11 @@
 <template>
   <div id="app">
     <div class="left-panel">
-      <radar-control-panel class="bl-card-shadow"></radar-control-panel>
-        <word-cloud :topicData="topicData"
-            class="bl-card-shadow"></word-cloud>
+      <radar-control-panel class="bl-card-shadow"
+        :topicsGroup="topicsGroup"
+        :versions="versions"></radar-control-panel>
+      <word-cloud :topicData="topicData"
+        class="bl-card-shadow"></word-cloud>
     </div>
     <div class="center-panel">
       <div class="first-row">
@@ -196,6 +198,7 @@ html {
     flex-direction: column;
     .radar-control-panel{
       flex:5;
+      margin-bottom: 5px;
     }
     .word-cloud{
       flex:1.5;
