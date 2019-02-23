@@ -15,12 +15,13 @@
       </el-select>
     </div>
     <div class="topic-select-control-panel">
-      <div v-for="(item,idx) in sliderData"
+      <div v-for="item in sliderData"
         :key="item.id"
         class='select-control-wrapper'>
-        <div class="topic-idx">{{idx}}</div>
+        <div class="topic-idx"
+          :style="{opacity:item.opacity}">{{item.topicId}}</div>
         <div class="legend"
-          :style="{background:item.color, width:legendWdith[idx]+'px'}"
+          :style="{background:item.color, width:item.value+'px'}"
           @click='legendClickHandler(item)'
           :class='{selected:item.isSelected}'>
         </div>
@@ -51,13 +52,14 @@ export default {
     return {
       sliderData: TOPIC_COLOR.map((d, i) => ({
         color: d,
+        opacity: 1,
         value: 0,
         topicId: i,
         isSelected: false
       })),
       selectedTopic: null,
       selectedVersion: 'all',
-      legendWdith: [],
+      // legendWdith: [],
       options:[{value:0, label: 'all'}],
     }
   },
@@ -76,28 +78,45 @@ export default {
     },
     selectTrigger(val){
       this.selectedVersion = val
-      for(var i=0;i<this.legendWdith.length;i++)
-        this.legendWdith[i] = 0
+      this.sliderData.forEach(d => {
+        d.value = 0
+        d.opacity = 1
+      })
       this.sliderData.forEach(d => (d.isSelected = false))
       this.$bus.$emit('topic-selected', -1)
       if(this.selectedVersion === 'all') {
-        this.topicsGroup.forEach(d => {
-          this.legendWdith[d.key]=d.val.length
+        this.sliderData.sort(function(a, b){
+          return a.topicId - b.topicId
         })
+        this.topicsGroup.forEach(d => {
+          this.sliderData[d.key].value=d.val.length
+        }) 
       }
-      else
+      else {
         this.topicsGroup.forEach(topic => {
           topic.val.forEach(d => {
             if(this.selectedVersion === d.key)
-              this.legendWdith[topic.key] += d.val.length
+              this.sliderData[topic.key].value += d.val.length
           })
         })
+        this.sliderData.sort(function(a, b){
+          return b.value - a.value
+        })
+      }
+      this.sliderData.forEach(d => {
+        if(d.value === 0)
+          d.opacity = 0.2
+      })
       var widthScale =  d3
         .scaleLinear()
-        .domain([0, d3.max(this.legendWdith)])
+        .domain([0, d3.max(this.sliderData, d => {
+          return d.value
+        })])
         .range([0, 120])
-      for(var j=0;j<this.legendWdith.length;j++)
-        this.legendWdith[j] = widthScale(this.legendWdith[j]) 
+      this.sliderData.forEach(d => {
+        d.value = widthScale(d.value) 
+      })
+      
     }
     // resetBtnClickHandler() {
     //   this.sliderData.forEach(d => (d.isSelected = false))
@@ -121,7 +140,7 @@ export default {
             .domain([0, this.versions.length])
             .range([0, 120])
           this.topicsGroup.forEach(d => {
-            this.legendWdith[d.key]=widthScale(d.val.length)
+            this.sliderData[d.key].value=widthScale(d.val.length)
           })
         }
       })

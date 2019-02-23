@@ -68,6 +68,9 @@ export default {
         this.selectedCluster = null
         this.$bus.$emit('cluster-selected', null)
         resetStatus()
+        circle.on('mouseleave', function() {
+          resetStatus()
+        })
       })
       const x = d3
         .scaleLinear()
