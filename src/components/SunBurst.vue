@@ -24,7 +24,9 @@ export default {
   props: ['topicColormap'],
   methods: {
     draw (data) {
+      this.$refs.root.innerHTML = ''
       let root = d3.hierarchy(data)
+      // 后序遍历, value相加, 详情见https://github.com/xswei/d3-hierarchy
       root.sum(d => (d.children ? 0 : 1))
       let svg = d3
         .select(this.$refs.root)
@@ -110,6 +112,7 @@ export default {
         .attr('opacity', 0.1)
     })
     this.$bus.$on('cluster-selected', ids => {
+      console.log('ids: ' + ids)
       this.resetStatus()
       if (ids === null) {
         return

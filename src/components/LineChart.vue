@@ -52,7 +52,7 @@ export default {
               .attr('font-weight', 'bold')
               .attr('class', 'x-label')
               .attr('y', -10)
-              .text('版本号')
+              .text('versions')
           )
           .call(g =>
             g
@@ -74,7 +74,7 @@ export default {
               .attr('x', 3)
               .attr('text-anchor', 'start')
               .attr('font-weight', 'bold')
-              .text('文件数(#)')
+              .text('number of files(#)')
           )
       svg.append('g').call(xAxis)
 
@@ -107,13 +107,13 @@ export default {
         .attr('d', d => {
           return line(d.val)
         })
-        .on('mouseenter', d => {
-          // console.log('hover', d.key)
-        })
-        .on('click', d => {
-          this.$bus.$emit('topic-selected', d.key)
-        })
-      // 画x轴延长线
+        // .on('mouseenter', d => {
+        //   // console.log('hover', d.key)
+        // })
+        // .on('click', d => {
+        //   this.$bus.$emit('topic-selected', d.key)
+        // })
+      // 画版本定位辅助线
       const gridLine = d3.line()
       let xOffset = 0
       svg
@@ -130,7 +130,7 @@ export default {
         .enter()
         .append('path')
         .attr('opacity', 0)
-        .attr('d', (d, i) => {
+        .attr('d', d => {
           xOffset = x(d)
           return gridLine([
             [xOffset, margin.top],
@@ -147,14 +147,14 @@ export default {
           console.log(d)
           this.$bus.$emit('version-selected', d)
         })
-      // 画点
-      const dot = svg.append('g').attr('display', 'none')
-      dot.append('circle').attr('r', 2.5)
-      dot
-        .append('text')
-        .style('font', '10px sans-serif')
-        .attr('text-anchor', 'middle')
-        .attr('y', -8)
+      // // 画点
+      // const dot = svg.append('g').attr('display', 'none')
+      // dot.append('circle').attr('r', 2.5)
+      // dot
+      //   .append('text')
+      //   .style('font', '10px sans-serif')
+      //   .attr('text-anchor', 'middle')
+      //   .attr('y', -8)
     },
     resetLineStatus () {
       this.lineSvg.attr('opacity', 1).attr('stroke-width', this.strokeWidth)

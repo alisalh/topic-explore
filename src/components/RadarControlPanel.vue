@@ -78,10 +78,13 @@ export default {
       this.selectedVersion = val
       for(var i=0;i<this.legendWdith.length;i++)
         this.legendWdith[i] = 0
-      if(this.selectedVersion === 'all')
+      this.sliderData.forEach(d => (d.isSelected = false))
+      this.$bus.$emit('topic-selected', -1)
+      if(this.selectedVersion === 'all') {
         this.topicsGroup.forEach(d => {
           this.legendWdith[d.key]=d.val.length
         })
+      }
       else
         this.topicsGroup.forEach(topic => {
           topic.val.forEach(d => {
