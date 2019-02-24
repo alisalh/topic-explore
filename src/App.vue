@@ -26,6 +26,7 @@
       </div>
       <div class="second-row">
         <sunburst :topicColormap="topicColormap"
+          :docData="docVerData&&docVerData.files"
           class="bl-card-shadow"></sunburst>
         <div class="panel bl-card-shadow">
         </div>
@@ -242,7 +243,7 @@ html {
         margin-right: 5px;
       }
       .panel{
-        flex:1.5;
+        flex:1.3;
       }
       // .parallel-coordinate {
       //   flex: 0.5;
@@ -267,7 +268,7 @@ html {
     }
   }
   .right-panel {
-    flex: 0.8;
+    flex: 1.2;
   }
 }
 </style>

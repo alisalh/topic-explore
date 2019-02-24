@@ -13,7 +13,8 @@ export default {
     return {
       // width: 600,
       height: 0,
-      arcSvg: null
+      arcSvg: null,
+      doc: null
     }
   },
   computed: {
@@ -21,7 +22,7 @@ export default {
       return this.height
     }
   },
-  props: ['topicColormap'],
+  props: ['topicColormap', 'docData'],
   methods: {
     draw (data) {
       this.$refs.root.innerHTML = ''
@@ -104,7 +105,8 @@ export default {
             .style('fill', 'none')
         })
         .on('click', d => {
-          console.log(d)
+          if(d.data.type === 'file')
+            this.$bus.$emit('doc-selected', this.docData[d.data.id])
         })
       node
         .append('text')

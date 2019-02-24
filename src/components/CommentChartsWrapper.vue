@@ -1,22 +1,24 @@
 <template>
   <div class='comment-charts-wrapper'>
-    <file-bar-chart :docData="docData"
-                    @doc-selected='docSelectedHandler'></file-bar-chart>
+    <!-- <file-bar-chart :docData="docData"
+                    @doc-selected='docSelectedHandler'></file-bar-chart> -->
     <div class="selected-file-wrapper">
-      <div class="title">当前选中文件: </div>
+      <div class="title">the selected file: </div>
       <div class="content">{{relFilename}}</div>
     </div>
     <div class="comment-wrapper">
       <div class="title">
-        注释信息(#{{selectedDoc&&selectedDoc.commentArr.length}})
+        comments(#{{selectedDoc&&selectedDoc.commentArr.length}})
       </div>
       <div class="content">
         <div class="comment"
-             v-if="processedComments"
-             v-for="comment in processedComments">
+          v-if="processedComments"
+          v-for="comment in processedComments"
+          :key="comment.id">
           <div v-for="token in comment"
-               :style="getWordStyle(token)"
-               class="token">
+            :key="token.id"
+            :style="getWordStyle(token)"
+            class="token">
             {{token.word}}
           </div>
         </div>
@@ -24,15 +26,20 @@
     </div>
     <div class="identifier-wrapper">
       <div class="title">
-        变量信息(#{{uniqueIdentifiers.length}})
+        variables(#{{uniqueIdentifiers.length}})
       </div>
       <div class="content">
         <div v-for="word in uniqueIdentifiers"
-             :style="getWordStyle(word)"
-             class="variable">
+          :key="word.id"
+          :style="getWordStyle(word)"
+          class="variable">
           {{word.identifier}}
         </div>
       </div>
+    </div>
+    <div class="code-wrapper">
+      <div class="title">code</div>
+      <div class="content"></div>
     </div>
   </div>
 </template>
@@ -40,7 +47,7 @@
 <script>
 import * as d3 from 'd3'
 import { getRelPathWithVersion } from '../utils/index.js'
-import FileBarChart from './FileBarChart.vue'
+// import FileBarChart from './FileBarChart.vue'
 
 export default {
   name: 'component_name',
@@ -98,7 +105,7 @@ export default {
             console.error(ids, data)
           } */
           const id2Cnt = {}
-          data.forEach((val, idx) => {
+          data.forEach(val => {
             if (!id2Cnt.hasOwnProperty(val)) id2Cnt[val] = 1
             else id2Cnt[val]++
           })
@@ -117,7 +124,7 @@ export default {
     }
   },
   components: {
-    FileBarChart
+    //  FileBarChart
   },
   computed: {
     bgColorScale () {
@@ -143,15 +150,24 @@ export default {
     }
   },
   created () {
-    this.$bus.$on('topic-selected', topicIdx => {
+    // this.$bus.$on('topic-selected', topicIdx => {
+    //   this.selectedTopicKeywords = this.topicData
+    //     .find(d => d.index === topicIdx)
+    //     .keywords.map(d => ({
+    //       keyword: d.keyword,
+    //       cost: d.weight
+    //     }))
+    // })
+    // this.$bus.$on('file-selected', selectedDoc => {
+    //   this.docSelectedHandler(selectedDoc)
+    // })
+    this.$bus.$on('doc-selected', selectedDoc => {
       this.selectedTopicKeywords = this.topicData
-        .find(d => d.index === topicIdx)
+        .find(d => d.index === selectedDoc.Dominant_Topic)
         .keywords.map(d => ({
           keyword: d.keyword,
           cost: d.weight
         }))
-    })
-    this.$bus.$on('file-selected', selectedDoc => {
       this.docSelectedHandler(selectedDoc)
     })
   }
@@ -163,22 +179,24 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  .file-bar-chart {
-    flex: 2;
-  }
+  // .file-bar-chart {
+  //   flex: 2;
+  // }
   .selected-file-wrapper {
-    flex: none;
+    flex: 0.8;
     .content {
       word-break: break-all;
     }
   }
   .comment-wrapper,
-  .identifier-wrapper {
-    flex: 2;
+  .identifier-wrapper,
+  .code-wrapper {
+    border-top: 1px solid rgb(156, 151, 151);
   }
   .selected-file-wrapper,
   .comment-wrapper,
-  .identifier-wrapper {
+  .identifier-wrapper,
+  .code-wrapper{
     display: flex;
     flex-direction: column;
     padding: 10px;
@@ -189,13 +207,14 @@ export default {
     }
     .content {
       flex: 1;
-      overflow: scroll;
+      overflow: auto;
     }
   }
   .comment-wrapper {
+    flex: 1.2;
     .content {
       .comment {
-        border-bottom: 1px solid black;
+        border-bottom: 1px dashed black;
         .token {
           display: inline-block;
           margin: 0 5px;
@@ -205,6 +224,7 @@ export default {
     }
   }
   .identifier-wrapper {
+    flex: 1.2;
     .content {
       .variable {
         display: inline-block;
@@ -212,6 +232,9 @@ export default {
         border-radius: 5px;
       }
     }
+  }
+  .code-wrapper {
+    flex: 2;
   }
 }
 </style>
