@@ -68,9 +68,6 @@ export default {
         this.selectedCluster = null
         this.$bus.$emit('cluster-selected', null)
         resetStatus()
-        circle.on('mouseleave', function() {
-          resetStatus()
-        })
       })
       const x = d3
         .scaleLinear()
@@ -101,126 +98,76 @@ export default {
       const markerSize = 10
       // <defs>元素用于存储图形对象, 但并不立即渲染, 根据<use>中的设置进行渲染
       // 虚线圆(del)
-      // svg
-      //   .append('defs')
-      //   .append('g')
-      //   .attr('id', 'marker-dashedCircle')
-      //   .append('circle')
-      //   .attr('r', markerSize)
-      //   .style('stroke', function() {
-      //     return 'black'
-      //   })
-      //   .attr('stroke-dasharray', '5,5')
-      // // 实线圆(add)
-      // svg
-      //   .append('defs')
-      //   .append('g')
-      //   .attr('id', 'marker-solidCircle')
-      //   .append('circle')
-      //   .attr('r', markerSize)
-      //   .style('stroke', function() {
-      //     return 'black'
-      //   })
-      //   // .append('rect')
-      //   // .attr('width', markerSize * 2)
-      //   // .attr('height', markerSize * 2)
-      // // 半虚半实圆(edit)
-      // var g = svg
-      //   .append('defs')
-      //   .append('g')
-      //   .attr('id', 'marker-otherCircle')
-      // g.append('circle')
-      //   .attr('r', markerSize)
-      // g.append('path')
-      //   .attr('d', d3.arc()({
-      //     innerRadius: markerSize,
-      //     outerRadius: markerSize,
-      //     startAngle: 0,
-      //     endAngle: Math.PI
-      //   }))
-      //   .style('stroke', function() {
-      //     return 'black'
-      //   })
-      // g.append('path')
-      //   .attr('d', d3.arc()({
-      //     innerRadius: markerSize,
-      //     outerRadius: markerSize,
-      //     startAngle: Math.PI,
-      //     endAngle: 2*Math.PI
-      //   }))
-      //   .style('stroke', function() {
-      //     return 'black'
-      //   })
-      //   .attr('stroke-dasharray', '5,5')
-      //   // .attr('viewBox', '0 0 1024 1024')
-      //   // .attr('width', markerSize * 3)
-      //   // .attr('height', markerSize * 3)
-      //   // .append('path')
-      //   // .attr('d', 'M71.675 893.33l440.325-762.683 440.325 762.683z')
-
-      // const type2Shape = {
-      //   add: '#marker-solidCircle',
-      //   del: '#marker-dashedCircle',
-      //   edit: '#marker-otherCircle'
-      // }
-
-      // 力布局避免重叠
-      var clusters = new Array(this.clusterNum+1)
-      var cnt = 0
-      for(var i=0; i<data.length; i++){
-        if(cnt > this.clusterNum) break
-        var id = data[i].cluster+1
-        if(!clusters[id]) {
-          clusters[id] = data[i]
-          cnt++
-        }
-      }
-      var forceCollide = d3.forceCollide()
-        .radius(function(){ return markerSize+1.5})
-        .iterations(1)
-      function forceCluster(alpha){
-        for (var i = 0, n = data.length, node, cluster, k = alpha * 1; i < n; ++i) {
-          node = data[i]
-          cluster = clusters[node.cluster+1]
-          node.vx -= (node.x - cluster.x) * k
-          node.vy -= (node.y - cluster.y) * k
-        }
-      }  
-      function tick(){
-        circle
-          .attr('cx', function(d){return d.x})
-          .attr('cy', function(d){return d.y})
-        solidPath.attr('transform', 
-          function(d){ return 'translate('+d.x+','+d.y+')'})
-        dashedPath.attr('transform', 
-          function(d){ return 'translate('+d.x+','+d.y+')'})
-      }
-      d3.forceSimulation()
-        .nodes(data)
-        .force('center', d3.forceCenter(this.width/2, this.height/2))
-        .force('collide', forceCollide)
-        .force('cluster', forceCluster)
-        .force('gravity', d3.forceManyBody(30))
-        .force('x', d3.forceX().strength(.7))
-        .force('y', d3.forceY().strength(.7))
-        .on('tick', tick)
-      var markerG = svg
+      svg
+        .append('defs')
         .append('g')
-      var circle = markerG
+        .attr('id', 'marker-dashedCircle')
+        .append('circle')
+        .attr('r', markerSize)
+        .style('stroke', function() {
+          return 'black'
+        })
+        .attr('stroke-dasharray', '5,5')
+      // 实线圆(add)
+      svg
+        .append('defs')
+        .append('g')
+        .attr('id', 'marker-solidCircle')
+        .append('circle')
+        .attr('r', markerSize)
+        .style('stroke', function() {
+          return 'black'
+        })
+        // .append('rect')
+        // .attr('width', markerSize * 2)
+        // .attr('height', markerSize * 2)
+      // 半虚半实圆(edit)
+      var g = svg
+        .append('defs')
+        .append('g')
+        .attr('id', 'marker-otherCircle')
+      g.append('circle')
+        .attr('r', markerSize)
+      g.append('path')
+        .attr('d', d3.arc()({
+          innerRadius: markerSize,
+          outerRadius: markerSize,
+          startAngle: 0,
+          endAngle: Math.PI
+        }))
+        .style('stroke', function() {
+          return 'black'
+        })
+      g.append('path')
+        .attr('d', d3.arc()({
+          innerRadius: markerSize,
+          outerRadius: markerSize,
+          startAngle: Math.PI,
+          endAngle: 2*Math.PI
+        }))
+        .style('stroke', function() {
+          return 'black'
+        })
+        .attr('stroke-dasharray', '5,5')
+        // .attr('viewBox', '0 0 1024 1024')
+        // .attr('width', markerSize * 3)
+        // .attr('height', markerSize * 3)
+        // .append('path')
+        // .attr('d', 'M71.675 893.33l440.325-762.683 440.325 762.683z')
+
+      const type2Shape = {
+        add: '#marker-solidCircle',
+        del: '#marker-dashedCircle',
+        edit: '#marker-otherCircle'
+      }
+
+      var circle = svg
+        .append('g')
         .selectAll('marker')
         .data(data)
         .enter()
-        .append('g')
-        .attr('class', function(d){
-          if(d.type === 'add') return 'marker-solidCircle'
-          if(d.type === 'del') return 'marker-dashedCircle'
-          if(d.type === 'edit') return 'marker-otherCircle'
-        })
-        // .append('use')
-        // .attr('href', d => type2Shape[d.type])
-        .append('circle')
-        
-        .attr('r', markerSize)
+        .append('use')
+        .attr('href', d => type2Shape[d.type])
         .attr('x', d => x(d.x))
         .attr('y', d => y(d.y))
         .attr('fill', d => this.clusterColormap(d.cluster))
@@ -231,7 +178,8 @@ export default {
           highlightMarker(d.cluster)
         })
         .on('mouseleave', function() {
-          resetStatus()
+           if(!this.selectedCluster)
+            resetStatus()
         })
         .on('click', ({ cluster: selectedCluster }) => {
           // 解绑mouseleave事件
@@ -250,54 +198,141 @@ export default {
           highlightMarker(selectedCluster)
           this.$bus.$emit('cluster-selected', clusters)
         })
-        // 设置轮廓
-        d3.selectAll('.marker-solidCircle')
-         .style('stroke', 'black')
-        d3.selectAll('.marker-dashedCircle')
-          .style('stroke', 'black')
-          .attr('stroke-dasharray', '3,5')
-        var solidPath = d3.selectAll('.marker-otherCircle')
-          .append('path')
-          .attr('d', d3.arc()({
-            innerRadius: markerSize,
-            outerRadius: markerSize,
-            startAngle: 0,
-            endAngle: Math.PI
-          }))
-          .style('stroke', 'black')
-          .attr('opacity', 1)
-        var dashedPath = d3.selectAll('.marker-otherCircle')
-          .append('path')
-          .attr('d', d3.arc()({
-            innerRadius: markerSize,
-            outerRadius: markerSize,
-            startAngle: Math.PI,
-            endAngle: 2*Math.PI
-          }))
-          .style('stroke', 'black')
-          .attr('opacity', 1)
-          .attr('stroke-dasharray', '3,5')
-          .attr('stroke-dashoffset', '3')
+
+      // // 力布局避免重叠
+      // var clusters = new Array(this.clusterNum+1)
+      // var cnt = 0
+      // for(var i=0; i<data.length; i++){
+      //   if(cnt > this.clusterNum) break
+      //   var id = data[i].cluster+1
+      //   if(!clusters[id]) {
+      //     clusters[id] = data[i]
+      //     cnt++
+      //   }
+      // }
+      // var forceCollide = d3.forceCollide()
+      //   .radius(function(){ return markerSize+1.5})
+      //   .iterations(1)
+      // function forceCluster(alpha){
+      //   for (var i = 0, n = data.length, node, cluster, k = alpha * 1; i < n; ++i) {
+      //     node = data[i]
+      //     cluster = clusters[node.cluster+1]
+      //     node.vx -= (node.x - cluster.x) * k
+      //     node.vy -= (node.y - cluster.y) * k
+      //   }
+      // }  
+      // function tick(){
+      //   circle
+      //     .attr('cx', function(d){return d.x})
+      //     .attr('cy', function(d){return d.y})
+      //   solidPath.attr('transform', 
+      //     function(d){ return 'translate('+d.x+','+d.y+')'})
+      //   dashedPath.attr('transform', 
+      //     function(d){ return 'translate('+d.x+','+d.y+')'})
+      // }
+      // d3.forceSimulation()
+      //   .nodes(data)
+      //   .force('center', d3.forceCenter(this.width/2, this.height/2))
+      //   .force('collide', forceCollide)
+      //   .force('cluster', forceCluster)
+      //   .force('gravity', d3.forceManyBody(30))
+      //   .force('x', d3.forceX().strength(.7))
+      //   .force('y', d3.forceY().strength(.7))
+      //   .on('tick', tick)
+      // var markerG = svg
+      //   .append('g')
+      // var circle = markerG
+      //   .selectAll('marker')
+      //   .data(data)
+      //   .enter()
+      //   .append('g')
+      //   .attr('class', function(d){
+      //     if(d.type === 'add') return 'marker-solidCircle'
+      //     if(d.type === 'del') return 'marker-dashedCircle'
+      //     if(d.type === 'edit') return 'marker-otherCircle'
+      //   })
+      //   // .append('use')
+      //   // .attr('href', d => type2Shape[d.type])
+      //   .append('circle')
+        
+      //   .attr('r', markerSize)
+      //   .attr('x', d => x(d.x))
+      //   .attr('y', d => y(d.y))
+      //   .attr('fill', d => this.clusterColormap(d.cluster))
+      //   .attr('opacity', 0.7)
+      //   .on('mouseenter', d => {
+      //     if (this.selectedCluster) return
+      //     resetStatus()
+      //     highlightMarker(d.cluster)
+      //   })
+      //   .on('mouseleave', function() {
+      //     resetStatus()
+      //   })
+      //   .on('click', ({ cluster: selectedCluster }) => {
+      //     // 解绑mouseleave事件
+      //     circle.on('mouseleave', null)
+      //     this.selectedCluster = selectedCluster
+      //     let clusters = []
+      //     circle
+      //       .filter(d => d.cluster === selectedCluster)
+      //       .each(d => {
+      //         // 合并数组concat
+      //         console.log('fileIds: ' + d['fileIds'])
+      //         clusters = clusters.concat(d['fileIds'])
+      //       })
+      //     // 多事件结合使用时，可以阻止其他事件的发生，避免产生多个动作
+      //     d3.event.stopPropagation()
+      //     highlightMarker(selectedCluster)
+      //     this.$bus.$emit('cluster-selected', clusters)
+      //   })
+      //   // 设置轮廓
+      //   d3.selectAll('.marker-solidCircle')
+      //    .style('stroke', 'black')
+      //   d3.selectAll('.marker-dashedCircle')
+      //     .style('stroke', 'black')
+      //     .attr('stroke-dasharray', '3,5')
+      //   var solidPath = d3.selectAll('.marker-otherCircle')
+      //     .append('path')
+      //     .attr('d', d3.arc()({
+      //       innerRadius: markerSize,
+      //       outerRadius: markerSize,
+      //       startAngle: 0,
+      //       endAngle: Math.PI
+      //     }))
+      //     .style('stroke', 'black')
+      //     .attr('opacity', 1)
+      //   var dashedPath = d3.selectAll('.marker-otherCircle')
+      //     .append('path')
+      //     .attr('d', d3.arc()({
+      //       innerRadius: markerSize,
+      //       outerRadius: markerSize,
+      //       startAngle: Math.PI,
+      //       endAngle: 2*Math.PI
+      //     }))
+      //     .style('stroke', 'black')
+      //     .attr('opacity', 1)
+      //     .attr('stroke-dasharray', '3,5')
+      //     .attr('stroke-dashoffset', '3')
         
         // 状态重置和高亮
         function resetStatus () {
           circle.attr('opacity', 0.7)
-          solidPath.attr('opacity', 1)
-          dashedPath.attr('opacity', 1)
+          // solidPath.attr('opacity', 1)
+          // dashedPath.attr('opacity', 1)
         }
         function highlightMarker (selectedCluster) {
           circle.attr('opacity', 0.1)
-          solidPath.attr('opacity', 0.1)
-          dashedPath.attr('opacity', 0.1)
+          // solidPath.attr('opacity', 0.1)
+          // dashedPath.attr('opacity', 0.1)
           circle
             .filter(d => d.cluster === selectedCluster)
             .attr('opacity', 0.7)
-          solidPath
-            .filter(d => d.cluster === selectedCluster)
-            .attr('opacity', d => {if(d.type === 'edit') return 1})
-          dashedPath
-            .filter(d => d.cluster === selectedCluster)
-            .attr('opacity', d => {if(d.type === 'edit') return 1})
+          // solidPath
+          //   .filter(d => d.cluster === selectedCluster)
+          //   .attr('opacity', d => {if(d.type === 'edit') return 1})
+          // dashedPath
+          //   .filter(d => d.cluster === selectedCluster)
+          //   .attr('opacity', d => {if(d.type === 'edit') return 1})
         }
     },
     fieldAdapter (doc) {
@@ -310,6 +345,7 @@ export default {
     },
     getDocData () {
       const topicNum = this.topicData.length
+      console.log(this.fileGroup)
       const addDocs = this.fileGroup.addDocs.map(doc => ({
         relFileName: getRelPath(doc.filename),
         diffVec: this.calDiffVec(

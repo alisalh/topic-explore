@@ -28,6 +28,12 @@
         <sunburst :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           class="bl-card-shadow"></sunburst>
+        <aspect-bar-chart :topicColormap="topicColormap"
+          :fileGroup="fileGroup"
+          :topicData="topicData"
+          :prevVer="prevVer"
+          class='bl-card-shadow'>
+        </aspect-bar-chart>
         <div class="panel bl-card-shadow">
         </div>
         <!-- <parallel-coordinate :topicData="topicData"
@@ -61,6 +67,7 @@ import WordCloud from './components/WordCloud.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
+import AspectBarChart from './components/AspectBarChart.vue'
 // import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
@@ -72,7 +79,8 @@ export default {
       docVerData: null,
       topicsGroup: null,
       fileGroup: null,
-      prevVer: null
+      prevVer: null,
+      prevDocs: null
     }
   },
   components: {
@@ -87,6 +95,7 @@ export default {
     ScatterPlot,
     // ParallelCoordinate,
     // DiffFilesWrapper
+    AspectBarChart
   },
   computed: {
     topicColormap() {
@@ -113,16 +122,16 @@ export default {
       const versions = this.docVerData.versions
       const prevVer = this.getRelVersion(versions, curVer, -1)
       const curDocs = docs.filter(d => getVersion(d.filename) === curVer)
-      const prevDocs = docs.filter(d => getVersion(d.filename) === prevVer)
+      this.prevDocs = docs.filter(d => getVersion(d.filename) === prevVer)
       this.prevVer = prevVer
-      let addDocs = _.differenceBy(curDocs, prevDocs, d =>
+      let addDocs = _.differenceBy(curDocs, this.prevDocs, d =>
         getRelPath(d['filename'])
       )
-      let delDocs = _.differenceBy(prevDocs, curDocs, d =>
+      let delDocs = _.differenceBy(this.prevDocs, curDocs, d =>
         getRelPath(d['filename'])
       )
       // 同名文件视为编辑状态
-      const editDocsObj = _.groupBy(prevDocs.concat(curDocs), d =>
+      const editDocsObj = _.groupBy(this.prevDocs.concat(curDocs), d =>
         getRelPath(d['filename'])
       )
       return {
@@ -242,8 +251,12 @@ html {
         flex: 1;
         margin-right: 5px;
       }
+      .aspect-bar-chart{
+        flex: 0.6;
+        margin-right: 5px;
+      }
       .panel{
-        flex:1.3;
+        flex:0.6;
       }
       // .parallel-coordinate {
       //   flex: 0.5;
