@@ -34,8 +34,11 @@
           :prevVer="prevVer"
           class='bl-card-shadow'>
         </aspect-bar-chart>
-        <div class="panel bl-card-shadow">
-        </div>
+        <file-list 
+          :fileGroup="fileGroup"
+          :prevVer="prevVer"
+          class="bl-card-shadow">
+        </file-list>
         <!-- <parallel-coordinate :topicData="topicData"
           :docVerData="docVerData"
           class="bl-card-shadow"></parallel-coordinate>
@@ -68,6 +71,7 @@ import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
 import AspectBarChart from './components/AspectBarChart.vue'
+import FileList from './components/FileList.vue'
 // import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
@@ -95,7 +99,8 @@ export default {
     ScatterPlot,
     // ParallelCoordinate,
     // DiffFilesWrapper
-    AspectBarChart
+    AspectBarChart,
+    FileList
   },
   computed: {
     topicColormap() {
@@ -255,7 +260,7 @@ html {
         flex: 0.6;
         margin-right: 5px;
       }
-      .panel{
+      .file-list{
         flex:0.6;
       }
       // .parallel-coordinate {

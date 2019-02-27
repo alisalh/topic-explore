@@ -36,6 +36,7 @@ export default {
   watch: {
     fileGroup () {
       const allDocs = this.getDocData()
+      console.log(allDocs)
       this.$axios
         .post('http://localhost:5000/topic/getClusterDrInfo', allDocs)
         .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
@@ -95,7 +96,7 @@ export default {
       // svg.append('g').call(yAxis)
 
       // 添加marker形状定义
-      const markerSize = 10
+      const markerSize = 7
       // <defs>元素用于存储图形对象, 但并不立即渲染, 根据<use>中的设置进行渲染
       // 虚线圆(del)
       svg
@@ -107,7 +108,8 @@ export default {
         .style('stroke', function() {
           return 'black'
         })
-        .attr('stroke-dasharray', '5,5')
+        .attr('stroke-dasharray', '3,5')
+        .attr('stroke-width', '2')
       // 实线圆(add)
       svg
         .append('defs')
@@ -118,6 +120,7 @@ export default {
         .style('stroke', function() {
           return 'black'
         })
+        .attr('stroke-width', '2')
         // .append('rect')
         // .attr('width', markerSize * 2)
         // .attr('height', markerSize * 2)
@@ -138,6 +141,7 @@ export default {
         .style('stroke', function() {
           return 'black'
         })
+        .attr('stroke-width', '2')
       g.append('path')
         .attr('d', d3.arc()({
           innerRadius: markerSize,
@@ -148,7 +152,9 @@ export default {
         .style('stroke', function() {
           return 'black'
         })
-        .attr('stroke-dasharray', '5,5')
+        .attr('stroke-dasharray', '3,5')
+        .attr('stroke-dashoffset', '3')
+        .attr('stroke-width', '2')
         // .attr('viewBox', '0 0 1024 1024')
         // .attr('width', markerSize * 3)
         // .attr('height', markerSize * 3)
@@ -190,7 +196,7 @@ export default {
             .filter(d => d.cluster === selectedCluster)
             .each(d => {
               // 合并数组concat
-              console.log('fileIds: ' + d['fileIds'])
+              console.log(d)
               clusters = clusters.concat(d['fileIds'])
             })
           // 多事件结合使用时，可以阻止其他事件的发生，避免产生多个动作

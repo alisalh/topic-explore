@@ -8,7 +8,8 @@
     </div>
     <div class="comment-wrapper">
       <div class="title">
-        comments(#{{selectedDoc&&selectedDoc.commentArr.length}})
+        <!-- comments(#{{selectedDoc&&selectedDoc.commentArr.length}}) -->
+        comments:
       </div>
       <div class="content">
         <div class="comment"
@@ -26,7 +27,8 @@
     </div>
     <div class="identifier-wrapper">
       <div class="title">
-        variables(#{{uniqueIdentifiers.length}})
+        <!-- variables(#{{uniqueIdentifiers.length}}) -->
+        variables:
       </div>
       <div class="content">
         <div v-for="word in uniqueIdentifiers"
@@ -38,8 +40,12 @@
       </div>
     </div>
     <div class="code-wrapper">
-      <div class="title">code</div>
-      <div class="content"></div>
+      <div class="title">code:</div>
+      <div class="content">
+        <div v-for="line in code"
+          :key="line.id"
+          class="code">{{line}}</div>
+      </div>
     </div>
   </div>
 </template>
@@ -58,6 +64,7 @@ export default {
         commentArr: [],
         identifiers: ''
       },
+      code: null,
       selectedTopicKeywords: null,
       uniqueIdentifiers: [],
       processedComments: null
@@ -169,6 +176,11 @@ export default {
           cost: d.weight
         }))
       this.docSelectedHandler(selectedDoc)
+      this.$axios
+        .get('topics/getCode', { filepath: this.selectedDoc.filename})
+        .then(({ data }) => {
+          this.code = data
+        })
     })
   }
 }
@@ -183,7 +195,7 @@ export default {
   //   flex: 2;
   // }
   .selected-file-wrapper {
-    flex: 0.8;
+    flex: 0.5;
     .content {
       word-break: break-all;
     }
@@ -235,6 +247,13 @@ export default {
   }
   .code-wrapper {
     flex: 2;
+    .content{
+      .code{
+        word-break: break-all;
+        border-bottom: 1px dashed black;
+      }
+      
+    }
   }
 }
 </style>
