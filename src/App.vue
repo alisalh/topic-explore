@@ -27,6 +27,7 @@
       <div class="second-row">
         <sunburst :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
+          :versions="versions"
           class="bl-card-shadow"></sunburst>
         <aspect-bar-chart :topicColormap="topicColormap"
           :fileGroup="fileGroup"

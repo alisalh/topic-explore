@@ -248,8 +248,8 @@ export default {
   .code-wrapper {
     flex: 2;
     .content{
+      word-break: break-all;
       .code{
-        word-break: break-all;
         border-bottom: 1px dashed black;
       }
       

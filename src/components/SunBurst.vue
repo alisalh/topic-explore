@@ -13,8 +13,8 @@ export default {
     return {
       // width: 600,
       height: 0,
-      arcSvg: null,
-      doc: null
+      arcSvg: null
+      // doc: null,
     }
   },
   computed: {
@@ -22,7 +22,7 @@ export default {
       return this.height
     }
   },
-  props: ['topicColormap', 'docData'],
+  props: ['topicColormap', 'docData', 'versions'],
   methods: {
     draw (data) {
       this.$refs.root.innerHTML = ''
@@ -74,9 +74,10 @@ export default {
         .attr('class', 'hierarchy-node')
         .attr('id', (d, i) => 'hierarchy-node-'+i)
         .attr('d', arc)
-        .style('stroke', function() {
-          return 'black'
+        .style('stroke', function(){
+            return 'black'
         })
+        .attr('stroke-opacity', '0.6')
         .style('fill', d => {
           if (d.data.type === 'dir') {
             return '#f0f0f0'
@@ -108,6 +109,7 @@ export default {
           if(d.data.type === 'file')
             this.$bus.$emit('doc-selected', this.docData[d.data.id])
         })
+      
       node
         .append('text')
         .attr('dy', function(d) { 
@@ -122,18 +124,43 @@ export default {
           if(d.data.type === 'dir')
             return d.data.name.substr(d.data.name.lastIndexOf('\\') + 1)
         })
-        
-        
+      
+    // // 添加虚线
+    // node
+    //     .each((d, i) => {
+    //       var firstArcSection = /A(.*)L/,
+    //         lineAndArcSection = /(L.*)Z/,
+    //         curNode = node.select('#hierarchy-node-'+i).attr('d')
+    //       var newArc1 = firstArcSection.exec(curNode)[1],
+    //         newArc2 = lineAndArcSection.exec(curNode)[1]
+    //       var list = newArc1.split(',')
+    //       newArc1 = 'M' + list[5] + ',' + list[6] + newArc2
+    //       newArc1 = newArc1.replace(/,/g, ' ')
+    //       node.append('path').attr('d', newArc1)
+    //         .attr('fill-opacity', '0')
+    //         .style('stroke', 'black')
+    //         .attr('stroke-dasharray', '5,5')
+    //     })
+       
       this.arcSvg
         .append('title')
         .text(d => d.data.name)
+      
       node
-        .filter(d => d.data.type === 'dir')
-        .attr('stroke-dasharray', '5,5')
-        .attr('stroke-opacity', '0.6')
+        .filter(d => d.data.version === 'prev')
+        .attr('stroke-dasharray', '3,5')
     },
     resetStatus () {
       this.arcSvg.attr('opacity', 1)
+    },
+    findNode(root, name){
+      for(var i=0; i<root.children.length; i++) {
+        let fpath = root.children[i].name
+        var fname = fpath.substr(fpath.lastIndexOf('\\')+1)
+        if(name === fname)
+          return i
+      }
+      return -1
     }
   },
   created () {
@@ -149,21 +176,22 @@ export default {
         .attr('opacity', 0.1)
     })
     this.$bus.$on('cluster-selected', ids => {
-      console.log('ids: ' + ids)
       this.resetStatus()
-      if (ids === null) {
-        return
-      }
+      if (ids === null) return
       this.arcSvg
         .filter(d => d.data.type !== 'dir' && ids.indexOf(d.data.id) === -1)
         .attr('opacity', 0.1)
+      this.arcSvg
+        .filter(d => d.data.preId && ids.indexOf(d.data.preId) != -1)
+        .attr('stroke-width', '2')
     })
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.$bus.$on('version-selected', d => {
+      var prev = this.versions[this.versions.indexOf(d)-1]
       this.$axios
-        .get('topics/getTopicDisByVersion', { version: d })
+        .get('topics/getTopicDisByVersion', { curv: d, prev: prev})
         .then(({ data }) => {
           this.draw(data)
         })

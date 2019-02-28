@@ -41,6 +41,7 @@ export default {
         .post('http://localhost:5000/topic/getClusterDrInfo', allDocs)
         .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
           this.clusterNum = clusterNum
+          this.selectedCluster = null
           // console.log(this.clusterNum)
           console.log('chartData:', chartData)
           this.draw(chartData)
@@ -191,13 +192,14 @@ export default {
           // 解绑mouseleave事件
           circle.on('mouseleave', null)
           this.selectedCluster = selectedCluster
-          let clusters = []
+          let clusters = [], selectedDocs = []
           circle
             .filter(d => d.cluster === selectedCluster)
             .each(d => {
               // 合并数组concat
-              console.log(d)
               clusters = clusters.concat(d['fileIds'])
+              selectedDocs.push(d)
+              console.log(selectedDocs)
             })
           // 多事件结合使用时，可以阻止其他事件的发生，避免产生多个动作
           d3.event.stopPropagation()
@@ -351,7 +353,6 @@ export default {
     },
     getDocData () {
       const topicNum = this.topicData.length
-      console.log(this.fileGroup)
       const addDocs = this.fileGroup.addDocs.map(doc => ({
         relFileName: getRelPath(doc.filename),
         diffVec: this.calDiffVec(
