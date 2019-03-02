@@ -12,6 +12,7 @@
         <line-chart :topicColormap="topicColormap"
           :topicsGroup="topicsGroup"
           :versions="versions"
+          :normData="normData"
           class="bl-card-shadow"></line-chart>
         <!-- <div class="scatter-xx-wrapper">
           <bubble-chart :topicColormap="topicColormap"
@@ -19,27 +20,28 @@
           <word-cloud :topicData="topicData"
             class="bl-card-shadow"></word-cloud>
         </div> -->
-        <scatter-plot class="bl-card-shadow"
-          :fileGroup="fileGroup"
-          :topicData="topicData"
-          :prevVer="prevVer"></scatter-plot>
+        
       </div>
       <div class="second-row">
         <sunburst :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           :versions="versions"
           class="bl-card-shadow"></sunburst>
+        <scatter-plot class="bl-card-shadow"
+          :fileGroup="fileGroup"
+          :topicData="topicData"
+          :prevVer="prevVer"></scatter-plot>
         <aspect-bar-chart :topicColormap="topicColormap"
           :fileGroup="fileGroup"
           :topicData="topicData"
           :prevVer="prevVer"
           class='bl-card-shadow'>
         </aspect-bar-chart>
-        <file-list 
+        <!-- <file-list 
           :fileGroup="fileGroup"
           :prevVer="prevVer"
           class="bl-card-shadow">
-        </file-list>
+        </file-list> -->
         <!-- <parallel-coordinate :topicData="topicData"
           :docVerData="docVerData"
           class="bl-card-shadow"></parallel-coordinate>
@@ -72,7 +74,7 @@ import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
 import AspectBarChart from './components/AspectBarChart.vue'
-import FileList from './components/FileList.vue'
+// import FileList from './components/FileList.vue'
 // import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
@@ -85,7 +87,8 @@ export default {
       topicsGroup: null,
       fileGroup: null,
       prevVer: null,
-      prevDocs: null
+      prevDocs: null,
+      normData: null
     }
   },
   components: {
@@ -101,7 +104,7 @@ export default {
     // ParallelCoordinate,
     // DiffFilesWrapper
     AspectBarChart,
-    FileList
+    // FileList
   },
   computed: {
     topicColormap() {
@@ -186,6 +189,9 @@ export default {
       this.docVerData = data
       this.topicsGroup = this.getTopicsGroup(this.docVerData.files)
     })
+    this.$axios.get('topics/getNormOfDiffVecs', {}).then(({data}) => {
+      this.normData = data
+    })
   }
 }
 </script>
@@ -230,7 +236,7 @@ html {
       display: flex;
       .line-chart {
         flex: 1.5;
-        margin-right: 5px;
+        // margin-right: 5px;
       }
       // .scatter-xx-wrapper {
       //   flex: 0.8;
@@ -245,9 +251,9 @@ html {
       //     margin-bottom: 10px;
       //   }
       // }
-      .scatter-plot {
-        flex: 1;
-      }
+      // .scatter-plot {
+      //   flex: 1;
+      // }
     }
     .second-row {
       flex: 1.3;
@@ -257,13 +263,16 @@ html {
         flex: 1;
         margin-right: 5px;
       }
-      .aspect-bar-chart{
-        flex: 0.6;
+      .scatter-plot{
+        flex: 1;
         margin-right: 5px;
       }
-      .file-list{
-        flex:0.6;
+      .aspect-bar-chart{
+        flex: 0.6;
       }
+      // .file-list{
+      //   flex:0.6;
+      // }
       // .parallel-coordinate {
       //   flex: 0.5;
       //   margin-right: 10px;

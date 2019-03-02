@@ -13,48 +13,49 @@ export default {
       height: 0,
       width: 0,
       lineSvg: null,
-      strokeWidth: 1.5
+      strokeWidth: 1.5,
+      curData: [],
+      showVersions: []
     }
   },
-  props: ['topicColormap', 'topicsGroup', 'versions'],
+  props: ['topicColormap', 'topicsGroup', 'versions', 'normData'],
   methods: {
     draw (data) {
       // const vm = this
-      // console.log(data)
-      const margin = { top: 20, right: 20, bottom: 40, left: 50 }
+      const margin = { top: 20, right: 25, bottom: 45, left: 40 }
+      const brushHeight = 50, gap = 20  //gap表示brush和linechart之间的间隔
       const svg = d3
         .select(this.$refs.root)
         .append('svg')
         .attr('width', this.width)
         .attr('height', this.height)
-      const maxY = d3.max(data, topic =>
+      var maxY = d3.max(data, topic =>
         d3.max(topic.val, version => version.val.length)
       )
-      const y = d3
+      var y = d3
         .scaleLinear()
         .domain([0, maxY])
         .nice()
-        .range([this.height - margin.bottom, margin.top])
-      const x = d3
-        .scaleBand()
+        .range([this.height - brushHeight - margin.bottom - gap, margin.top])
+      var x = d3
+        .scalePoint()
         .domain(this.versions)
         .range([margin.left, this.width - margin.right])
-        .padding(0.1)
-      const xAxis = g =>
+      var xAxis = g =>
         g
-          .attr('transform', `translate(0,${this.height - margin.bottom})`)
+          .attr('transform', `translate(0,${this.height - brushHeight -margin.bottom - gap})`)
           .call(d3.axisBottom(x))
-          .call(g =>
-            g
-              .select('.tick:last-of-type text')
-              .clone()
-              .attr('text-anchor', 'end')
-              .attr('font-weight', 'bold')
-              .attr('class', 'x-label')
-              .attr('y', -10)
-              .text('versions')
-          )
-          .call(g =>
+          // .call(g =>
+          //   g
+          //     .select('.tick:last-of-type text')   // 设置x轴文字
+          //     .clone()
+          //     .attr('text-anchor', 'end')
+          //     .attr('font-weight', 'bold')
+          //     .attr('class', 'x-label')
+          //     .attr('y', -10)
+          //     .text('versions')
+          // )
+          .call(g =>                            // 设置tick
             g
               .selectAll('text:not(.x-label)')
               .style('text-anchor', 'end')
@@ -62,7 +63,7 @@ export default {
               .attr('dy', '.15em')
               .attr('transform', 'rotate(-65)')
           )
-      const yAxis = g =>
+      var yAxis = g =>
         g
           .attr('transform', `translate(${margin.left},0)`)
           .call(d3.axisLeft(y))
@@ -76,7 +77,7 @@ export default {
               .attr('font-weight', 'bold')
               .text('number of files(#)')
           )
-      svg.append('g').call(xAxis)
+      svg.append('g').attr('class','axis axis--x').call(xAxis)
 
       svg.append('g').call(yAxis)
       // 画线
@@ -90,7 +91,7 @@ export default {
         .y(d => y(d.val.length))
       this.lineSvg = svg
         .append('g')
-        .attr('transform', `translate(${x.bandwidth() / 2},0)`)
+        // .attr('transform', `translate(${x.bandwidth() / 2},0)`)
         .attr('fill', 'none')
         .attr('stroke-width', this.stokeWidth)
         .attr('stroke-linejoin', 'round')
@@ -99,6 +100,7 @@ export default {
         .data(data)
         .enter()
         .append('path')
+        .attr('class', 'topic-line')
         .attr('stroke', d => {
           // console.log(d.key, this.topicColormap(parseInt(d.key)))
           return this.topicColormap(parseInt(d.key))
@@ -114,11 +116,9 @@ export default {
         //   this.$bus.$emit('topic-selected', d.key)
         // })
       // 画版本定位辅助线
-      const gridLine = d3.line()
       let xOffset = 0
-      svg
+      var gridLine = svg
         .append('g')
-        .attr('transform', `translate(${x.bandwidth() / 2},0)`)
         .attr('fill', 'none')
         .attr('stroke-width', 3)
         .attr('stroke-linejoin', 'round')
@@ -132,9 +132,9 @@ export default {
         .attr('opacity', 0)
         .attr('d', d => {
           xOffset = x(d)
-          return gridLine([
+          return d3.line()([
             [xOffset, margin.top],
-            [xOffset, this.height - margin.bottom]
+            [xOffset, this.height - margin.bottom-brushHeight -gap]
           ])
         })
         .on('mouseenter', function () {
@@ -155,6 +155,89 @@ export default {
       //   .style('font', '10px sans-serif')
       //   .attr('text-anchor', 'middle')
       //   .attr('y', -8)
+
+      // 添加brush的折线图
+      const maxBrushY = d3.max(this.normData.map(d => d.val))
+      const brushY = d3
+        .scaleLinear()
+        .domain([0, maxBrushY])
+        .range([this.height - margin.bottom, this.height-margin.bottom-brushHeight+gap])
+      const brushX = d3
+        .scalePoint()
+        .domain(this.versions)
+        .range([margin.left, this.width - margin.right])
+      var brushXAxis = g =>
+        g
+          .attr('transform', `translate(0,${this.height -margin.bottom})`)
+          .call(d3.axisBottom(brushX).tickValues(this.showVersions))
+          .call(g =>
+            g
+              .selectAll('text:not(.x-label)')
+              .style('text-anchor', 'end')
+              .attr('dx', '-.8em')
+              .attr('dy', '.15em')
+              .attr('transform', 'rotate(-65)')
+          )
+      svg.append('g').call(brushXAxis)
+      const brushLine = d3.line()
+        .curve(d3.curveMonotoneX)
+        .x(d => brushX(d.ver))
+        .y(d => brushY(d.val))
+      svg.append('g')
+        .attr('fill', 'none')
+        .attr('stroke-width', this.stokeWidth)
+        .attr('stroke-linejoin', 'round')
+        .attr('stroke-linecap', 'round')
+        .append('path')
+        .attr('stroke', 'black')
+        .attr('d', brushLine(this.normData))
+      
+      // 添加brush
+      var brush = d3.brushX()
+        .extent([[margin.left, 0],[this.width - margin.right, brushHeight-gap+2]])
+        .on('brush end', brushend)
+      svg.append('g')
+        .attr('transform', `translate(0,${brushY(maxBrushY)-2})`)
+        .attr('class', 'brush')
+        .call(brush)
+      function brushend(){
+        let s = d3.event.selection
+        if (s != null) {
+          let eachBand = brushX.step()
+          let prevIndex = Math.round((s[0]-margin.left)/eachBand),
+            curvIndex = Math.round((s[1]-margin.left)/eachBand)
+          // 更新x轴
+          this.showVersions = []
+          for(let i=prevIndex; i<=curvIndex; i++)
+            this.showVersions.push(brushX.domain()[i])
+          x.domain(this.showVersions)
+          svg.select('.axis--x').call(xAxis)
+          // 更新折线
+          this.curData = []
+          data.forEach(topic => {
+            let item = topic.val.filter(d => this.showVersions.indexOf(d.key) != -1)
+            this.curData.push({key: topic.key, val: item})
+          })
+          this.lineSvg = svg.selectAll('.topic-line')
+              .data(this.curData)
+              .attr('d', d => {
+                return line(d.val)
+          })
+          // 更新辅助线(高度this.height问题)
+          gridLine.on('mouseenter', null)
+          gridLine.filter(d => this.showVersions.indexOf(d) != -1)
+            .attr('d', d => {
+              xOffset = x(d)
+              return d3.line()([
+                [xOffset, margin.top],
+                [xOffset, 400 - margin.bottom-brushHeight -gap]
+              ])
+            })
+            .on('mouseenter', function(){
+              d3.select(this).attr('opacity', 0.7)
+            })
+        }
+      }
     },
     resetLineStatus () {
       this.lineSvg.attr('opacity', 1).attr('stroke-width', this.strokeWidth)
@@ -169,15 +252,25 @@ export default {
         .attr('opacity', 0.1)
     }
   },
-  watch: {},
+  watch: {
+  },
   created () {
     // 当所有异步数据都获取完以后才开始渲染(类Promise.all实现)
-    const requiredData = ['topicColormap', 'topicsGroup', 'versions']
+    const requiredData = ['topicColormap', 'topicsGroup', 'versions', 'normData']
     let cnt = 0
     requiredData.forEach(d => {
       this.$watch(d, val => {
         if (val) cnt++
         if (cnt === requiredData.length) {
+          this.showVersions.push(this.versions[0])
+          for(let i=1; i<this.normData.length; i++) {
+            if(this.normData[i].val >= 2) 
+              this.showVersions.push(this.versions[i])
+          }
+          this.topicsGroup.forEach(topic => {
+            let item = topic.val.filter(d => this.showVersions.indexOf(d.key) != -1)
+            this.curData.push({key: topic.key, val: item})
+          })
           this.draw(this.topicsGroup)
         }
       })
