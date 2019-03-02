@@ -13,7 +13,8 @@ export default {
     return {
       // width: 600,
       height: 0,
-      arcSvg: null
+      arcSvg: null,
+      diffDocs: null
       // doc: null,
     }
   },
@@ -60,6 +61,7 @@ export default {
         .outerRadius(function (d) {
           return Math.max(0, y(d.y1))
         })
+        // .padAngle(0.002)
       var node = svg
         .selectAll('.hierarchy-node')
         .data(
@@ -77,7 +79,7 @@ export default {
         .style('stroke', function(){
             return 'black'
         })
-        .attr('stroke-opacity', '0.6')
+        .attr('stroke-opacity', '0.5')
         .style('fill', d => {
           if (d.data.type === 'dir') {
             return '#f0f0f0'
@@ -110,20 +112,20 @@ export default {
             this.$bus.$emit('doc-selected', this.docData[d.data.id])
         })
       
-      node
-        .append('text')
-        .attr('dy', function(d) { 
-          var angle = arc(d).split(',')[7].split('L')
-          return (angle[0] > Math.PI/2 ? -6 : 18) 
-        })
-        .append('textPath')
-        .attr('startOffset','50%')
-        .style('text-anchor','middle')
-        .attr('xlink:href', (d, i) => '#donutArc'+i)
-        .text(function(d){
-          if(d.data.type === 'dir')
-            return d.data.name.substr(d.data.name.lastIndexOf('\\') + 1)
-        })
+      // node
+      //   .append('text')
+      //   .attr('dy', function(d) { 
+      //     var angle = arc(d).split(',')[7].split('L')
+      //     return (angle[0] > Math.PI/2 ? -6 : 18) 
+      //   })
+      //   .append('textPath')
+      //   .attr('startOffset','50%')
+      //   .style('text-anchor','middle')
+      //   .attr('xlink:href', (d, i) => '#donutArc'+i)
+      //   .text(function(d){
+      //     if(d.data.type === 'dir')
+      //       return d.data.name.substr(d.data.name.lastIndexOf('\\') + 1)
+      //   })
       
     // // 添加虚线
     // node
@@ -145,10 +147,23 @@ export default {
       this.arcSvg
         .append('title')
         .text(d => d.data.name)
-      
-      node
+      // 前一版本用虚线
+      this.arcSvg
         .filter(d => d.data.version === 'prev')
-        .attr('stroke-dasharray', '3,5')
+        .attr('stroke-dasharray', '5,5')
+      
+      var leafNodes = root.leaves()
+      leafNodes.forEach(d => {
+        let obj = this.diffDocs.find(doc => {
+          return (d.data.id === doc.fileIds[0]) || (d.data.id === doc.fileIds[1])
+        })
+        d['norm'] = obj['norm']
+        d['fileType'] = obj['type']
+      })
+      // 前后版本的差异较小的文件透明度降低(阈值为0.1)
+      this.arcSvg
+        .filter(d => d.norm < 0.1)
+        .attr('opacity', '0.1')
     },
     resetStatus () {
       this.arcSvg.attr('opacity', 1)
@@ -189,11 +204,21 @@ export default {
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.$bus.$on('version-selected', d => {
-      var prev = this.versions[this.versions.indexOf(d)-1]
+      // var prev = this.versions[this.versions.indexOf(d)-1]
       this.$axios
-        .get('topics/getTopicDisByVersion', { curv: d, prev: prev})
+        .get('topics/getTopicDisByVersion', { curv: d, prev: null})
         .then(({ data }) => {
           this.draw(data)
+        })
+    })
+    this.$bus.$on('version-range-selected', d => {
+      console.log('version-range:', d)
+      this.$axios
+        .get('topics/getTopicDisByVersion', d)
+        .then(({ data }) => {
+          // console.log(data)
+          this.diffDocs = data.diffDocs
+          this.draw(data.root)
         })
     })
   }

@@ -15,7 +15,8 @@ export default {
       lineSvg: null,
       strokeWidth: 1.5,
       curData: [],
-      showVersions: []
+      showVersions: [],
+      // verRange: {}
     }
   },
   props: ['topicColormap', 'topicsGroup', 'versions', 'normData'],
@@ -144,7 +145,6 @@ export default {
           d3.select(this).attr('opacity', 0.0)
         })
         .on('click', d => {
-          console.log(d)
           this.$bus.$emit('version-selected', d)
         })
       // // 画点
@@ -195,12 +195,35 @@ export default {
       // 添加brush
       var brush = d3.brushX()
         .extent([[margin.left, 0],[this.width - margin.right, brushHeight-gap+2]])
-        .on('brush end', brushend)
+        .on('brush', brushed)
+        .on('end', brushended.bind(this))
       svg.append('g')
         .attr('transform', `translate(0,${brushY(maxBrushY)-2})`)
         .attr('class', 'brush')
         .call(brush)
-      function brushend(){
+      function brushended(){
+        // 点击brush恢复到原始状态
+        let s = d3.event.selection
+        if(!s){
+          x.domain(brushX.domain())
+          svg.select('.axis--x').call(xAxis)
+          this.lineSvg = svg.selectAll('.topic-line')
+              .data(data)
+              .attr('d', d => {
+                return line(d.val)
+          })
+        }
+        else{
+          let eachBand = brushX.step()
+          let prevIndex = Math.round((s[0]-margin.left)/eachBand),
+            curvIndex = Math.round((s[1]-margin.left)/eachBand)
+          this.$bus.$emit('version-range-selected',{
+            curv: brushX.domain()[curvIndex],
+            prev: brushX.domain()[prevIndex]
+          })
+        }
+      }
+      function brushed(){
         let s = d3.event.selection
         if (s != null) {
           let eachBand = brushX.step()
@@ -226,15 +249,15 @@ export default {
           // 更新辅助线(高度this.height问题)
           gridLine.on('mouseenter', null)
           gridLine.filter(d => this.showVersions.indexOf(d) != -1)
+            .on('mouseenter', function(){
+              d3.select(this).attr('opacity', 0.7)
+            })
             .attr('d', d => {
               xOffset = x(d)
               return d3.line()([
                 [xOffset, margin.top],
                 [xOffset, 400 - margin.bottom-brushHeight -gap]
               ])
-            })
-            .on('mouseenter', function(){
-              d3.select(this).attr('opacity', 0.7)
             })
         }
       }
