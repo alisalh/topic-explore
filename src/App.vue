@@ -219,11 +219,11 @@ html {
     display: flex;
     flex-direction: column;
     .radar-control-panel{
-      flex:5;
+      flex:4.5;
       margin-bottom: 5px;
     }
     .word-cloud{
-      flex:1.5;
+      flex:2;
     }
   }
   .center-panel {

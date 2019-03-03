@@ -1,7 +1,7 @@
 <template>
   <div class='radar-control-panel'
     @click='globalClickHandler'>
-    <div class='version-select-box'>
+    <!-- <div class='version-select-box'>
       <div class='version-title'>version</div>
       <el-select v-model="selectedVersion" size='small'
         @change="selectTrigger(selectedVersion)"
@@ -13,7 +13,7 @@
           :label="item.label">
         </el-option>
       </el-select>
-    </div>
+    </div> -->
     <div class="topic-select-control-panel">
       <div v-for="item in sliderData"
         :key="item.id"
@@ -60,18 +60,26 @@ export default {
       selectedTopic: null,
       selectedVersion: 'all',
       // legendWdith: [],
-      options:[{value:0, label: 'all'}],
+      // options:[{value:0, label: 'all'}],
     }
   },
   props:['topicsGroup', 'versions'],
   methods: {
     legendClickHandler(selectedTopic) {
-      this.sliderData
-        .filter(d => d !== selectedTopic)
-        .forEach(d => (d.isSelected = false))
-      selectedTopic.isSelected = true
-      this.$bus.$emit('topic-selected', selectedTopic.topicId)
-      this.selectedTopic = selectedTopic.topicId
+      if(selectedTopic.isSelected){
+        this.$bus.$emit('topic-restored', {})
+        this.sliderData
+          .forEach(d => (d.isSelected = false))
+        this.selectedTopic = null
+      }
+      else {
+        this.sliderData
+          .filter(d => d !== selectedTopic)
+          .forEach(d => (d.isSelected = false))
+        selectedTopic.isSelected = true
+        this.$bus.$emit('topic-selected', selectedTopic.topicId)
+        this.selectedTopic = selectedTopic.topicId
+      }
     },
     globalClickHandler() {
       console.log('global click')
@@ -132,9 +140,9 @@ export default {
       this.$watch(d,val => {
         if(val) cnt++
         if(cnt === requiredData.length) {
-          this.versions.forEach((d, i) => {
-            this.options.push({value: i+1, label: d })
-          })
+          // this.versions.forEach((d, i) => {
+          //   this.options.push({value: i+1, label: d })
+          // })
           var widthScale =  d3
             .scaleLinear()
             .domain([0, this.versions.length])
@@ -145,6 +153,8 @@ export default {
         }
       })
     })
+    this.$bus.$on('version-selected', d => {this.selectTrigger(d)})
+    this.$bus.$on('version-restored', d => {this.selectTrigger(d)})
   }
 }
 </script>
@@ -154,21 +164,21 @@ export default {
   display: flex;
   flex-direction: column;
   padding: 0 5px;
-  .version-select-box{
-    flex: 0.8;
-    display: flex;
-    padding: 10px 5px;
-    border-bottom: 1px solid rgb(156, 151, 151); 
-    .version-title{
-      flex:1;
-      font-size: 17px;
-      text-align: center;
-      margin:auto;
-    }
-    .version-id{
-      flex:1.5;
-    }
-  }
+  // .version-select-box{
+  //   flex: 0.8;
+  //   display: flex;
+  //   padding: 10px 5px;
+  //   border-bottom: 1px solid rgb(156, 151, 151); 
+  //   .version-title{
+  //     flex:1;
+  //     font-size: 17px;
+  //     text-align: center;
+  //     margin:auto;
+  //   }
+  //   .version-id{
+  //     flex:1.5;
+  //   }
+  // }
   .topic-select-control-panel {
     flex: 15;
     margin-top:10px;

@@ -16,6 +16,7 @@ export default {
       strokeWidth: 1.5,
       curData: [],
       showVersions: [],
+      selectedVersion: null
       // verRange: {}
     }
   },
@@ -145,8 +146,18 @@ export default {
           d3.select(this).attr('opacity', 0.0)
         })
         .on('click', d => {
+           gridLine
+            .on('mouseout', function () {
+              d3.select(this).attr('opacity', 0.0)
+            })
+            .attr('opacity', 0.0)
+           gridLine
+            .filter(ver => ver === d)
+            .on('mouseout', null)
+            .attr('opacity', 0.7)
           this.$bus.$emit('version-selected', d)
         })
+       
       // // 画点
       // const dot = svg.append('g').attr('display', 'none')
       // dot.append('circle').attr('r', 2.5)
@@ -195,12 +206,18 @@ export default {
       // 添加brush
       var brush = d3.brushX()
         .extent([[margin.left, 0],[this.width - margin.right, brushHeight-gap+2]])
+        .on('start', brushstarted.bind(this))
         .on('brush', brushed)
         .on('end', brushended.bind(this))
       svg.append('g')
         .attr('transform', `translate(0,${brushY(maxBrushY)-2})`)
         .attr('class', 'brush')
         .call(brush)
+      function brushstarted(){
+        gridLine
+          .attr('opacity', 0.0)
+        this.$bus.$emit('version-restored', 'all')
+      }
       function brushended(){
         // 点击brush恢复到原始状态
         let s = d3.event.selection
@@ -212,6 +229,22 @@ export default {
               .attr('d', d => {
                 return line(d.val)
           })
+          gridLine
+            .attr('opacity', 0.0)
+            .attr('d', d => {
+              xOffset = x(d)
+              return d3.line()([
+                [xOffset, margin.top],
+                [xOffset, 400 - margin.bottom-brushHeight -gap]
+              ])
+            })
+            .on('mouseenter', function(){
+              d3.select(this).attr('opacity', 0.7)
+            })
+            .on('mouseout', function () {
+              d3.select(this).attr('opacity', 0.0)
+            })
+          this.$bus.$emit('version-returned', 'all')
         }
         else{
           let eachBand = brushX.step()
@@ -305,6 +338,9 @@ export default {
     this.$bus.$on('topic-selected', topicId => {
       if (topicId === -1) this.resetLineStatus()
       else this.highlightLine(topicId)
+    })
+    this.$bus.$on('topic-restored', d =>{
+      this.resetLineStatus()
     })
   }
 }

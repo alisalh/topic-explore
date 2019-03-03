@@ -41,10 +41,7 @@
     </div>
     <div class="code-wrapper">
       <div class="title">code:</div>
-      <div class="content">
-        <div v-for="line in code"
-          :key="line.id"
-          class="code">{{line}}</div>
+      <div class="content" v-highlight v-html="codeText">
       </div>
     </div>
   </div>
@@ -64,7 +61,7 @@ export default {
         commentArr: [],
         identifiers: ''
       },
-      code: null,
+      codeText: '',
       selectedTopicKeywords: null,
       uniqueIdentifiers: [],
       processedComments: null
@@ -179,7 +176,7 @@ export default {
       this.$axios
         .get('topics/getCode', { filepath: this.selectedDoc.filename})
         .then(({ data }) => {
-          this.code = data
+          this.codeText = `<pre><code>${data}</code></pre>`
         })
     })
   }
@@ -248,11 +245,8 @@ export default {
   .code-wrapper {
     flex: 2;
     .content{
-      word-break: break-all;
-      .code{
-        border-bottom: 1px dashed black;
-      }
-      
+      overflow-x: scroll;
+      overflow-y: scroll;
     }
   }
 }

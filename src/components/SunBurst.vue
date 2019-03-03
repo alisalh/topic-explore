@@ -221,6 +221,9 @@ export default {
           this.draw(data.root)
         })
     })
+    this.$bus.$on('version-restored', d => {
+      this.$refs.root.innerHTML = ''
+    })
   }
 }
 </script>

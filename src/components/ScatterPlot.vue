@@ -6,7 +6,6 @@
 
 <script>
 import * as d3 from 'd3'
-import { getRelPath, getVersion } from '../utils/index.js'
 import { CLUSTER_COLOR } from '../utils/constant.js'
 
 export default {
@@ -20,7 +19,7 @@ export default {
       selectedCluster: null
     }
   },
-  props: ['fileGroup', 'topicData', 'prevVer'],
+  props: ['topicData', 'prevVer'],
   computed: {
     clusterColormap () {
       return d3
@@ -34,26 +33,39 @@ export default {
     }
   },
   watch: {
-    fileGroup () {
-      const allDocs = this.getDocData()
-      console.log(allDocs)
-      this.$axios
-        .post('http://localhost:5000/topic/getClusterDrInfo', allDocs)
-        .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
-          this.clusterNum = clusterNum
-          this.selectedCluster = null
-          // console.log(this.clusterNum)
-          console.log('chartData:', chartData)
-          this.draw(chartData)
-        })
-        .catch(e => {
-          console.log(e)
-        })
-    }
+    // fileGroup () {
+    //   const allDocs = this.getDocData()
+    //   console.log(allDocs)
+    //   this.$axios
+    //     .post('http://localhost:5000/topic/getClusterDrInfo', allDocs)
+    //     .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
+    //       this.clusterNum = clusterNum
+    //       this.selectedCluster = null
+    //       // console.log(this.clusterNum)
+    //       console.log('chartData:', chartData)
+    //       this.draw(chartData)
+    //     })
+    //     .catch(e => {
+    //       console.log(e)
+    //     })
+    // }
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.width = Math.floor(this.$refs.root.clientWidth)
+    this.$bus.$on('version-range-selected', d => {
+      this.$axios.get('topics/getDiffDocs', d)
+        .then(({ diffDocs }) => {
+          this.$axios
+            .post('http://localhost:5000/topic/getClusterDrInfo', diffDocs)
+            .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
+              this.clusterNum = clusterNum
+              this.selectedCluster = null
+              console.log('chartData:', chartData)
+              this.draw(chartData)
+            })
+        })
+    })
   },
   methods: {
     draw (data) {
@@ -351,54 +363,6 @@ export default {
         fileIds: doc['fileIds']
       }
     },
-    getDocData () {
-      const topicNum = this.topicData.length
-      const addDocs = this.fileGroup.addDocs.map(doc => ({
-        relFileName: getRelPath(doc.filename),
-        diffVec: this.calDiffVec(
-          Array(topicNum).fill(0),
-          doc['Topic_Contribution'].map(topic => topic['percent'])
-        ),
-        type: 'add',
-        fileIds: [doc.id]
-      }))
-      const delDocs = this.fileGroup.delDocs.map(doc => ({
-        relFileName: getRelPath(doc.filename),
-        diffVec: this.calDiffVec(
-          doc['Topic_Contribution'].map(topic => topic['percent']),
-          Array(topicNum).fill(0)
-        ),
-        type: 'del',
-        fileIds: [doc.id]
-      }))
-      let editDocs = []
-      let val, preData, nextData, version
-      Object.keys(this.fileGroup.editDocsObj).forEach(key => {
-        val = this.fileGroup.editDocsObj[key]
-        if (val.length === 2) {
-          for (let i = 0; i < val.length; i++) {
-            version = getVersion(val[i].filename)
-            if (version === this.prevVer) preData = val[i]
-            else nextData = val[i]
-          }
-          editDocs.push({
-            relFileName: getRelPath(preData.filename),
-            diffVec: this.calDiffVec(
-              preData['Topic_Contribution'].map(topic => topic['percent']),
-              nextData['Topic_Contribution'].map(topic => topic['percent'])
-            ),
-            type: 'edit',
-            fileIds: [preData.id, nextData.id]
-          })
-        }
-      })
-      return [addDocs, delDocs, editDocs]
-        .reduce((a, b) => a.concat(b))
-        .map(d => this.fieldAdapter(d))
-    },
-    calDiffVec (a, b) {
-      return a.map((val, idx) => b[idx] - val)
-    }
   }
 }
 </script>
