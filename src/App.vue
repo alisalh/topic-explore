@@ -4,8 +4,6 @@
       <radar-control-panel class="bl-card-shadow"
         :topicsGroup="topicsGroup"
         :versions="versions"></radar-control-panel>
-      <word-cloud :topicData="topicData"
-        class="bl-card-shadow"></word-cloud>
     </div>
     <div class="center-panel">
       <div class="first-row">
@@ -53,9 +51,13 @@
         </div> -->
       </div>
     </div>
-    <div class="right-panel bl-card-shadow">
+    <div class="right-panel">
+      <word-cloud :topicData="topicData" class="bl-card-shadow"></word-cloud>
       <comment-charts-wrapper :docData="docVerData&&docVerData.files"
-        :topicData="topicData"></comment-charts-wrapper>
+        :topicData="topicData" class="bl-card-shadow"></comment-charts-wrapper>
+    </div>
+    <div class="code-panel">
+      <code-text class="bl-card-shadow"></code-text>
     </div>
   </div>
 </template>
@@ -74,6 +76,7 @@ import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
 import AspectBarChart from './components/AspectBarChart.vue'
+import CodeText from './components/CodeText.vue'
 // import FileList from './components/FileList.vue'
 // import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
@@ -104,6 +107,7 @@ export default {
     // ParallelCoordinate,
     // DiffFilesWrapper
     AspectBarChart,
+    CodeText
     // FileList
   },
   computed: {
@@ -222,9 +226,6 @@ html {
       flex:4.5;
       margin-bottom: 5px;
     }
-    .word-cloud{
-      flex:2;
-    }
   }
   .center-panel {
     margin-right: 5px;
@@ -297,6 +298,22 @@ html {
   }
   .right-panel {
     flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    .word-cloud{
+      flex:2;
+    }
+    .comment-charts-wrapper
+    {
+      margin-top: 5px;
+      flex: 5;
+    }
+  }
+  .code-panel{
+    flex: 2;
+    margin-left: 5px;
+    display: flex;
+    overflow: auto;
   }
 }
 </style>

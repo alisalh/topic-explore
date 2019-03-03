@@ -39,11 +39,11 @@
         </div>
       </div>
     </div>
-    <div class="code-wrapper">
+    <!-- <div class="code-wrapper">
       <div class="title">code:</div>
       <div class="content" v-highlight v-html="codeText">
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 
@@ -61,7 +61,7 @@ export default {
         commentArr: [],
         identifiers: ''
       },
-      codeText: '',
+      // codeText: '',
       selectedTopicKeywords: null,
       uniqueIdentifiers: [],
       processedComments: null
@@ -173,11 +173,11 @@ export default {
           cost: d.weight
         }))
       this.docSelectedHandler(selectedDoc)
-      this.$axios
-        .get('topics/getCode', { filepath: this.selectedDoc.filename})
-        .then(({ data }) => {
-          this.codeText = `<pre><code>${data}</code></pre>`
-        })
+      // this.$axios
+      //   .get('topics/getCode', { filepath: selectedDoc.filename})
+      //   .then(({ data }) => {
+      //     this.codeText = `<pre><code>${data}</code></pre>`
+      //   })
     })
   }
 }
@@ -198,14 +198,12 @@ export default {
     }
   }
   .comment-wrapper,
-  .identifier-wrapper,
-  .code-wrapper {
+  .identifier-wrapper {
     border-top: 1px solid rgb(156, 151, 151);
   }
   .selected-file-wrapper,
   .comment-wrapper,
-  .identifier-wrapper,
-  .code-wrapper{
+  .identifier-wrapper,{
     display: flex;
     flex-direction: column;
     padding: 10px;
@@ -240,13 +238,6 @@ export default {
         margin: 0 5px;
         border-radius: 5px;
       }
-    }
-  }
-  .code-wrapper {
-    flex: 2;
-    .content{
-      overflow-x: scroll;
-      overflow-y: scroll;
     }
   }
 }
