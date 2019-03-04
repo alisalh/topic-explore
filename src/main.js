@@ -3,8 +3,8 @@ import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 import App from './App.vue'
 import axios from './utils/http'
-import './assets/common.less'
 import Highlight from './directives/highlight.js'
+import './assets/common.less'
 
 Vue.config.productionTip = false
 Vue.prototype.$axios = axios

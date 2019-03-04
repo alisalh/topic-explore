@@ -1,8 +1,7 @@
 <template>
-  <div class='code-text' 
+  <div class="code-wrapper"  v-show="isShow"
         v-highlight 
-        v-html="codeText"
-        v-show="isShow">
+        v-html="codeText">
   </div>
 </template>
 
@@ -14,6 +13,8 @@ export default {
         return{
             isShow: false,
             codeText: '',
+            height: 0,
+            width: 0
         }
     },
     created(){
@@ -30,7 +31,9 @@ export default {
 </script>
  
 <style lang='less'>
-.code-text{
+.code-wrapper{
     height: 100%;
+    // width: 100%;
+    font-weight: bold;
 }
 </style>

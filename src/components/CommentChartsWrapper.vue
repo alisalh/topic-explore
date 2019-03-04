@@ -194,6 +194,7 @@ export default {
   .selected-file-wrapper {
     flex: 0.5;
     .content {
+      // font-size: 15px;
       word-break: break-all;
     }
   }
@@ -221,6 +222,7 @@ export default {
     flex: 1.2;
     .content {
       .comment {
+        word-break: break-all;
         border-bottom: 1px dashed black;
         .token {
           display: inline-block;

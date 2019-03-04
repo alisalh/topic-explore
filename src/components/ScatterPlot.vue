@@ -15,6 +15,7 @@ export default {
       height: 0,
       width: 0,
       clusterNum: 0,
+      diffDocs: null,
       // markerG: null,
       selectedCluster: null
     }
@@ -49,22 +50,29 @@ export default {
     //       console.log(e)
     //     })
     // }
+    diffDocs(){
+       this.$axios
+        .post('http://localhost:5000/topic/getClusterDrInfo', this.diffDocs)
+        .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
+          this.clusterNum = clusterNum
+          this.selectedCluster = null
+          console.log('chartdata: ', chartData)
+          this.draw(chartData)
+        })
+    }
+
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.width = Math.floor(this.$refs.root.clientWidth)
     this.$bus.$on('version-range-selected', d => {
       this.$axios.get('topics/getDiffDocs', d)
-        .then(({ diffDocs }) => {
-          this.$axios
-            .post('http://localhost:5000/topic/getClusterDrInfo', diffDocs)
-            .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
-              this.clusterNum = clusterNum
-              this.selectedCluster = null
-              console.log('chartData:', chartData)
-              this.draw(chartData)
-            })
+        .then(({ data }) => {
+         this.diffDocs = data
         })
+    })
+    this.$bus.$on('version-restored', d => {
+      this.$refs.root.innerHTML = ''
     })
   },
   methods: {
@@ -78,11 +86,6 @@ export default {
         .append('svg')
         .attr('width', width)
         .attr('height', height)
-      svg.on('click', () => {
-        this.selectedCluster = null
-        this.$bus.$emit('cluster-selected', null)
-        resetStatus()
-      })
       const x = d3
         .scaleLinear()
         .domain(d3.extent(data, d => d.x))
@@ -121,7 +124,7 @@ export default {
         .style('stroke', function() {
           return 'black'
         })
-        .attr('stroke-dasharray', '3,5')
+        .attr('stroke-dasharray', '3,3')
         .attr('stroke-width', '2')
       // 实线圆(add)
       svg
@@ -165,7 +168,7 @@ export default {
         .style('stroke', function() {
           return 'black'
         })
-        .attr('stroke-dasharray', '3,5')
+        .attr('stroke-dasharray', '3,3')
         .attr('stroke-dashoffset', '3')
         .attr('stroke-width', '2')
         // .attr('viewBox', '0 0 1024 1024')
@@ -193,8 +196,8 @@ export default {
         .attr('opacity', 0.7)
         .on('mouseenter', d => {
           if (this.selectedCluster) return
-          resetStatus()
-          highlightMarker(d.cluster)
+            resetStatus()
+            highlightMarker(d.cluster)
         })
         .on('mouseleave', function() {
            if(!this.selectedCluster)
@@ -218,6 +221,16 @@ export default {
           highlightMarker(selectedCluster)
           this.$bus.$emit('cluster-selected', clusters)
         })
+
+      svg.on('click', () => {
+        this.selectedCluster = null
+        this.$bus.$emit('cluster-restored', {})
+        circle.on('mouseleave', function() {
+          if(!this.selectedCluster)
+            resetStatus()
+        })
+        resetStatus()
+      })
 
       // // 力布局避免重叠
       // var clusters = new Array(this.clusterNum+1)

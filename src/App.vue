@@ -4,6 +4,9 @@
       <radar-control-panel class="bl-card-shadow"
         :topicsGroup="topicsGroup"
         :versions="versions"></radar-control-panel>
+      <div class="args bl-card-shadow">
+
+      </div>
     </div>
     <div class="center-panel">
       <div class="first-row">
@@ -56,8 +59,8 @@
       <comment-charts-wrapper :docData="docVerData&&docVerData.files"
         :topicData="topicData" class="bl-card-shadow"></comment-charts-wrapper>
     </div>
-    <div class="code-panel">
-      <code-text class="bl-card-shadow"></code-text>
+    <div class="code-panel" >
+      <code-wrapper class="bl-card-shadow"></code-wrapper>
     </div>
   </div>
 </template>
@@ -76,7 +79,7 @@ import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
 import AspectBarChart from './components/AspectBarChart.vue'
-import CodeText from './components/CodeText.vue'
+import CodeWrapper from './components/CodeWrapper.vue'
 // import FileList from './components/FileList.vue'
 // import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
@@ -107,7 +110,7 @@ export default {
     // ParallelCoordinate,
     // DiffFilesWrapper
     AspectBarChart,
-    CodeText
+    CodeWrapper
     // FileList
   },
   computed: {
@@ -223,8 +226,11 @@ html {
     display: flex;
     flex-direction: column;
     .radar-control-panel{
-      flex:4.5;
+      flex:5;
       margin-bottom: 5px;
+    }
+    .args{
+      flex: 2;
     }
   }
   .center-panel {
@@ -261,7 +267,7 @@ html {
       display: flex;
       margin-top: 5px;
       .sunburst {
-        flex: 1;
+        flex: 1.2;
         margin-right: 5px;
       }
       .scatter-plot{
@@ -269,7 +275,7 @@ html {
         margin-right: 5px;
       }
       .aspect-bar-chart{
-        flex: 0.6;
+        flex: 0.5;
       }
       // .file-list{
       //   flex:0.6;
@@ -312,8 +318,9 @@ html {
   .code-panel{
     flex: 2;
     margin-left: 5px;
-    display: flex;
     overflow: auto;
+    // overflow: scroll;
+    display: flex;
   }
 }
 </style>

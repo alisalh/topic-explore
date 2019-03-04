@@ -7,6 +7,8 @@
 
 <script>
 import * as d3 from 'd3'
+import d3tip from 'd3-tip'
+
 export default {
   name: 'component_name',
   data () {
@@ -45,7 +47,7 @@ export default {
         .scaleLinear()
         .range([100, this.height / 2])
         .domain([1, 0])
-
+        
       var partition = d3.partition()
       var arc = d3
         .arc()
@@ -111,21 +113,39 @@ export default {
           if(d.data.type === 'file')
             this.$bus.$emit('doc-selected', this.docData[d.data.id])
         })
-      
-      // node
-      //   .append('text')
-      //   .attr('dy', function(d) { 
-      //     var angle = arc(d).split(',')[7].split('L')
-      //     return (angle[0] > Math.PI/2 ? -6 : 18) 
-      //   })
-      //   .append('textPath')
-      //   .attr('startOffset','50%')
-      //   .style('text-anchor','middle')
-      //   .attr('xlink:href', (d, i) => '#donutArc'+i)
-      //   .text(function(d){
-      //     if(d.data.type === 'dir')
-      //       return d.data.name.substr(d.data.name.lastIndexOf('\\') + 1)
-      //   })
+
+      var tip = d3tip()
+        .offset([2, 2])
+        .attr('class', 'd3-tip')
+        .html(function(d) { return d.data.name.substr(d.data.name.lastIndexOf('\\') + 1) })
+      svg.call(tip)
+      node
+        .append('text')
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide)
+        .attr('dy', function(d) { 
+          var angle = arc(d).split(',')[7].split('L')
+          return (angle[0] > Math.PI/2 ? -6 : 18) 
+        })
+        .append('textPath')
+        .attr('startOffset','50%')
+        .style('text-anchor','middle')
+        .attr('xlink:href', (d, i) => '#donutArc'+i)
+        .text(function(d){
+          if(d.data.type === 'dir'){
+            let firstArc = (/(^.+?)L/).exec(arc(d))[1]
+            let startPoint = (/M(.*?)A/).exec(firstArc)[1].split(','),
+              endPoint = firstArc.split(',').slice(-2)
+            let distX = startPoint[0]-endPoint[0],
+              distY = startPoint[1]-endPoint[1]
+            let dist = Math.sqrt(distX * distX + distY * distY)
+            let name = d.data.name.substr(d.data.name.lastIndexOf('\\') + 1)
+            if(dist < name.length*10)
+              return '...'
+            else return name
+          }
+        })
+        // .style('font-size', '15px')
       
     // // 添加虚线
     // node
@@ -164,6 +184,36 @@ export default {
       this.arcSvg
         .filter(d => d.norm < 0.1)
         .attr('opacity', '0.1')
+
+      this.arcSvg
+        .filter(d => d.norm >= 0.1 && d.fileType === 'edit')
+        .attr('stroke-width', '2')
+        .attr('stroke-opacity', '0.8')
+      
+      // svg
+      //   .append('defs')
+      //   .append('pattern')
+      //   .attr('id', 'stripes')
+      //   .attr('patternUnits', 'userSpaceOnUse')
+      //   .attr('width', 4)
+      //   .attr('height', 4)
+      //   .append('circle')
+      //   .attr('cx', 0.5)
+      //   .attr('cy', 0.5)
+      //   .attr('r', 0.5)
+      //   .style('stroke', 'black')
+
+      // node
+      //   .each((d, i) => {
+      //     if(d.fileType === 'edit' && d.norm >= 0.1) {
+      //       let curPath = node.select('#hierarchy-node-'+i).attr('d')
+      //       node.append('path')
+      //         .attr('d', curPath)
+      //         .attr('fill', 'url(#stripes)')
+      //     }
+      //   })
+        
+        
     },
     resetStatus () {
       this.arcSvg.attr('opacity', 1)
@@ -192,13 +242,10 @@ export default {
     })
     this.$bus.$on('cluster-selected', ids => {
       this.resetStatus()
-      if (ids === null) return
+      // if (ids === null) return
       this.arcSvg
         .filter(d => d.data.type !== 'dir' && ids.indexOf(d.data.id) === -1)
         .attr('opacity', 0.1)
-      this.arcSvg
-        .filter(d => d.data.preId && ids.indexOf(d.data.preId) != -1)
-        .attr('stroke-width', '2')
     })
   },
   mounted () {
@@ -224,6 +271,12 @@ export default {
     this.$bus.$on('version-restored', d => {
       this.$refs.root.innerHTML = ''
     })
+    this.$bus.$on('cluster-restored', d => {
+      this.resetStatus ()
+      this.arcSvg
+        .filter(d => d.norm < 0.1)
+        .attr('opacity', '0.1')
+    })
   }
 }
 </script>
@@ -231,6 +284,34 @@ export default {
 <style lang="less">
 .sunburst {
   height: 100%;
+}
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+/* Style northward tooltips differently */
+.d3-tip.n:after {
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
 }
 
 </style>
