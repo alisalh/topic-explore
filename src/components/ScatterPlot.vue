@@ -20,7 +20,7 @@ export default {
       selectedCluster: null
     }
   },
-  props: ['topicData', 'prevVer'],
+  props: [],
   computed: {
     clusterColormap () {
       return d3
@@ -57,6 +57,7 @@ export default {
           this.clusterNum = clusterNum
           this.selectedCluster = null
           console.log('chartdata: ', chartData)
+          this.$bus.$emit('diff-docs-changed', chartData)
           this.draw(chartData)
         })
     }
@@ -78,7 +79,7 @@ export default {
   methods: {
     draw (data) {
       this.$refs.root.innerHTML = ''
-      const margin = { top: 20, right: 30, bottom: 30, left: 40 }
+      const margin = { top: 10, right: 10, bottom: 10, left: 10 }
       const height = this.height
       const width = this.width
       const svg = d3
@@ -214,17 +215,18 @@ export default {
               // 合并数组concat
               clusters = clusters.concat(d['fileIds'])
               selectedDocs.push(d)
-              console.log(selectedDocs)
             })
           // 多事件结合使用时，可以阻止其他事件的发生，避免产生多个动作
           d3.event.stopPropagation()
           highlightMarker(selectedCluster)
           this.$bus.$emit('cluster-selected', clusters)
+          this.$bus.$emit('docs-selected', selectedDocs)
         })
 
       svg.on('click', () => {
         this.selectedCluster = null
         this.$bus.$emit('cluster-restored', {})
+        this.$bus.$emit('docs-selected', null)
         circle.on('mouseleave', function() {
           if(!this.selectedCluster)
             resetStatus()
@@ -381,4 +383,7 @@ export default {
 </script>
 
 <style lang="less">
+  // .scatter-plot{
+  //   height: 100%;
+  // }
 </style>

@@ -35,12 +35,12 @@ export default {
       let svg = d3
         .select(this.$refs.root)
         .append('svg')
-        .attr('width', this.width)
+        .attr('width', this.width-20)
         .attr('height', this.height)
         .append('g')
         .attr(
           'transform',
-          'translate(' + this.width / 2 + ',' + this.height / 2 + ')'
+          'translate(' + (this.width / 2 - 5) + ',' + this.height / 2 + ')'
         )
       var x = d3.scaleLinear().range([0, 2 * Math.PI])
       var y = d3
@@ -121,8 +121,8 @@ export default {
       svg.call(tip)
       node
         .append('text')
-        .on('mouseover', tip.show)
-        .on('mouseout', tip.hide)
+        .style('cursor', 'default')
+        .attr('id', (d, i) => 'text'+i)
         .attr('dy', function(d) { 
           var angle = arc(d).split(',')[7].split('L')
           return (angle[0] > Math.PI/2 ? -6 : 18) 
@@ -131,7 +131,7 @@ export default {
         .attr('startOffset','50%')
         .style('text-anchor','middle')
         .attr('xlink:href', (d, i) => '#donutArc'+i)
-        .text(function(d){
+        .text(function(d, i){
           if(d.data.type === 'dir'){
             let firstArc = (/(^.+?)L/).exec(arc(d))[1]
             let startPoint = (/M(.*?)A/).exec(firstArc)[1].split(','),
@@ -141,11 +141,15 @@ export default {
             let dist = Math.sqrt(distX * distX + distY * distY)
             let name = d.data.name.substr(d.data.name.lastIndexOf('\\') + 1)
             if(dist < name.length*10)
+            {
+              node.select('#text'+ i)
+                .on('click', tip.show)
+                .on('mouseout', tip.hide)
               return '...'
+            }  
             else return name
           }
         })
-        // .style('font-size', '15px')
       
     // // 添加虚线
     // node
@@ -164,9 +168,9 @@ export default {
     //         .attr('stroke-dasharray', '5,5')
     //     })
        
-      this.arcSvg
-        .append('title')
-        .text(d => d.data.name)
+      // this.arcSvg
+      //   .append('title')
+      //   .text(d => d.data.name)
       // 前一版本用虚线
       this.arcSvg
         .filter(d => d.data.version === 'prev')
@@ -282,26 +286,26 @@ export default {
 </script>
 
 <style lang="less">
-.sunburst {
-  height: 100%;
-}
+// .sunburst {
+//   height: 100%;
+// }
 .d3-tip {
   line-height: 1;
-  font-weight: bold;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.8);
+  // font-weight: bold;
+  padding: 5px;
+  background: rgba(100, 98, 98, 0.8);
   color: #fff;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 /* Creates a small triangle extender for the tooltip */
 .d3-tip:after {
   box-sizing: border-box;
   display: inline;
-  font-size: 10px;
+  font-size: 8px;
   width: 100%;
   line-height: 1;
-  color: rgba(0, 0, 0, 0.8);
+  color: rgba(100, 98, 98, 0.8);
   content: "\25BC";
   position: absolute;
   text-align: center;
@@ -309,7 +313,7 @@ export default {
 
 /* Style northward tooltips differently */
 .d3-tip.n:after {
-  margin: -1px 0 0 0;
+  margin: -2px 0 0 0;
   top: 100%;
   left: 0;
 }

@@ -4,9 +4,8 @@
       <radar-control-panel class="bl-card-shadow"
         :topicsGroup="topicsGroup"
         :versions="versions"></radar-control-panel>
-      <div class="args bl-card-shadow">
-
-      </div>
+      <args-wrapper class="bl-card-shadow">
+      </args-wrapper>
     </div>
     <div class="center-panel">
       <div class="first-row">
@@ -28,16 +27,14 @@
           :docData="docVerData&&docVerData.files"
           :versions="versions"
           class="bl-card-shadow"></sunburst>
-        <scatter-plot class="bl-card-shadow"
-          :fileGroup="fileGroup"
-          :topicData="topicData"
-          :prevVer="prevVer"></scatter-plot>
-        <aspect-bar-chart :topicColormap="topicColormap"
-          :fileGroup="fileGroup"
-          :topicData="topicData"
-          :prevVer="prevVer"
-          class='bl-card-shadow'>
-        </aspect-bar-chart>
+        <div class="scatter-bar-wrapper">
+          <scatter-plot
+            class="bl-card-shadow"></scatter-plot>
+          <aspect-bar-chart :topicColormap="topicColormap"
+            :docData="docVerData&&docVerData.files"
+            class='bl-card-shadow'>
+          </aspect-bar-chart>
+        </div>
         <!-- <file-list 
           :fileGroup="fileGroup"
           :prevVer="prevVer"
@@ -80,6 +77,7 @@ import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
 import AspectBarChart from './components/AspectBarChart.vue'
 import CodeWrapper from './components/CodeWrapper.vue'
+import ArgsWrapper from './components/ArgsWrapper.vue'
 // import FileList from './components/FileList.vue'
 // import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
@@ -110,7 +108,8 @@ export default {
     // ParallelCoordinate,
     // DiffFilesWrapper
     AspectBarChart,
-    CodeWrapper
+    CodeWrapper,
+    ArgsWrapper
     // FileList
   },
   computed: {
@@ -221,15 +220,15 @@ html {
   // margin-top: 60px;
   display: flex;
   .left-panel{
-    flex:0.8;
+    flex: 0.9;
     margin-right:5px;
     display: flex;
     flex-direction: column;
     .radar-control-panel{
-      flex:5;
+      flex:4.3;
       margin-bottom: 5px;
     }
-    .args{
+    .args-wrapper{
       flex: 2;
     }
   }
@@ -267,16 +266,22 @@ html {
       display: flex;
       margin-top: 5px;
       .sunburst {
-        flex: 1.2;
+        flex: 1.6;
         margin-right: 5px;
       }
-      .scatter-plot{
-        flex: 1;
-        margin-right: 5px;
+      .scatter-bar-wrapper{
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        .scatter-plot{
+          flex: 1.1;
+          margin-bottom: 5px;
+        }
+        .aspect-bar-chart{
+          flex: 0.8;
+        }
       }
-      .aspect-bar-chart{
-        flex: 0.5;
-      }
+      
       // .file-list{
       //   flex:0.6;
       // }
@@ -303,7 +308,7 @@ html {
     }
   }
   .right-panel {
-    flex: 1.2;
+    flex: 1.1;
     display: flex;
     flex-direction: column;
     .word-cloud{
@@ -316,9 +321,10 @@ html {
     }
   }
   .code-panel{
-    flex: 2;
+    flex: 1.9;
     margin-left: 5px;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: auto;
     // overflow: scroll;
     display: flex;
   }
