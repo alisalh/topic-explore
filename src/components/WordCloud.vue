@@ -39,6 +39,17 @@ export default {
         }))
       this.draw(keywords)
     })
+    this.$bus.$on('doc-selected', doc =>{
+      d3.select('.word-cloud>svg *').remove()
+      // weight关键字被占用，改为cost代替
+      let keywords = this.topicData
+        .find(d => d.index === parseInt(doc.Dominant_Topic))
+        .keywords.map(d => ({
+          keyword: d.keyword,
+          cost: d.weight
+        }))
+      this.draw(keywords)
+    })
   },
   methods: {
     draw (data) {

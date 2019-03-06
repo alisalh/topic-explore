@@ -67,7 +67,7 @@ export default {
   methods: {
     legendClickHandler(selectedTopic) {
       if(selectedTopic.isSelected){
-        this.$bus.$emit('topic-restored', {})
+        this.$bus.$emit('topic-selected', -1)
         this.sliderData
           .forEach(d => (d.isSelected = false))
         this.selectedTopic = null
@@ -90,6 +90,9 @@ export default {
         d.value = 0
         d.opacity = 1
       })
+      this.sliderData.sort(function(a, b){
+          return a.topicId - b.topicId
+        })
       this.sliderData.forEach(d => (d.isSelected = false))
       this.$bus.$emit('topic-selected', -1)
       if(this.selectedVersion === 'all') {

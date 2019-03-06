@@ -155,6 +155,7 @@ export default {
             .filter(ver => ver === d)
             .on('mouseout', null)
             .attr('opacity', 0.7)
+          this.selectedVersion = d
           this.$bus.$emit('version-selected', d)
         })
        
@@ -338,9 +339,6 @@ export default {
     this.$bus.$on('topic-selected', topicId => {
       if (topicId === -1) this.resetLineStatus()
       else this.highlightLine(topicId)
-    })
-    this.$bus.$on('topic-restored', d =>{
-      this.resetLineStatus()
     })
   }
 }

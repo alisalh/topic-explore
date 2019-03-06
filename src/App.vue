@@ -28,7 +28,8 @@
           :versions="versions"
           class="bl-card-shadow"></sunburst>
         <div class="scatter-bar-wrapper">
-          <scatter-plot
+          <scatter-plot :topicColormap="topicColormap"
+            :docData="docVerData&&docVerData.files"
             class="bl-card-shadow"></scatter-plot>
           <aspect-bar-chart :topicColormap="topicColormap"
             :docData="docVerData&&docVerData.files"

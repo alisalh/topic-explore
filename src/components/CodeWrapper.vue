@@ -33,7 +33,7 @@ export default {
 <style lang='less'>
 .code-wrapper{
     height: 100%;
-    // width: 100%;
+    width: 100%;
     font-weight: bold;
 }
 </style>

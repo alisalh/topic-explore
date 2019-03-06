@@ -278,7 +278,7 @@ export default {
     this.$bus.$on('cluster-restored', d => {
       this.resetStatus ()
       this.arcSvg
-        .filter(d => d.norm < 0.1)
+        .filter(d => d.norm < 0.5)
         .attr('opacity', '0.1')
     })
   }

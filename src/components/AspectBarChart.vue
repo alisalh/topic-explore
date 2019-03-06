@@ -11,7 +11,11 @@ export default {
     data() {
         return{
             width: 0,
-            height: 0
+            height: 0,
+            selectedDocs: null,
+            barG: null,
+            svg: null,
+            barWidth: 11
         }
     },
     props: ['topicColormap', 'docData'],
@@ -19,11 +23,10 @@ export default {
         draw(data){
             this.$refs.root.innerHTML = ''
             const margin = { top: 10, right: 10, bottom: 10, left: 20 }
-            var barWidth = 12,
-                gap = 8  // 组间距离
-            var chartWidth = barWidth*data.length + gap*data.length/2
+            var gap = 11  // 组间距离
+            var chartWidth = this.barWidth*data.length + gap*data.length/2
 
-            const svg = d3
+           this.svg = d3
               .select(this.$refs.root)
               .append('svg')
               .attr('height', this.height - margin.top - margin.bottom)
@@ -37,46 +40,38 @@ export default {
             // var xAxis = d3.axisBottom(x)
             //     .tickFormat('')
             //     .tickSize(0)
-            var barG = svg.selectAll('g')
+            this.barG = this.svg.selectAll('g')
                 .data(data)
                 .enter().append('g')
-                .attr('transform', (d, i) => {
-                    return 'translate('+ (i * barWidth + gap * (0.5 + Math.floor(i/2))) 
-                        + ',' + (this.height - margin.bottom - y(d.val)) +')'
-                })
-            barG.append('rect')
+                // .attr('id', (d, i) => 'barG'+i)
+                // .attr('transform', (d, i) => {
+                //     return 'translate('+ (i * this.barWidth + gap * (0.5 + Math.floor(i/2))) 
+                //         + ',' + (this.height - margin.bottom - margin.top - y(d.val)) +')'
+                // })
+            
+            this.barG.append('rect')
                 .attr('fill', d => d.color )
                 .attr('class', 'bar')
-                .attr('height', d => y(d.val))
-                .attr('width', barWidth - 3)  // 1为组内bar间的距离 
+                .attr('id', (d, i) => 'bar'+i)
+                .attr('x', (d, i) => i * this.barWidth + gap * parseInt(i/2))
+                .attr('y', d => this.height - margin.bottom - margin.top - y(d.val))
+                .attr('height', d =>y(d.val))
+                .attr('width', this.barWidth - 2)  // 1为组内bar间的距离 
                 .style('stroke', 'black') 
                 .attr('stroke-dasharray', d => {
-                    if(d.type === 'prev') return '5,5'
+                    if(d.type === 'prev') return '3,3'
                 })
+                .attr('stroke-opacity', 0.5)
             // svg.append('g')
             // .attr('class','x axis')
             // .attr('transform', 'translate(' + margin.left +',' + (this.height - 20) +')')
             // .call(xAxis)
-        }
-    },
-    watch: {
-       
-    },
-    created() {
 
-    },
-    mounted() {
-        this.height = Math.floor(this.$refs.root.clientHeight)
-        this.width = Math.floor(this.$refs.root.clientWidth)
-        this.$bus.$on('diff-docs-changed', docs => {
-            console.log('diffDocs:', docs)
-            if(!docs){
-                this.$refs.root.innerHTML = ''
-                return
-            }
-            var preVec = Array(docs[0].vec.length).fill(0), 
-                curVec = Array(docs[0].vec.length).fill(0)
-            docs.forEach(doc => {
+        },
+        getVecSum(data){
+            var preVec = Array(data[0].vec.length).fill(0), 
+                curVec = Array(data[0].vec.length).fill(0)
+            data.forEach(doc => {
                 if(doc.type === 'edit'){
                     let preId = doc.fileIds[0], curId = doc.fileIds[1]
                     let preDoc = this.docData[preId], curDoc = this.docData[curId]
@@ -102,6 +97,68 @@ export default {
                     curVec = curVec.map((d, i) => d+del_curVec[i])
                 }
             })
+            return {preVec: preVec, curVec: curVec}
+        }
+    },
+    watch: {
+        selectedDocs(){
+            this.svg.selectAll('.bar-tick').remove()
+            let vec = this.getVecSum(this.selectedDocs)
+            let preVec = vec.preVec, curVec = vec.curVec
+            this.barG.each((d, i) => {
+                if(i%2 === 0 && preVec[parseInt(i/2)] > 0.2){
+                    let barHeight = parseFloat(this.barG.select('#bar'+i).attr('height'))
+                    let newHeight = preVec[parseInt(i/2)]/d.val*barHeight
+                    let x = this.barG.select('#bar'+i).attr('x'),
+                        y = this.barG.select('#bar'+i).attr('y')
+                    this.svg.append('g')
+                        .attr('class', 'bar-tick')
+                        .append('rect')
+                        .attr('fill', 'none')
+                        .attr('class', 'bar')
+                        .attr('x', x)
+                        .attr('y', parseFloat(y)+barHeight-newHeight)
+                        .attr('height', newHeight)
+                        .attr('width', this.barWidth - 2)  
+                        .style('stroke', 'black') 
+                        .attr('stroke-dasharray','3,3')
+                        .attr('stroke-width', '1.5')
+                    
+                }
+                if(i%2 === 1 && curVec[parseInt(i/2)] > 0.2){
+                    let barHeight = parseFloat(this.barG.select('#bar'+i).attr('height'))
+                    let newHeight = curVec[parseInt(i/2)]/d.val*barHeight
+                    let x = this.barG.select('#bar'+i).attr('x'),
+                        y = this.barG.select('#bar'+i).attr('y')
+                    this.svg.append('g')
+                        .attr('class', 'bar-tick')
+                        .append('rect')
+                        .attr('fill', 'none')
+                        .attr('class', 'bar')
+                        .attr('x', x)
+                        .attr('y', parseFloat(y)+barHeight-newHeight)
+                        .attr('height', newHeight)
+                        .attr('width', this.barWidth - 2)  
+                        .style('stroke', 'black') 
+                        .attr('stroke-width', '1.5')
+                }
+            })
+        }
+    },
+    created() {
+
+    },
+    mounted() {
+        this.height = Math.floor(this.$refs.root.clientHeight)
+        this.width = Math.floor(this.$refs.root.clientWidth)
+        this.$bus.$on('diff-docs-changed', docs => {
+            console.log('diffDocs:', docs)
+            if(!docs){
+                this.$refs.root.innerHTML = ''
+                return
+            }
+            let vec = this.getVecSum(docs)
+            let preVec = vec.preVec, curVec = vec.curVec
             var barData = []
             preVec.forEach((d, i) => {
                 barData.push({
@@ -118,6 +175,12 @@ export default {
                 })
             })
             this.draw(barData)
+        })
+        this.$bus.$on('docs-selected', docs =>{
+            this.selectedDocs = docs
+        })
+        this.$bus.$on('version-restored', d => {
+            this.$refs.root.innerHTML = ''
         })
     }
 }

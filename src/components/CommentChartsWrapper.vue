@@ -179,6 +179,7 @@ export default {
       //     this.codeText = `<pre><code>${data}</code></pre>`
       //   })
     })
+
   }
 }
 </script>
