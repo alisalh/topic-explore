@@ -226,7 +226,7 @@ html {
     display: flex;
     flex-direction: column;
     .radar-control-panel{
-      flex:4.3;
+      flex: 5;
       margin-bottom: 5px;
     }
     .args-wrapper{

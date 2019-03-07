@@ -16,7 +16,9 @@ export default {
       // width: 600,
       height: 0,
       arcSvg: null,
-      diffDocs: null
+      diffDocs: null,
+      threshold: 0.1,
+      dataRoot: null
       // doc: null,
     }
   },
@@ -26,10 +28,37 @@ export default {
     }
   },
   props: ['topicColormap', 'docData', 'versions'],
+  watch:{
+    threshold(){
+      this.arcSvg
+        .attr('opacity', 1)
+        .attr('stroke-width', 1)
+      if(!this.diffDocs)
+        return 
+      var leafNodes = this.dataRoot.leaves()
+      leafNodes.forEach(d => {
+        let obj = this.diffDocs.find(doc => {
+          return (d.data.id === doc.fileIds[0]) || (d.data.id === doc.fileIds[1])
+        })
+        d['norm'] = obj['norm']
+        d['fileType'] = obj['type']
+      })
+      // 前后版本的差异较小的文件透明度降低(阈值为0.1)
+      this.arcSvg
+        .filter(d => d.norm < this.threshold)
+        .attr('opacity', '0.1')
+
+      this.arcSvg
+        .filter(d => d.norm >= 0.1 && d.fileType === 'edit')
+        .attr('stroke-width', '2')
+        .attr('stroke-opacity', '0.8')
+    }
+  },
   methods: {
     draw (data) {
       this.$refs.root.innerHTML = ''
       let root = d3.hierarchy(data)
+      this.dataRoot = root
       // 后序遍历, value相加, 详情见https://github.com/xswei/d3-hierarchy
       root.sum(d => (d.children ? 0 : 1))
       let svg = d3
@@ -186,14 +215,13 @@ export default {
       })
       // 前后版本的差异较小的文件透明度降低(阈值为0.1)
       this.arcSvg
-        .filter(d => d.norm < 0.1)
+        .filter(d => d.norm < this.threshold)
         .attr('opacity', '0.1')
 
       this.arcSvg
         .filter(d => d.norm >= 0.1 && d.fileType === 'edit')
         .attr('stroke-width', '2')
         .attr('stroke-opacity', '0.8')
-      
       // svg
       //   .append('defs')
       //   .append('pattern')
@@ -216,7 +244,6 @@ export default {
       //         .attr('fill', 'url(#stripes)')
       //     }
       //   })
-        
         
     },
     resetStatus () {
@@ -267,7 +294,6 @@ export default {
       this.$axios
         .get('topics/getTopicDisByVersion', d)
         .then(({ data }) => {
-          // console.log(data)
           this.diffDocs = data.diffDocs
           this.draw(data.root)
         })
@@ -278,9 +304,10 @@ export default {
     this.$bus.$on('cluster-restored', d => {
       this.resetStatus ()
       this.arcSvg
-        .filter(d => d.norm < 0.5)
+        .filter(d => d.norm < this.threshold)
         .attr('opacity', '0.1')
     })
+    this.$bus.$on('threshold-selected', d => this.threshold=d)
   }
 }
 </script>

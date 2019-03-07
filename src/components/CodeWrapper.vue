@@ -19,12 +19,17 @@ export default {
     },
     created(){
         this.$bus.$on('doc-selected', selectedDoc => {
-            this.isShow = true
             this.$axios
             .get('topics/getCode', { filepath: selectedDoc.filename})
             .then(({ data }) => {
                 this.codeText = `<pre><code>${data}</code></pre>`
             })
+        })
+        this.$bus.$on('code-radio-selected', d =>{
+            if(d === '1')
+                this.isShow = true
+            if(d === '2')
+                this.isShow = false
         })
     }
 }
@@ -33,7 +38,7 @@ export default {
 <style lang='less'>
 .code-wrapper{
     height: 100%;
-    width: 100%;
+    // width: 100%;
     font-weight: bold;
 }
 </style>

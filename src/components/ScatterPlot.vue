@@ -16,8 +16,12 @@ export default {
       width: 0,
       clusterNum: 0,
       diffDocs: null,
+      min_samples: 2,
+      eps: 0.05,
+      threshold: 0.1,
       // markerG: null,
-      selectedCluster: null
+      selectedCluster: null,
+      chartData: null
     }
   },
   props: ['topicColormap', 'docData'],
@@ -50,25 +54,25 @@ export default {
     //       console.log(e)
     //     })
     // }
-    diffDocs(){
-       this.$axios
-        .post('http://localhost:5000/topic/getClusterDrInfo', this.diffDocs)
-        .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
-          this.clusterNum = clusterNum
-          this.selectedCluster = null
-          let step = 0
-          chartData.forEach(d => {
-            if(d.cluster === -1) {
-              d.cluster = d.cluster - step
-              step = step + 1
-            }
-          })
-          console.log('chartdata: ', chartData)
-          this.$bus.$emit('diff-docs-changed', chartData)
-          this.draw(chartData)
-        })
-    }
 
+    min_samples(){
+      if(this.diffDocs)
+        this.getCluster()
+    },
+    eps(){
+      if(this.diffDocs)
+        this.getCluster()
+    },
+    threshold(){
+      if(this.diffDocs)
+        this.getCluster()
+    },
+    diffDocs(){
+      this.getCluster()
+    },
+    chartData(){
+      this.$bus.$emit('diff-docs-changed', this.chartData)
+    }
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
@@ -82,8 +86,31 @@ export default {
     this.$bus.$on('version-restored', d => {
       this.$refs.root.innerHTML = ''
     })
+    this.$bus.$on('min-samples-selected', d => this.min_samples = d)
+    this.$bus.$on('eps-selected', d => this.eps = d)
+    this.$bus.$on('threshold-selected', d => this.threshold = d)
   },
   methods: {
+    getCluster(){
+      this.$axios
+        .post('http://localhost:5000/topic/getClusterDrInfo', {
+          docs: this.diffDocs, threshold: this.threshold, 
+          min_samples: this.min_samples, eps: this.eps
+        })
+        .then(({ data: { data: chartData, cluster_num: clusterNum } }) => {
+          this.clusterNum = clusterNum
+          this.selectedCluster = null
+          let step = 0
+          chartData.forEach(d => {
+            if(d.cluster === -1) {
+              d.cluster = d.cluster - step
+              step = step + 1
+            }
+          })
+          this.chartData = chartData
+          this.draw(chartData)
+        })
+    },
     draw (data) {
       this.$refs.root.innerHTML = ''
       const margin = { top: 10, right: 10, bottom: 10, left: 10 }
@@ -236,7 +263,7 @@ export default {
               return this.topicColormap(this.docData[parseInt(d.fileIds[0])].Dominant_Topic)
           }
         })
-        .attr('opacity', 0.7)
+        // .attr('opacity', 0.8)
         .on('mouseenter', d => {
           if (this.selectedCluster) return
             resetStatus()
@@ -394,7 +421,7 @@ export default {
         
         // 状态重置和高亮
         function resetStatus () {
-          circle.attr('opacity', 0.7)
+          circle.attr('opacity', 1)
           // solidPath.attr('opacity', 1)
           // dashedPath.attr('opacity', 1)
         }
@@ -404,7 +431,7 @@ export default {
           // dashedPath.attr('opacity', 0.1)
           circle
             .filter(d => d.cluster === selectedCluster)
-            .attr('opacity', 0.7)
+            .attr('opacity', 1)
           // solidPath
           //   .filter(d => d.cluster === selectedCluster)
           //   .attr('opacity', d => {if(d.type === 'edit') return 1})

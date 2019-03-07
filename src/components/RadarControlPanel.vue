@@ -190,7 +190,7 @@ export default {
     .select-control-wrapper {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       .topic-idx {
         // flex:none;
         flex: 0 0 20px;
