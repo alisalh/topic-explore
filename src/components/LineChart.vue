@@ -118,6 +118,7 @@ export default {
         //   this.$bus.$emit('topic-selected', d.key)
         // })
       // 画版本定位辅助线
+      console.log(this.versions)
       let xOffset = 0
       var gridLine = svg
         .append('g')
@@ -324,6 +325,7 @@ export default {
             if(this.normData[i].val >= 2) 
               this.showVersions.push(this.versions[i])
           }
+          console.log('chartData:', this.topicsGroup)
           this.topicsGroup.forEach(topic => {
             let item = topic.val.filter(d => this.showVersions.indexOf(d.key) != -1)
             this.curData.push({key: topic.key, val: item})
