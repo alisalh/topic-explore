@@ -86,6 +86,9 @@ export default {
     this.$bus.$on('version-restored', d => {
       this.$refs.root.innerHTML = ''
     })
+    this.$bus.$on('version-selected', d => {
+      this.$refs.root.innerHTML = ''
+    })
     this.$bus.$on('min-samples-selected', d => this.min_samples = d)
     this.$bus.$on('eps-selected', d => this.eps = d)
     this.$bus.$on('threshold-selected', d => this.threshold = d)
@@ -337,10 +340,11 @@ export default {
       legend
         .append('use')
         .attr('href', '#marker-triangle')
-        .attr('fill', 'white')
+        .attr('fill', 'none')
         .attr('x', 150)
         .attr('y', 8)
-        .attr('stroke-width', '2')
+        .style('stroke','#999494')
+        .attr('stroke-width', '120')
       legend.append('text')
         .attr('x', 170)
         .attr('y', 20)

@@ -13,6 +13,7 @@ export default {
       height: 0,
       width: 0,
       lineSvg: null,
+      gridLineG: null,
       strokeWidth: 2,
       curData: [],
       showVersions: [],
@@ -128,9 +129,9 @@ export default {
         
       // 画版本定位辅助线
       let xOffset = 0
-      var gridLineG = svg
+      this.gridLineG = svg
         .append('g')
-      var gridLine = gridLineG
+      var gridLine = this.gridLineG
         .attr('fill', 'none')
         .attr('stroke-width', 3)
         .attr('stroke-linejoin', 'round')
@@ -141,6 +142,7 @@ export default {
         .data(this.versions)
         .enter()
         .append('path')
+        .attr('class', 'x-grid-line')
         .attr('id', d => 'grid-line-'+d.replace(/\./g, ''))
         .attr('opacity', 0)
         .attr('d', d => {
@@ -274,7 +276,7 @@ export default {
             .attr('opacity', 0.0)
             .attr('transform', d => {
               let reg = /M(.*)L/
-              let pos = reg.exec(gridLineG.select('#grid-line-'+d.replace(/\./g,'')).attr('d'))[1]
+              let pos = reg.exec(this.gridLineG.select('#grid-line-'+d.replace(/\./g,'')).attr('d'))[1]
               xOffset = x(d)-pos.split(',')[0]
               return `translate(${xOffset},0)`
             })
@@ -344,7 +346,7 @@ export default {
             .attr('opacity', 0.0)
             .attr('transform', d => {
               let reg = /M(.*)L/
-              let curLine = gridLineG.select('#grid-line-'+d.replace(/\./g,''))
+              let curLine = this.gridLineG.select('#grid-line-'+d.replace(/\./g,''))
               let pos = reg.exec(curLine.attr('d'))[1]
               xOffset = 0-pos.split(',')[0]
               return `translate(${xOffset},0)`
@@ -352,7 +354,7 @@ export default {
           gridLine.filter(d => this.showVersions.indexOf(d) != -1)
             .attr('transform', d => {
               let reg = /M(.*)L/
-              let curLine = gridLineG.select('#grid-line-'+d.replace(/\./g,''))
+              let curLine = this.gridLineG.select('#grid-line-'+d.replace(/\./g,''))
               let pos = reg.exec(curLine.attr('d'))[1]
               xOffset = x(d)-pos.split(',')[0]
               return `translate(${xOffset},0)`
@@ -404,6 +406,11 @@ export default {
     this.$bus.$on('topic-selected', topicId => {
       this.resetLineStatus()
       if(topicId != -1) this.highlightLine(topicId)
+    })
+    this.$bus.$on('version-range-selected', d =>{
+      this.selectedVersion = null
+      this.gridLineG.selectAll('.x-grid-line')
+        .attr('opacity', 0)
     })
   }
 }

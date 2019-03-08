@@ -18,7 +18,9 @@ export default {
       arcSvg: null,
       diffDocs: null,
       threshold: 0.1,
-      dataRoot: null
+      dataRoot: null,
+      selectedCluster: null,
+      selectedDoc: null
       // doc: null,
     }
   },
@@ -49,7 +51,7 @@ export default {
         .attr('opacity', '0.1')
 
       this.arcSvg
-        .filter(d => d.norm >= 0.1 && d.fileType === 'edit')
+        .filter(d => d.norm >= this.threshold && d.fileType === 'edit')
         .attr('stroke-width', '2')
         .attr('stroke-opacity', '0.8')
     }
@@ -123,15 +125,15 @@ export default {
           var firstArcSection = /(^.+?)L/
           var newArc = firstArcSection.exec(node.select('#hierarchy-node-'+i).attr('d'))[1]
           newArc = newArc.replace(/,/g, ' ')
-          if(newArc.split(' ')[7] > Math.PI/2){
-            var startLoc = /M(.*?)A/,
-              middleLoc = /A(.*?)0 0 1/,
-              endLoc = /0 0 1 (.*?)$/
-            var newStart = endLoc.exec(newArc)[1],
-              newEnd = startLoc.exec(newArc)[1],
-              middleSec = middleLoc.exec(newArc)[1]
-            newArc = 'M' + newStart + 'A' + middleSec + '0 0 0' + newEnd 
-          }
+          // if(newArc.split(' ')[7] > Math.PI/2){
+          //   var startLoc = /M(.*?)A/,
+          //     middleLoc = /A(.*?)0 0 1/,
+          //     endLoc = /0 0 1 (.*?)$/
+          //   var newStart = endLoc.exec(newArc)[1],
+          //     newEnd = startLoc.exec(newArc)[1],
+          //     middleSec = middleLoc.exec(newArc)[1]
+          //   newArc = 'M' + newStart + 'A' + middleSec + '0 0 0' + newEnd 
+          // }
           node.append('path')
             .attr('class', 'hiddenDonutArcs')
             .attr('id', 'donutArc'+i)
@@ -139,8 +141,31 @@ export default {
             .style('fill', 'none')
         })
         .on('click', d => {
-          if(d.data.type === 'file')
+          if(d.data.type === 'file'){
             this.$bus.$emit('doc-selected', this.docData[d.data.id])
+            this.arcSvg.filter(d => d.data.type === 'file')
+              .attr('opacity', '0.1')
+            if(this.selectedDoc === d.data.id){
+              this.selectedDoc = null
+              if(this.selectedCluster){
+                this.arcSvg.filter(d => this.selectedCluster.indexOf(d.data.id) != -1)
+                  .attr('opacity', 1)
+              }
+              else{
+                this.arcSvg.filter(d => d.data.type === 'file')
+                  .attr('opacity', '1')
+                this.arcSvg
+                  .filter(d => d.norm < this.threshold)
+                  .attr('opacity', '0.1')
+              }
+            }
+            else{
+              this.selectedDoc = d.data.id
+              this.arcSvg.filter(arc => arc.data.id === d.data.id)
+                .attr('opacity', 1)
+            }
+          }
+          
         })
 
       var tip = d3tip()
@@ -152,10 +177,11 @@ export default {
         .append('text')
         .style('cursor', 'default')
         .attr('id', (d, i) => 'text'+i)
-        .attr('dy', function(d) { 
-          var angle = arc(d).split(',')[7].split('L')
-          return (angle[0] > Math.PI/2 ? -6 : 18) 
-        })
+        .attr("dy", 16)
+        // .attr('dy', function(d) { 
+        //   var angle = arc(d).split(',')[7].split('L')
+        //   return (angle[0] > Math.PI/2 ? -6 : 18) 
+        // })
         .append('textPath')
         .attr('startOffset','50%')
         .style('text-anchor','middle')
@@ -172,7 +198,7 @@ export default {
             if(dist < name.length*10)
             {
               node.select('#text'+ i)
-                .on('click', tip.show)
+                .on('mouseenter', tip.show)
                 .on('mouseout', tip.hide)
               return '...'
             }  
@@ -203,6 +229,7 @@ export default {
       // 前一版本用虚线
       this.arcSvg
         .filter(d => d.data.version === 'prev')
+        .attr('opacity', '0.7')
         .attr('stroke-dasharray', '5,5')
       
       var leafNodes = root.leaves()
@@ -217,22 +244,26 @@ export default {
       this.arcSvg
         .filter(d => d.norm < this.threshold)
         .attr('opacity', '0.1')
+        .on('click', null)
 
       this.arcSvg
-        .filter(d => d.norm >= 0.1 && d.fileType === 'edit')
-        .attr('stroke-width', '2')
-        .attr('stroke-opacity', '0.8')
+        .filter(d => d.norm >= this.threshold && d.fileType === 'edit')
+        .attr('stroke-width', '2.5')
+        .attr('stroke-opacity', 1)
       // svg
       //   .append('defs')
       //   .append('pattern')
       //   .attr('id', 'stripes')
       //   .attr('patternUnits', 'userSpaceOnUse')
+      //   // .attr('width', 4)
+      //   // .attr('height', 4)
+      //   // .append('rect')
+      //   // .attr('width', 0.1)
+      //   // .attr('height', 8)
       //   .attr('width', 4)
       //   .attr('height', 4)
-      //   .append('circle')
-      //   .attr('cx', 0.5)
-      //   .attr('cy', 0.5)
-      //   .attr('r', 0.5)
+      //   .append('path')
+      //   .attr('d', 'M-1,1 l2,-2M0,10 l10,-10M9,11 l2,-2')
       //   .style('stroke', 'black')
 
       // node
@@ -273,7 +304,7 @@ export default {
     })
     this.$bus.$on('cluster-selected', ids => {
       this.resetStatus()
-      // if (ids === null) return
+      this.selectedCluster = ids
       this.arcSvg
         .filter(d => d.data.type !== 'dir' && ids.indexOf(d.data.id) === -1)
         .attr('opacity', 0.1)
@@ -301,10 +332,13 @@ export default {
       this.$refs.root.innerHTML = ''
     })
     this.$bus.$on('cluster-restored', () => {
+      this.selectedCluster = null
       this.resetStatus ()
       this.arcSvg
         .filter(d => d.norm < this.threshold)
         .attr('opacity', '0.1')
+      this.arcSvg.filter(d => d.data.version === 'prev')
+        .attr('opacity', 0.5)
     })
     this.$bus.$on('threshold-selected', d => this.threshold=d)
   }
