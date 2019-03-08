@@ -290,7 +290,6 @@ export default {
         })
     })
     this.$bus.$on('version-range-selected', d => {
-      console.log('version-range:', d)
       this.$axios
         .get('topics/getTopicDisByVersion', d)
         .then(({ data }) => {

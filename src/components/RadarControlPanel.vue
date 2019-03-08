@@ -167,7 +167,7 @@ export default {
         }
       })
     })
-    this.$bus.$on('version-selected', d => {this.selectTrigger(d)})
+    this.$bus.$on('version-selected', d => {console.log(d),this.selectTrigger(d)})
     this.$bus.$on('version-restored', d => {this.selectTrigger(d)})
     this.$bus.$on('line-selected', topicId =>{
       this.sliderData

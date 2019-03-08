@@ -1,7 +1,8 @@
 <template>
   <div id="app">
     <div class="left-panel">
-      <args-wrapper class="bl-card-shadow">
+      <args-wrapper class="bl-card-shadow"
+        :versions='versions'>
       </args-wrapper>
       <radar-control-panel class="bl-card-shadow"
         :topicsGroup="topicsGroup"
