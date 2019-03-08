@@ -297,10 +297,10 @@ export default {
           this.draw(data.root)
         })
     })
-    this.$bus.$on('version-restored', d => {
+    this.$bus.$on('version-restored', () => {
       this.$refs.root.innerHTML = ''
     })
-    this.$bus.$on('cluster-restored', d => {
+    this.$bus.$on('cluster-restored', () => {
       this.resetStatus ()
       this.arcSvg
         .filter(d => d.norm < this.threshold)

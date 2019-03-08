@@ -15,48 +15,20 @@
           :versions="versions"
           :normData="normData"
           class="bl-card-shadow"></line-chart>
-        <!-- <div class="scatter-xx-wrapper">
-          <bubble-chart :topicColormap="topicColormap"
-            class="bl-card-shadow"></bubble-chart>
-          <word-cloud :topicData="topicData"
-            class="bl-card-shadow"></word-cloud>
-        </div> -->
-        
+        <word-cloud :topicData="topicData" 
+          class="bl-card-shadow"></word-cloud>
       </div>
       <div class="second-row">
         <sunburst :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           :versions="versions"
           class="bl-card-shadow"></sunburst>
-        <div class="scatter-bar-wrapper">
-          <scatter-plot :topicColormap="topicColormap"
-            :docData="docVerData&&docVerData.files"
-            class="bl-card-shadow"></scatter-plot>
-          <aspect-bar-chart :topicColormap="topicColormap"
-            :docData="docVerData&&docVerData.files"
-            class='bl-card-shadow'>
-          </aspect-bar-chart>
-        </div>
-        <!-- <file-list 
-          :fileGroup="fileGroup"
-          :prevVer="prevVer"
-          class="bl-card-shadow">
-        </file-list> -->
-        <!-- <parallel-coordinate :topicData="topicData"
-          :docVerData="docVerData"
-          class="bl-card-shadow"></parallel-coordinate>
-        <div class="right-panel bl-card-shadow">
-          <diff-files-wrapper :fileGroup="fileGroup"
-            :prevVer="prevVer"
-            :topicColormap="topicColormap"></diff-files-wrapper>
-          <radar-control-panel class="bl-card"></radar-control-panel>
-        </div> -->
-      </div>
-    </div>
-    <div class="right-panel">
-      <word-cloud :topicData="topicData" class="bl-card-shadow"></word-cloud>
-      <comment-charts-wrapper :docData="docVerData&&docVerData.files"
+        <scatter-plot :topicColormap="topicColormap"
+          :docData="docVerData&&docVerData.files"
+          class="bl-card-shadow"></scatter-plot>
+        <comment-charts-wrapper :docData="docVerData&&docVerData.files"
         :topicData="topicData" class="bl-card-shadow"></comment-charts-wrapper>
+      </div>
     </div>
     <div class="code-panel" >
       <code-wrapper class="bl-card-shadow"></code-wrapper>
@@ -77,7 +49,7 @@ import WordCloud from './components/WordCloud.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
-import AspectBarChart from './components/AspectBarChart.vue'
+// import AspectBarChart from './components/AspectBarChart.vue'
 import CodeWrapper from './components/CodeWrapper.vue'
 import ArgsWrapper from './components/ArgsWrapper.vue'
 // import FileList from './components/FileList.vue'
@@ -109,7 +81,7 @@ export default {
     ScatterPlot,
     // ParallelCoordinate,
     // DiffFilesWrapper
-    AspectBarChart,
+    // AspectBarChart,
     CodeWrapper,
     ArgsWrapper
     // FileList
@@ -215,14 +187,14 @@ html {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  height: 98%;
+  height: 95%;
   width: 100%;
   // text-align: center;
   color: #2c3e50;
   // margin-top: 60px;
   display: flex;
   .left-panel{
-    flex: 0.9;
+    flex: 1;
     margin-right:5px;
     display: flex;
     flex-direction: column;
@@ -230,7 +202,7 @@ html {
       flex: 5;
     }
     .args-wrapper{
-      flex: 2;
+      flex: 2.1;
       margin-bottom: 5px;
     }
   }
@@ -238,88 +210,34 @@ html {
     margin-right: 5px;
     display: flex;
     flex-direction: column;
-    flex: 5;
+    flex: 6;
     .first-row {
       flex: 1;
       display: flex;
       .line-chart {
-        flex: 1.5;
-        // margin-right: 5px;
+        flex: 5;
+        margin-right: 5px;
       }
-      // .scatter-xx-wrapper {
-      //   flex: 0.8;
-      //   margin-right: 10px;
-      //   display: flex;
-      //   flex-direction: column;
-      //   .word-cloud,
-      //   .bubble-chart {
-      //     flex: 1;
-      //   }
-      //   .bubble-chart {
-      //     margin-bottom: 10px;
-      //   }
-      // }
-      // .scatter-plot {
-      //   flex: 1;
-      // }
+      .word-cloud{
+        flex: 1;
+      }
     }
     .second-row {
       flex: 1.3;
       display: flex;
       margin-top: 5px;
       .sunburst {
-        flex: 1.6;
+        flex: 1.2;
         margin-right: 5px;
       }
-      .scatter-bar-wrapper{
-        flex: 2;
-        display: flex;
-        flex-direction: column;
-        .scatter-plot{
-          flex: 1.1;
-          margin-bottom: 5px;
-        }
-        .aspect-bar-chart{
-          flex: 0.8;
-        }
+      .scatter-plot{
+        flex: 1.3;
+        margin-right: 5px;
       }
-      
-      // .file-list{
-      //   flex:0.6;
-      // }
-      // .parallel-coordinate {
-      //   flex: 0.5;
-      //   margin-right: 10px;
-      // }
-      // .right-panel {
-      //   flex: 1.2;
-      //   display: flex;
-      //   padding: 10px;
-      //   .radar-chart-wrapper {
-      //     flex: 3;
-      //     margin-right: 10px;
-      //   }
-      //   .diff-files-wrapper {
-      //     flex: 3;
-      //     margin-right: 10px;
-      //   }
-      //   .radar-control-panel {
-      //     flex: 1;
-      //   }
-      // }
-    }
-  }
-  .right-panel {
-    flex: 1.1;
-    display: flex;
-    flex-direction: column;
-    .word-cloud{
-      flex:2;
-    }
-    .comment-charts-wrapper
-    {
-      margin-top: 5px;
-      flex: 5;
+      .comment-charts-wrapper
+      {
+        flex: 0.8;
+      }
     }
   }
   .code-panel{

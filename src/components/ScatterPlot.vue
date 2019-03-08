@@ -113,7 +113,7 @@ export default {
     },
     draw (data) {
       this.$refs.root.innerHTML = ''
-      const margin = { top: 10, right: 10, bottom: 10, left: 10 }
+      const margin = { top: 60, right: 10, bottom: 30, left: 10 }
       const height = this.height
       const width = this.width
       const svg = d3
@@ -210,6 +210,7 @@ export default {
       //   edit: '#marker-otherCircle'
       // }
 
+    // 圆形(删除文件)
       svg
         .append('defs')
         .append('g')
@@ -217,7 +218,7 @@ export default {
         .append('circle')
         .attr('r', markerSize)
         .style('stroke', '#999494')
-      // 正方形
+      // 正方形(增加文件)
       svg
         .append('defs')
         .append('g')
@@ -226,7 +227,7 @@ export default {
         .attr('width', markerSize * 2)
         .attr('height', markerSize * 2)
         .style('stroke', '#999494')
-      // 三角形
+      // 三角形(修改文件)
       svg
         .append('defs')
         .append('svg')
@@ -237,6 +238,7 @@ export default {
         .append('path')
         .attr('d', 'M71.675 893.33l440.325-762.683 440.325 762.683z')
         .style('stroke', '#999494')
+      
       const type2Shape = {
         add: '#marker-square',
         del: '#marker-circle',
@@ -304,6 +306,46 @@ export default {
         resetStatus()
       })
 
+      // 添加legend
+      var legend = svg.append('g')
+        .attr('transform', 'translate(10,10)')
+        // .style('stroke', 'grey')
+      legend
+        .append('use')
+        .attr('href', '#marker-square')
+        .attr('fill', 'none')
+        .attr('x', 10)
+        .attr('y', 10)
+        .attr('stroke-width', '2')
+      legend.append('text')
+        .attr('x', 30)
+        .attr('y', 18)
+        .attr('font-size', '13px')
+        .text('add')
+      legend
+        .append('use')
+        .attr('href', '#marker-circle')
+        .attr('fill', 'none')
+        .attr('x', 80)
+        .attr('y', 15)
+        .attr('stroke-width', '2')
+      legend.append('text')
+        .attr('x', 93)
+        .attr('y', 20)
+        .attr('font-size', '13px')
+        .text('delete')
+      legend
+        .append('use')
+        .attr('href', '#marker-triangle')
+        .attr('fill', 'white')
+        .attr('x', 150)
+        .attr('y', 8)
+        .attr('stroke-width', '2')
+      legend.append('text')
+        .attr('x', 170)
+        .attr('y', 20)
+        .attr('font-size', '13px')
+        .text('edit')
       // // 力布局避免重叠
       // var clusters = new Array(this.clusterNum+1)
       // var cnt = 0

@@ -16,7 +16,7 @@
   <div class='select-wrapper'>
     <div class='title'>current version</div>
       <el-select v-model="curVersion" size="mini"
-         @change="selectCurTrigger(curVersion)"> 
+         @change="selectCurTrigger()"> 
         <el-option
           v-for="item in curOptions"
           :key="item.value"
@@ -105,7 +105,7 @@ export default {
             this.curOptions.push({value: i, label: d})
           })
       },
-      selectCurTrigger(val){
+      selectCurTrigger(){
         this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion})
       }
   },
@@ -153,7 +153,7 @@ export default {
       }
       .el-input{
         margin: 5px 10px 0 10px;
-        width: 90%;
+        width: 93%;
       }
     }
     .input-wrapper{

@@ -193,7 +193,7 @@ export default {
   //   flex: 2;
   // }
   .selected-file-wrapper {
-    flex: 0.5;
+    flex: 0.6;
     .content {
       // font-size: 15px;
       word-break: break-all;
