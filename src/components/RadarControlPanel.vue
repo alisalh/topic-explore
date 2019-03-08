@@ -21,7 +21,7 @@
         <div class="topic-idx"
           :style="{opacity:item.opacity}">{{item.topicId}}</div>
         <div class="legend"
-          :style="{background:item.color, width:item.value+'px'}"
+          :style="{background:item.color, opacity: item.opacity, width:item.value+'px'}"
           @click='legendClickHandler(item)'
           :class='{selected:item.isSelected}'>
         </div>
@@ -69,16 +69,27 @@ export default {
       if(selectedTopic.isSelected){
         this.$bus.$emit('topic-selected', -1)
         this.sliderData
-          .forEach(d => (d.isSelected = false))
-        this.selectedTopic = null
+          .forEach(d => {
+            d.isSelected = false
+            d.opacity = 1
+          })
+        // this.selectedTopic = null
       }
       else {
         this.sliderData
-          .filter(d => d !== selectedTopic)
-          .forEach(d => (d.isSelected = false))
-        selectedTopic.isSelected = true
+          .forEach(d => {
+            d.isSelected = false
+            d.opacity = 0.2
+          })
+        this.sliderData
+          .filter(d => d === selectedTopic)
+          .forEach(d => {
+            d.isSelected = true
+            d.opacity = 1
+          })
+        // selectedTopic.isSelected = true
         this.$bus.$emit('topic-selected', selectedTopic.topicId)
-        this.selectedTopic = selectedTopic.topicId
+        // this.selectedTopic = selectedTopic.topicId
       }
     },
     globalClickHandler() {
@@ -158,6 +169,27 @@ export default {
     })
     this.$bus.$on('version-selected', d => {this.selectTrigger(d)})
     this.$bus.$on('version-restored', d => {this.selectTrigger(d)})
+    this.$bus.$on('line-selected', topicId =>{
+      this.sliderData
+        .forEach(d => {
+          d.isSelected = false
+          d.opacity = 0.2
+        })
+      this.sliderData
+        .filter(d => d.topicId === topicId)
+        .forEach(d => {
+          d.isSelected = true
+          d.opacity = 1
+        })
+    })
+    this.$bus.$on('line-restored', () =>{
+      this.sliderData
+        .forEach(d => {
+          d.isSelected = false
+          if(d.value === 0) d.opacity = 0.2
+          else d.opacity = 1
+        })
+    })
   }
 }
 </script>
@@ -167,6 +199,7 @@ export default {
   display: flex;
   flex-direction: column;
   padding: 0 5px;
+  cursor: default;
   // .version-select-box{
   //   flex: 0.8;
   //   display: flex;

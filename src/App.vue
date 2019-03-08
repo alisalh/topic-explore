@@ -1,11 +1,11 @@
 <template>
   <div id="app">
     <div class="left-panel">
+      <args-wrapper class="bl-card-shadow">
+      </args-wrapper>
       <radar-control-panel class="bl-card-shadow"
         :topicsGroup="topicsGroup"
         :versions="versions"></radar-control-panel>
-      <args-wrapper class="bl-card-shadow">
-      </args-wrapper>
     </div>
     <div class="center-panel">
       <div class="first-row">
@@ -227,10 +227,10 @@ html {
     flex-direction: column;
     .radar-control-panel{
       flex: 5;
-      margin-bottom: 5px;
     }
     .args-wrapper{
       flex: 2;
+      margin-bottom: 5px;
     }
   }
   .center-panel {

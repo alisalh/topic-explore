@@ -13,10 +13,11 @@ export default {
       height: 0,
       width: 0,
       lineSvg: null,
-      strokeWidth: 1.5,
+      strokeWidth: 2,
       curData: [],
       showVersions: [],
-      selectedVersion: null
+      selectedVersion: null,
+      selectedTopic: null
       // verRange: {}
     }
   },
@@ -24,8 +25,8 @@ export default {
   methods: {
     draw (data) {
       // const vm = this
-      const margin = { top: 20, right: 25, bottom: 45, left: 40 }
-      const brushHeight = 50, gap = 20  //gap表示brush和linechart之间的间隔
+      const margin = { top: 10, right: 25, bottom: 90, left: 40 }
+      const brushHeight = 30, gap = 40  //gap表示brush和linechart之间的间隔
       const svg = d3
         .select(this.$refs.root)
         .append('svg')
@@ -38,14 +39,14 @@ export default {
         .scaleLinear()
         .domain([0, maxY])
         .nice()
-        .range([this.height - brushHeight - margin.bottom - gap, margin.top])
+        .range([this.height-margin.bottom+gap, margin.top+brushHeight+gap])
       var x = d3
         .scalePoint()
         .domain(this.versions)
         .range([margin.left, this.width - margin.right])
       var xAxis = g =>
         g
-          .attr('transform', `translate(0,${this.height - brushHeight -margin.bottom - gap})`)
+          .attr('transform', `translate(0,${this.height - margin.bottom + gap})`)
           .call(d3.axisBottom(x))
           // .call(g =>
           //   g
@@ -59,6 +60,7 @@ export default {
           // )
           .call(g =>                            // 设置tick
             g
+              .style('cursor', 'default')
               .selectAll('text:not(.x-label)')
               .style('text-anchor', 'end')
               .attr('dx', '-.8em')
@@ -77,7 +79,7 @@ export default {
               .attr('x', 3)
               .attr('text-anchor', 'start')
               .attr('font-weight', 'bold')
-              .text('number of files(#)')
+              // .text('number of files(#)')
           )
       svg.append('g').attr('class','axis axis--x').call(xAxis)
 
@@ -91,6 +93,10 @@ export default {
           return x(d.key)
         })
         .y(d => y(d.val.length))
+      svg.on('click', ()=>{
+        this.resetLineStatus()
+        this.$bus.$emit('line-restored', {})
+      })
       this.lineSvg = svg
         .append('g')
         // .attr('transform', `translate(${x.bandwidth() / 2},0)`)
@@ -107,21 +113,24 @@ export default {
           // console.log(d.key, this.topicColormap(parseInt(d.key)))
           return this.topicColormap(parseInt(d.key))
         })
+        .attr('stroke-width', 2)
         // .style('mix-blend-mode', 'multiply')
         .attr('d', d => {
           return line(d.val)
         })
-        // .on('mouseenter', d => {
-        //   // console.log('hover', d.key)
-        // })
-        // .on('click', d => {
-        //   this.$bus.$emit('topic-selected', d.key)
-        // })
+        .on('click', d => {
+          d3.event.stopPropagation()
+          this.selectedTopic = d.key
+          this.resetLineStatus()
+          this.highlightLine(d.key)
+          this.$bus.$emit('line-selected', d.key)
+        })
+        
       // 画版本定位辅助线
-      console.log(this.versions)
       let xOffset = 0
-      var gridLine = svg
+      var gridLineG = svg
         .append('g')
+      var gridLine = gridLineG
         .attr('fill', 'none')
         .attr('stroke-width', 3)
         .attr('stroke-linejoin', 'round')
@@ -132,33 +141,63 @@ export default {
         .data(this.versions)
         .enter()
         .append('path')
+        .attr('id', d => 'grid-line-'+d.replace(/\./g, ''))
         .attr('opacity', 0)
         .attr('d', d => {
           xOffset = x(d)
           return d3.line()([
-            [xOffset, margin.top],
-            [xOffset, this.height - margin.bottom-brushHeight -gap]
+            [xOffset, margin.top+brushHeight+gap],
+            [xOffset, this.height - margin.bottom+gap]
           ])
         })
-        .on('mouseenter', function () {
-          d3.select(this).attr('opacity', 0.7)
-        })
-        .on('mouseout', function () {
-          d3.select(this).attr('opacity', 0.0)
-        })
-        .on('click', d => {
-           gridLine
-            .on('mouseout', function () {
-              d3.select(this).attr('opacity', 0.0)
-            })
-            .attr('opacity', 0.0)
-           gridLine
-            .filter(ver => ver === d)
-            .on('mouseout', null)
-            .attr('opacity', 0.7)
-          this.selectedVersion = d
-          this.$bus.$emit('version-selected', d)
-        })
+        // .on('mouseenter', function () {
+        //   d3.select(this).attr('opacity', 0.7)
+        // })
+        // .on('mouseout', function () {
+        //   d3.select(this).attr('opacity', 0.0)
+        // })
+        // .on('click', d => {
+        //    gridLine
+        //     .on('mouseout', function () {
+        //       d3.select(this).attr('opacity', 0.0)
+        //     })
+        //     .attr('opacity', 0.0)
+        //    gridLine
+        //     .filter(ver => ver === d)
+        //     .on('mouseout', null)
+        //     .attr('opacity', 0.7)
+        //   this.selectedVersion = d
+        //   this.$bus.$emit('version-selected', d)
+        // })
+
+        // 点击tick显示辅助线
+        svg.select('.axis')
+          .selectAll('.tick')
+          .on('mouseenter', d=>{
+            gridLine
+              .filter(ver => ver === d)
+              .attr('opacity', 0.7)
+          })
+          .on('mouseleave', ()=>{
+            gridLine.attr('opacity', 0.0)
+            gridLine
+              .filter(ver => ver === this.selectedVersion)
+              .attr('opacity', 0.7)
+          })
+          .on('click', d=>{
+            gridLine.attr('opacity', 0.0)
+            if(d === this.selectedVersion){
+              this.selectedVersion = null
+              this.$bus.$emit('version-restored', 'all')
+            }
+            else {
+              gridLine
+                .filter(ver => ver === d)
+                .attr('opacity', 0.7)
+              this.selectedVersion = d
+              this.$bus.$emit('version-selected', d)
+            }
+          })
        
       // // 画点
       // const dot = svg.append('g').attr('display', 'none')
@@ -174,22 +213,21 @@ export default {
       const brushY = d3
         .scaleLinear()
         .domain([0, maxBrushY])
-        .range([this.height - margin.bottom, this.height-margin.bottom-brushHeight+gap])
+        .range([margin.top+brushHeight, margin.top])
       const brushX = d3
         .scalePoint()
         .domain(this.versions)
         .range([margin.left, this.width - margin.right])
       var brushXAxis = g =>
         g
-          .attr('transform', `translate(0,${this.height -margin.bottom})`)
+          .attr('transform', `translate(0,${margin.top+brushHeight})`)
           .call(d3.axisBottom(brushX).tickValues(this.showVersions))
+          .call(g => g.select('.domain').remove())
           .call(g =>
             g
               .selectAll('text:not(.x-label)')
-              .style('text-anchor', 'end')
-              .attr('dx', '-.8em')
-              .attr('dy', '.15em')
-              .attr('transform', 'rotate(-65)')
+              .style('text-anchor', 'middle')
+              .attr('dy', '1em')
           )
       svg.append('g').call(brushXAxis)
       const brushLine = d3.line()
@@ -202,12 +240,12 @@ export default {
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
         .append('path')
-        .attr('stroke', 'black')
+        .attr('stroke', 'grey')
         .attr('d', brushLine(this.normData))
       
       // 添加brush
       var brush = d3.brushX()
-        .extent([[margin.left, 0],[this.width - margin.right, brushHeight-gap+2]])
+        .extent([[margin.left, 0],[this.width - margin.right, brushHeight+2]])
         .on('start', brushstarted.bind(this))
         .on('brush', brushed)
         .on('end', brushended.bind(this))
@@ -218,6 +256,7 @@ export default {
       function brushstarted(){
         gridLine
           .attr('opacity', 0.0)
+        this.selectedVersion = null
         this.$bus.$emit('version-restored', 'all')
       }
       function brushended(){
@@ -233,30 +272,49 @@ export default {
           })
           gridLine
             .attr('opacity', 0.0)
-            .attr('d', d => {
-              xOffset = x(d)
-              return d3.line()([
-                [xOffset, margin.top],
-                [xOffset, 400 - margin.bottom-brushHeight -gap]
-              ])
+            .attr('transform', d => {
+              let reg = /M(.*)L/
+              let pos = reg.exec(gridLineG.select('#grid-line-'+d.replace(/\./g,'')).attr('d'))[1]
+              xOffset = x(d)-pos.split(',')[0]
+              return `translate(${xOffset},0)`
             })
-            .on('mouseenter', function(){
-              d3.select(this).attr('opacity', 0.7)
-            })
-            .on('mouseout', function () {
-              d3.select(this).attr('opacity', 0.0)
-            })
-          this.$bus.$emit('version-returned', 'all')
         }
-        else{
-          let eachBand = brushX.step()
-          let prevIndex = Math.round((s[0]-margin.left)/eachBand),
-            curvIndex = Math.round((s[1]-margin.left)/eachBand)
-          this.$bus.$emit('version-range-selected',{
-            curv: brushX.domain()[curvIndex],
-            prev: brushX.domain()[prevIndex]
+        // else{
+        //   let eachBand = brushX.step()
+        //   let prevIndex = Math.round((s[0]-margin.left)/eachBand),
+        //     curvIndex = Math.round((s[1]-margin.left)/eachBand)
+        //   this.$bus.$emit('version-range-selected',{
+        //     curv: brushX.domain()[curvIndex],
+        //     prev: brushX.domain()[prevIndex]
+        //   })
+        // }
+        svg.select('.axis')
+          .selectAll('.tick')
+          .on('mouseenter', d=>{
+            gridLine
+              .filter(ver => ver === d)
+              .attr('opacity', 0.7)
           })
-        }
+          .on('mouseleave', ()=>{
+            gridLine.attr('opacity', 0.0)
+            gridLine
+              .filter(ver => ver === this.selectedVersion)
+              .attr('opacity', 0.7)
+          })
+          .on('click', d=>{
+            gridLine.attr('opacity', 0.0)
+            if(d === this.selectedVersion){
+              this.selectedVersion = null
+              this.$bus.$emit('version-restored', 'all')
+            }
+            else {
+              gridLine
+                .filter(ver => ver === d)
+                .attr('opacity', 0.7)
+              this.selectedVersion = d
+              this.$bus.$emit('version-selected', d)
+            }
+          })
       }
       function brushed(){
         let s = d3.event.selection
@@ -281,18 +339,23 @@ export default {
               .attr('d', d => {
                 return line(d.val)
           })
-          // 更新辅助线(高度this.height问题)
-          gridLine.on('mouseenter', null)
-          gridLine.filter(d => this.showVersions.indexOf(d) != -1)
-            .on('mouseenter', function(){
-              d3.select(this).attr('opacity', 0.7)
+          // 更新辅助线
+          gridLine.filter(d => this.showVersions.indexOf(d) === -1)
+            .attr('opacity', 0.0)
+            .attr('transform', d => {
+              let reg = /M(.*)L/
+              let curLine = gridLineG.select('#grid-line-'+d.replace(/\./g,''))
+              let pos = reg.exec(curLine.attr('d'))[1]
+              xOffset = 0-pos.split(',')[0]
+              return `translate(${xOffset},0)`
             })
-            .attr('d', d => {
-              xOffset = x(d)
-              return d3.line()([
-                [xOffset, margin.top],
-                [xOffset, 400 - margin.bottom-brushHeight -gap]
-              ])
+          gridLine.filter(d => this.showVersions.indexOf(d) != -1)
+            .attr('transform', d => {
+              let reg = /M(.*)L/
+              let curLine = gridLineG.select('#grid-line-'+d.replace(/\./g,''))
+              let pos = reg.exec(curLine.attr('d'))[1]
+              xOffset = x(d)-pos.split(',')[0]
+              return `translate(${xOffset},0)`
             })
         }
       }
@@ -301,7 +364,7 @@ export default {
       this.lineSvg.attr('opacity', 1).attr('stroke-width', this.strokeWidth)
     },
     highlightLine (topicId) {
-      this.resetLineStatus()
+      // this.resetLineStatus()
       this.lineSvg
         .filter(d => parseInt(d.key) === topicId)
         .attr('stroke-width', 3)
@@ -325,11 +388,11 @@ export default {
             if(this.normData[i].val >= 2) 
               this.showVersions.push(this.versions[i])
           }
-          console.log('chartData:', this.topicsGroup)
           this.topicsGroup.forEach(topic => {
             let item = topic.val.filter(d => this.showVersions.indexOf(d.key) != -1)
             this.curData.push({key: topic.key, val: item})
           })
+          this.showVersions.push(this.versions.slice(-1))
           this.draw(this.topicsGroup)
         }
       })
@@ -339,8 +402,8 @@ export default {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.width = Math.floor(this.$refs.root.clientWidth)
     this.$bus.$on('topic-selected', topicId => {
-      if (topicId === -1) this.resetLineStatus()
-      else this.highlightLine(topicId)
+      this.resetLineStatus()
+      if(topicId != -1) this.highlightLine(topicId)
     })
   }
 }
