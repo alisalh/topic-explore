@@ -1,5 +1,10 @@
 <template>
-  <div class="code-wrapper" v-show="isShow">
+  <div class="code-wrapper" v-show="isShow"
+    @pointerdown="handleDown"
+    @pointerup="handleUp"
+    @pointercancel="handleUp"
+    :style="style"
+    ref="root">
     <div class="header">
         <div class="title">The Source Code</div>
         <i class="el-icon-close"
@@ -19,14 +24,51 @@ export default {
         return{
             isShow: false,
             codeText: '',
-            height: 0,
-            width: 0,
-            path: ''
+            left: 0,
+            top: 0,
+            x: 1632,
+            y: 370,
+            height: 550, 
+            width: 400,
+            clientHeight: document.body.clientHeight,
+            clientWidth: document.body.clientWidth
         }
     },
     methods:{
         iconClick(){
             this.isShow = false
+        },
+        handleMove({ pageX, pageY, clientX, clientY }) {
+            if (this.$refs.root) {
+                this.x = pageX + this.left
+                this.y = pageY + this.top
+                if(this.x > this.clientWidth - this.width)
+                    this.x = this.clientWidth - this.width
+                if(this.x < 0)
+                    this.x = 0
+                if(this.y > this.clientHeight - this.height)
+                    this.y= this.clientHeight - this.height
+                if(this.y < 0)
+                    this.y = 0
+            }
+        },
+        handleDown(event) {
+            const { pageX, pageY } = event;
+            const { left, top } = this.$refs.root.getBoundingClientRect()
+            this.left = left - pageX;
+            this.top = top - pageY;
+            document.addEventListener("pointermove", this.handleMove)
+        },
+        handleUp() {
+            document.removeEventListener("pointermove", this.handleMove)
+        }   
+    }, 
+    computed: {
+        style() {
+            return {
+                left: `${this.x}px`,
+                top: `${this.y}px`
+            }
         }
     },
     created(){
@@ -50,8 +92,6 @@ export default {
     display: flex;
     flex-direction: column;
     font-weight: bold;
-    left: 80%;
-    top: 36%;
     .header{
         flex: 0.6;
         background-color:rgb(245, 245, 245);

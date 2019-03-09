@@ -280,7 +280,6 @@ export default {
             resetStatus()
         })
         .on('click', ({ cluster: selectedCluster }) => {
-          console.log(selectedCluster)
           // 解绑mouseleave事件
           circle.on('mouseleave', null)
           this.selectedCluster = selectedCluster

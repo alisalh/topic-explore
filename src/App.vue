@@ -185,6 +185,9 @@ html {
   font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -moz-user-select: none; 
+  -khtml-user-select: none; 
+  user-select: none;
   height: 98%;
   width: 80%;
   // text-align: center;
