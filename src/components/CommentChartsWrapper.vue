@@ -53,7 +53,7 @@
 
 <script>
 import * as d3 from 'd3'
-import CodeWrapper from './CodeWrapper.vue'
+// import CodeWrapper from './CodeWrapper.vue'
 import { getRelPathWithVersion } from '../utils/index.js'
 // import FileBarChart from './FileBarChart.vue'
 
@@ -72,9 +72,9 @@ export default {
       processedComments: null
     }
   },
-  components:{
-    CodeWrapper
-  },
+  // components:{
+  //   CodeWrapper
+  // },
   methods: {
     docSelectedHandler (doc) {
       console.log(doc)

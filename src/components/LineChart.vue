@@ -281,15 +281,36 @@ export default {
               return `translate(${xOffset},0)`
             })
         }
-        // else{
-        //   let eachBand = brushX.step()
-        //   let prevIndex = Math.round((s[0]-margin.left)/eachBand),
-        //     curvIndex = Math.round((s[1]-margin.left)/eachBand)
-        //   this.$bus.$emit('version-range-selected',{
-        //     curv: brushX.domain()[curvIndex],
-        //     prev: brushX.domain()[prevIndex]
-        //   })
-        // }
+        else{
+          let eachBand = brushX.step()
+          let prevIndex = Math.round((s[0]-margin.left)/eachBand),
+            curvIndex = Math.round((s[1]-margin.left)/eachBand)
+          // 更新x轴
+          this.showVersions = []
+          for(let i=prevIndex; i<=curvIndex; i++)
+            this.showVersions.push(brushX.domain()[i])
+          x.domain(this.showVersions)
+          svg.select('.axis--x').call(xAxis)
+           // 更新辅助线
+          gridLine.filter(d => this.showVersions.indexOf(d) === -1)
+            .attr('opacity', 0.0)
+            .attr('transform', d => {
+              let reg = /M(.*)L/
+              let curLine = this.gridLineG.select('#grid-line-'+d.replace(/\./g,''))
+              let pos = reg.exec(curLine.attr('d'))[1]
+              xOffset = 0-pos.split(',')[0]
+              return `translate(${xOffset},0)`
+            })
+          gridLine.filter(d => this.showVersions.indexOf(d) != -1)
+            .attr('transform', d => {
+              let reg = /M(.*)L/
+              let curLine = this.gridLineG.select('#grid-line-'+d.replace(/\./g,''))
+              let pos = reg.exec(curLine.attr('d'))[1]
+              xOffset = x(d)-pos.split(',')[0]
+              return `translate(${xOffset},0)`
+          })
+        }
+        // 重新绑定tick事件
         svg.select('.axis')
           .selectAll('.tick')
           .on('mouseenter', d=>{
@@ -341,24 +362,6 @@ export default {
               .attr('d', d => {
                 return line(d.val)
           })
-          // 更新辅助线
-          gridLine.filter(d => this.showVersions.indexOf(d) === -1)
-            .attr('opacity', 0.0)
-            .attr('transform', d => {
-              let reg = /M(.*)L/
-              let curLine = this.gridLineG.select('#grid-line-'+d.replace(/\./g,''))
-              let pos = reg.exec(curLine.attr('d'))[1]
-              xOffset = 0-pos.split(',')[0]
-              return `translate(${xOffset},0)`
-            })
-          gridLine.filter(d => this.showVersions.indexOf(d) != -1)
-            .attr('transform', d => {
-              let reg = /M(.*)L/
-              let curLine = this.gridLineG.select('#grid-line-'+d.replace(/\./g,''))
-              let pos = reg.exec(curLine.attr('d'))[1]
-              xOffset = x(d)-pos.split(',')[0]
-              return `translate(${xOffset},0)`
-            })
         }
       }
     },
