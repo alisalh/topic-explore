@@ -78,6 +78,7 @@ export default {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.width = Math.floor(this.$refs.root.clientWidth)
     this.$bus.$on('version-range-selected', d => {
+      this.$refs.root.innerHTML = ''
       this.$axios.get('topics/getDiffDocs', d)
         .then(({ data }) => {
          this.diffDocs = data

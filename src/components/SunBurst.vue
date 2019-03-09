@@ -177,7 +177,7 @@ export default {
         .append('text')
         .style('cursor', 'default')
         .attr('id', (d, i) => 'text'+i)
-        .attr("dy", 16)
+        .attr('dy', 16)
         // .attr('dy', function(d) { 
         //   var angle = arc(d).split(',')[7].split('L')
         //   return (angle[0] > Math.PI/2 ? -6 : 18) 
@@ -321,6 +321,7 @@ export default {
         })
     })
     this.$bus.$on('version-range-selected', d => {
+      this.$refs.root.innerHTML = ''
       this.$axios
         .get('topics/getTopicDisByVersion', d)
         .then(({ data }) => {

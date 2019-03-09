@@ -4,6 +4,7 @@
   <div class='select-wrapper'>
     <div class='title'>previous version</div>
       <el-select v-model="preVersion" size="mini"
+        placeholder="please select"
         @change="selectPreTrigger(preVersion)">
         <el-option
           v-for="item in preOptions"
@@ -16,7 +17,8 @@
   <div class='select-wrapper'>
     <div class='title'>current version</div>
       <el-select v-model="curVersion" size="mini"
-         @change="selectCurTrigger()"> 
+        placeholder="please select"
+        @change="selectCurTrigger()"> 
         <el-option
           v-for="item in curOptions"
           :key="item.value"

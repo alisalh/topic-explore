@@ -30,9 +30,7 @@
         :topicData="topicData" class="bl-card-shadow"></comment-charts-wrapper>
       </div>
     </div>
-    <div class="code-panel" >
-      <code-wrapper class="bl-card-shadow"></code-wrapper>
-    </div>
+    <code-wrapper class="bl-card-shadow"></code-wrapper>
   </div>
 </template>
 
@@ -188,7 +186,7 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   height: 98%;
-  width: 100%;
+  width: 80%;
   // text-align: center;
   color: #2c3e50;
   // margin-top: 60px;
@@ -240,13 +238,13 @@ html {
       }
     }
   }
-  .code-panel{
-    flex: 1.9;
-    margin-left: 5px;
-    overflow-x: auto;
-    overflow-y: auto;
-    // overflow: scroll;
-    display: flex;
-  }
+  // .code-panel{
+  //   flex: 1.9;
+  //   margin-left: 5px;
+  //   overflow-x: auto;
+  //   overflow-y: auto;
+  //   // overflow: scroll;
+  //   display: flex;
+  // }
 }
 </style>

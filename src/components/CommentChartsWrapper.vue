@@ -3,7 +3,11 @@
     <!-- <file-bar-chart :docData="docData"
                     @doc-selected='docSelectedHandler'></file-bar-chart> -->
     <div class="selected-file-wrapper">
-      <div class="title">the selected file: </div>
+      <div class="title">
+        <div>the selected file: </div>
+        <i class='el-icon-document'
+        @click="iconClick"></i>
+      </div>
       <div class="content">{{relFilename}}</div>
     </div>
     <div class="comment-wrapper">
@@ -49,6 +53,7 @@
 
 <script>
 import * as d3 from 'd3'
+import CodeWrapper from './CodeWrapper.vue'
 import { getRelPathWithVersion } from '../utils/index.js'
 // import FileBarChart from './FileBarChart.vue'
 
@@ -66,6 +71,9 @@ export default {
       uniqueIdentifiers: [],
       processedComments: null
     }
+  },
+  components:{
+    CodeWrapper
   },
   methods: {
     docSelectedHandler (doc) {
@@ -125,10 +133,10 @@ export default {
           })
           return Promise.resolve(resArr)
         })
+    },
+    iconClick(){
+      this.$bus.$emit('show-code', true)
     }
-  },
-  components: {
-    //  FileBarChart
   },
   computed: {
     bgColorScale () {
@@ -193,6 +201,12 @@ export default {
   //   flex: 2;
   // }
   .selected-file-wrapper {
+    .title{
+      display: flex;
+      .el-icon-document{
+        margin-left: 120px;
+      }
+    }
     flex: 0.6;
     .content {
       // font-size: 15px;
