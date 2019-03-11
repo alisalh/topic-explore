@@ -70,9 +70,9 @@ export default {
     diffDocs(){
       this.getCluster()
     },
-    chartData(){
-      this.$bus.$emit('diff-docs-changed', this.chartData)
-    }
+    // chartData(){
+    //   this.$bus.$emit('diff-docs-changed', this.chartData)
+    // }
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)

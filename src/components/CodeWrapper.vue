@@ -37,6 +37,8 @@ export default {
     methods:{
         iconClick(){
             this.isShow = false
+            this.x = 1632
+            this.y = 370
         },
         handleMove({ pageX, pageY, clientX, clientY }) {
             if (this.$refs.root) {

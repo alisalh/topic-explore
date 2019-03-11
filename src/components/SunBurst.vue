@@ -232,24 +232,43 @@ export default {
         .attr('opacity', '0.7')
         .attr('stroke-dasharray', '5,5')
       
-      var leafNodes = root.leaves()
-      leafNodes.forEach(d => {
-        let obj = this.diffDocs.find(doc => {
-          return (d.data.id === doc.fileIds[0]) || (d.data.id === doc.fileIds[1])
+      if(this.diffDocs){
+        var leafNodes = root.leaves()
+        leafNodes.forEach(d => {
+          let obj = this.diffDocs.find(doc => {
+            return (d.data.id === doc.fileIds[0]) || (d.data.id === doc.fileIds[1])
+          })
+          d['norm'] = obj['norm']
+          d['fileType'] = obj['type']
         })
-        d['norm'] = obj['norm']
-        d['fileType'] = obj['type']
-      })
-      // 前后版本的差异较小的文件透明度降低(阈值为0.1)
-      this.arcSvg
-        .filter(d => d.norm < this.threshold)
-        .attr('opacity', '0.1')
-        .on('click', null)
+        // 前后版本的差异较小的文件透明度降低(阈值为0.1)
+        this.arcSvg
+          .filter(d => d.norm < this.threshold)
+          .attr('opacity', '0.1')
+          .on('click', null)
+        this.arcSvg
+          .filter(d => d.norm >= this.threshold && d.fileType === 'edit')
+          .attr('stroke-width', '2.5')
+          .attr('stroke-opacity', 1)
+      
+        // 绘制连线
+        var cluster = d3.cluster().size([360, this.height / 2-110]).separation(() => 1)
+        var linkLine = d3.radialLine()
+          .curve(d3.curveBundle.beta(0.85))
+          .radius(function(d) { return d.y })
+          .angle(function(d) { return d.x / 180 * Math.PI -Math.PI/2})
+        cluster(root)
+        var linkG = svg.append('g')
+        var link = linkG.selectAll('.link')
+          .data(this.packageNodes(root.leaves(), this.diffDocs))
+          .enter().append('path')
+          .each(function(d){d.source = d[d.length-1], d.target = d[0]})
+          .attr('class', 'link')
+          .attr('id', d =>'link'+d[0].data.id)
+          .attr('d', linkLine)
+          .attr('stroke-width', 2)
+      }
 
-      this.arcSvg
-        .filter(d => d.norm >= this.threshold && d.fileType === 'edit')
-        .attr('stroke-width', '2.5')
-        .attr('stroke-opacity', 1)
       // svg
       //   .append('defs')
       //   .append('pattern')
@@ -276,6 +295,22 @@ export default {
       //     }
       //   })
         
+    },
+    packageNodes(nodes, diffDocs){
+      var map= {}, links = []
+      nodes.forEach(function(d){
+        map[d.data.id] = d
+      })
+      var editDocs = diffDocs.filter(doc => doc.type==='edit')
+      editDocs.forEach(doc =>{
+        let pre_node = nodes.filter(d => d.data.id === doc.fileIds[0])
+        if(pre_node.length > 0) {
+          let cur_node = nodes.filter(d => d.data.id === doc.fileIds[1])
+          if(cur_node.length > 0) 
+            links.push(map[cur_node[0].data.id].path(map[pre_node[0].data.id]))
+        }
+      })
+      return links
     },
     resetStatus () {
       this.arcSvg.attr('opacity', 1)
@@ -377,6 +412,12 @@ export default {
   margin: -2px 0 0 0;
   top: 100%;
   left: 0;
+}
+.link {
+  stroke: steelblue;
+  stroke-opacity: 0.5;
+  fill: none;
+  pointer-events: none;
 }
 
 </style>

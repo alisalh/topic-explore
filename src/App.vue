@@ -31,6 +31,10 @@
       </div>
     </div>
     <code-wrapper class="bl-card-shadow"></code-wrapper>
+    <aspect-bar-chart 
+      :topicColormap="topicColormap"
+      :docData="docVerData&&docVerData.files"
+      class="bl-card-shadow"></aspect-bar-chart>
   </div>
 </template>
 
@@ -47,7 +51,7 @@ import WordCloud from './components/WordCloud.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
-// import AspectBarChart from './components/AspectBarChart.vue'
+import AspectBarChart from './components/AspectBarChart.vue'
 import CodeWrapper from './components/CodeWrapper.vue'
 import ArgsWrapper from './components/ArgsWrapper.vue'
 // import FileList from './components/FileList.vue'
@@ -64,7 +68,8 @@ export default {
       fileGroup: null,
       prevVer: null,
       prevDocs: null,
-      normData: null
+      normData: null,
+      editFileIds: null
     }
   },
   components: {
@@ -79,7 +84,7 @@ export default {
     ScatterPlot,
     // ParallelCoordinate,
     // DiffFilesWrapper
-    // AspectBarChart,
+    AspectBarChart,
     CodeWrapper,
     ArgsWrapper
     // FileList
@@ -169,6 +174,9 @@ export default {
     })
     this.$axios.get('topics/getNormOfDiffVecs', {}).then(({data}) => {
       this.normData = data
+    })
+    this.$axios.get('topics/getEditFileIds', {}).then(({data}) => {
+      this.editFileIds = data
     })
   }
 }
