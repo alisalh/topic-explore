@@ -20,7 +20,9 @@ export default {
       threshold: 0.1,
       dataRoot: null,
       selectedCluster: null,
-      selectedDoc: null
+      selectedDoc: null,
+      links: [],
+      linkG: null
       // doc: null,
     }
   },
@@ -47,13 +49,64 @@ export default {
       })
       // 前后版本的差异较小的文件透明度降低(阈值为0.1)
       this.arcSvg
-        .filter(d => d.norm < this.threshold)
-        .attr('opacity', '0.1')
-
+        .on('click', d => {
+          if(d.data.type === 'file'){
+            this.$bus.$emit('doc-selected', this.docData[d.data.id])
+            this.arcSvg.filter(d => d.data.type === 'file')
+              .attr('opacity', '0.1')
+            if(this.linkG){
+              this.links.forEach((d, i) =>{
+                this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+              })
+            }
+            if(this.selectedDoc === d.data.id){
+              this.selectedDoc = null
+              if(this.selectedCluster){
+                this.arcSvg.filter(d => this.selectedCluster.indexOf(d.data.id) != -1)
+                  .attr('opacity', 1)
+                if(this.linkG){
+                  this.links.forEach((d, i) =>{
+                    if(this.selectedCluster.indexOf(d.source.data.id) != -1 && this.selectedCluster.indexOf(d.target.data.id) != -1)
+                      this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                  })
+                }
+              }
+              else{
+                this.arcSvg.filter(d => d.data.type === 'file')
+                  .attr('opacity', '1')
+                this.arcSvg.filter(d => d.norm >= this.threshold && d.data.version === 'prev')
+                  .attr('opacity', '0.5')
+                this.arcSvg
+                  .filter(d => d.norm < this.threshold)
+                  .attr('opacity', '0')
+                this.links.forEach((d, i) =>{
+                  this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                  if(d.source.norm < this.threshold || d.target.norm < this.threshold)
+                    this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+                })
+              }
+            }
+            else{
+              this.selectedDoc = d.data.id
+              this.arcSvg.filter(arc => arc.data.id === d.data.id)
+                .attr('opacity', 1)
+            }
+          } 
+        })
+      this.arcSvg.filter(d => d.norm < this.threshold)
+        .attr('opacity', '0')
+        .on('click', null)
+      this.arcSvg.filter(d => d.norm >= this.threshold && d.data.version === 'prev')
+        .attr('opacity', '0.5')
       this.arcSvg
-        .filter(d => d.norm >= this.threshold && d.fileType === 'edit')
-        .attr('stroke-width', '2')
-        .attr('stroke-opacity', '0.8')
+        .filter(d => d.norm >= this.threshold && d.fileType === 'edit' && d.data.version === 'curv')
+        .attr('stroke-width', '2.5')
+        .attr('stroke-opacity', 1)
+      this.links.forEach((d, i) =>{
+        this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+        if(d.source.norm < this.threshold || d.target.norm < this.threshold)
+          this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+      })
     }
   },
   methods: {
@@ -145,18 +198,36 @@ export default {
             this.$bus.$emit('doc-selected', this.docData[d.data.id])
             this.arcSvg.filter(d => d.data.type === 'file')
               .attr('opacity', '0.1')
+            if(this.linkG){
+              this.links.forEach((d, i) =>{
+                this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+              })
+            }
             if(this.selectedDoc === d.data.id){
               this.selectedDoc = null
               if(this.selectedCluster){
                 this.arcSvg.filter(d => this.selectedCluster.indexOf(d.data.id) != -1)
                   .attr('opacity', 1)
+                if(this.linkG){
+                  this.links.forEach((d, i) =>{
+                    if(this.selectedCluster.indexOf(d.source.data.id) != -1 && this.selectedCluster.indexOf(d.target.data.id) != -1)
+                      this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                  })
+                }
               }
               else{
                 this.arcSvg.filter(d => d.data.type === 'file')
                   .attr('opacity', '1')
+                this.arcSvg.filter(d => d.norm >= this.threshold && d.data.version === 'prev')
+                  .attr('opacity', '0.5')
                 this.arcSvg
                   .filter(d => d.norm < this.threshold)
-                  .attr('opacity', '0.1')
+                  .attr('opacity', '0')
+                this.links.forEach((d, i) =>{
+                  this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                  if(d.source.norm < this.threshold || d.target.norm < this.threshold)
+                    this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+                })
               }
             }
             else{
@@ -164,8 +235,7 @@ export default {
               this.arcSvg.filter(arc => arc.data.id === d.data.id)
                 .attr('opacity', 1)
             }
-          }
-          
+          } 
         })
 
       var tip = d3tip()
@@ -205,6 +275,10 @@ export default {
             else return name
           }
         })
+        .attr('opacity', d => {
+          if(d.data.version === 'prev')
+            return 0.5
+        })
       
     // // 添加虚线
     // node
@@ -229,7 +303,7 @@ export default {
       // 前一版本用虚线
       this.arcSvg
         .filter(d => d.data.version === 'prev')
-        .attr('opacity', '0.7')
+        .attr('opacity', '0.5')
         .attr('stroke-dasharray', '5,5')
       
       if(this.diffDocs){
@@ -244,29 +318,84 @@ export default {
         // 前后版本的差异较小的文件透明度降低(阈值为0.1)
         this.arcSvg
           .filter(d => d.norm < this.threshold)
-          .attr('opacity', '0.1')
+          .attr('opacity', '0')
           .on('click', null)
         this.arcSvg
-          .filter(d => d.norm >= this.threshold && d.fileType === 'edit')
+          .filter(d => d.norm >= this.threshold && d.fileType === 'edit'&& d.data.version === 'curv')
           .attr('stroke-width', '2.5')
           .attr('stroke-opacity', 1)
       
-        // 绘制连线
-        var cluster = d3.cluster().size([360, this.height / 2-110]).separation(() => 1)
-        var linkLine = d3.radialLine()
-          .curve(d3.curveBundle.beta(0.85))
-          .radius(function(d) { return d.y })
-          .angle(function(d) { return d.x / 180 * Math.PI -Math.PI/2})
-        cluster(root)
-        var linkG = svg.append('g')
-        var link = linkG.selectAll('.link')
-          .data(this.packageNodes(root.leaves(), this.diffDocs))
-          .enter().append('path')
-          .each(function(d){d.source = d[d.length-1], d.target = d[0]})
-          .attr('class', 'link')
-          .attr('id', d =>'link'+d[0].data.id)
-          .attr('d', linkLine)
-          .attr('stroke-width', 2)
+      // 绘制连线
+      //   var cluster = d3.cluster().size([360, this.height / 2-110]).separation(() => 1)
+      //   var linkLine = d3.radialLine()
+      //     .curve(d3.curveBundle.beta(0.85))
+      //     .radius(function(d) { return d.y })
+      //     .angle(function(d) { return d.x / 180 * Math.PI -Math.PI/2})
+      //  cluster(root)
+      //   var linkG = svg.append('g')
+      //   var link = linkG.selectAll('.link')
+      //     .data(this.packageNodes(root.leaves(), this.diffDocs))
+      //     .enter().append('path')
+      //     .each(function(d){d.source = d[d.length-1], d.target = d[0]})
+      //     .attr('class', 'link')
+      //     .attr('id', d =>'link'+d[0].data.id)
+      //     .attr('d', linkLine)
+      //     .style('stroke', d => this.topicColormap(parseInt(d[0].data.topic)))
+      //     .attr('stroke-width', 3)
+        
+       // 利用suorce, 圆心, target绘制连线
+        this.links = []
+        var editDocs = this.diffDocs.filter(doc => doc.type==='edit')
+        editDocs.forEach(doc =>{
+          let pre_node = leafNodes.filter(d => d.data.id === doc.fileIds[0])
+          if(pre_node.length > 0) {
+            let cur_node = leafNodes.filter(d => d.data.id === doc.fileIds[1])
+            if(cur_node.length > 0) 
+              this.links.push({source: pre_node[0], target: cur_node[0]}) 
+          }
+        })
+        this.linkG = svg.append('g')
+        this.links.forEach((d, i) =>{
+          // let start = arc.centroid(d.source), 
+          //   end = arc.centroid(d.target)
+          let sourceOuterR = arc.outerRadius()(d.source),
+            sourceAngle = (arc.startAngle()(d.source)+arc.endAngle()(d.source))/2,
+            targetOuterR = arc.outerRadius()(d.target),
+            targetAngle = (arc.startAngle()(d.target)+arc.endAngle()(d.target))/2
+          let start = [Math.sin(sourceAngle)*sourceOuterR, Math.abs(Math.cos(sourceAngle)*sourceOuterR)],
+            end = [Math.sin(targetAngle)*targetOuterR, -Math.cos(targetAngle)*targetOuterR]
+          let linearGradient = svg.append('defs')
+            .append('linearGradient')
+            .attr('id', 'linear-gradient'+i)
+            .attr('gradientUnits','userSpaceOnUse')
+            .attr('x1', start[0])
+            .attr('y1', start[1])
+            .attr('x2', end[0])
+            .attr('y2', end[1])
+            
+          linearGradient.append('stop')
+            .attr('offset', '0%')
+            .attr('stop-color', this.topicColormap(parseInt(d.source.data.topic)))
+          linearGradient.append('stop')
+            .attr('offset', '49%')
+            .attr('stop-color', this.topicColormap(parseInt(d.source.data.topic)))
+          linearGradient.append('stop')
+            .attr('offset', '50%')
+            .attr('stop-color', this.topicColormap(parseInt(d.target.data.topic)))
+          linearGradient.append('stop')
+            .attr('offset', '100%')
+            .attr('stop-color', this.topicColormap(parseInt(d.target.data.topic)))
+          this.linkG.append('path')
+            .attr('id', 'node-link'+i)
+            .attr('d', 'M'+start+'Q'+0+','+ 0+',' +end)
+            .attr('fill', 'none')
+            .attr('stroke', 'url(#linear-gradient'+i+')')
+            .attr('stroke-width', 2)
+            .attr('stroke-opacity', () =>{
+              if(d.source.norm < this.threshold || d.target.norm < this.threshold)
+                return 0
+            })
+        })
       }
 
       // svg
@@ -343,12 +472,18 @@ export default {
       this.arcSvg
         .filter(d => d.data.type !== 'dir' && ids.indexOf(d.data.id) === -1)
         .attr('opacity', 0.1)
+      this.links.forEach((d, i) =>{
+        this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+        if(ids.indexOf(d.source.data.id) != -1 && ids.indexOf(d.target.data.id) != -1)
+          this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+      })
     })
   },
   mounted () {
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.$bus.$on('version-selected', d => {
       // var prev = this.versions[this.versions.indexOf(d)-1]
+      this.$refs.root.innerHTML = ''
       this.$axios
         .get('topics/getTopicDisByVersion', { curv: d, prev: null})
         .then(({ data }) => {
@@ -372,9 +507,18 @@ export default {
       this.resetStatus ()
       this.arcSvg
         .filter(d => d.norm < this.threshold)
-        .attr('opacity', '0.1')
-      this.arcSvg.filter(d => d.data.version === 'prev')
-        .attr('opacity', 0.5)
+        .attr('opacity', '0')
+      this.arcSvg.filter(d => d.norm >= this.threshold && d.data.version === 'prev')
+        .attr('opacity', '0.5')
+      this.arcSvg
+        .filter(d => d.norm >= this.threshold && d.fileType === 'edit' && d.data.version === 'curv')
+        .attr('stroke-width', '2.5')
+        .attr('stroke-opacity', 1)
+      this.links.forEach((d, i) =>{
+        this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+        if(d.source.norm < this.threshold || d.target.norm < this.threshold)
+          this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+      })
     })
     this.$bus.$on('threshold-selected', d => this.threshold=d)
   }
