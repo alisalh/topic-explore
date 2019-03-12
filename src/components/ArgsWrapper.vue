@@ -18,7 +18,7 @@
     <div class='title'>current version</div>
       <el-select v-model="curVersion" size="mini"
         placeholder="please select"
-        @change="selectCurTrigger()"> 
+        @change="selectCurTrigger(curVersion)"> 
         <el-option
           v-for="item in curOptions"
           :key="item.value"
@@ -56,6 +56,11 @@
       <el-input v-model="eps" size="mini"></el-input>
     </div>
   </div>
+  <div class='button'>
+    <el-button size="mini"
+      :disabled="disabled"
+      @click="compareTrigger">compare</el-button>
+  </div>
   <!-- <div class="radio-wrapper">
     <div class='title'>code</div>
     <div class='radios'>
@@ -80,7 +85,8 @@ export default {
       preVersion: '',
       // radio: '2'
       curOptions: [],
-      preOptions: []
+      preOptions: [],
+      disabled: true
     }
   },
   props: ['versions'],
@@ -107,8 +113,19 @@ export default {
             this.curOptions.push({value: i, label: d})
           })
       },
-      selectCurTrigger(){
-        this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion})
+      selectCurTrigger(val){
+        this.preOptions = []
+        let id = this.versions.indexOf(val)-1
+        this.versions
+          .slice(0, id)
+          .forEach((d, i) =>{
+            this.preOptions.push({value: i, label: d})
+        })
+        // this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion})
+      },
+      compareTrigger(){
+        if(this.preVersion&&this.curVersion)
+          this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion})
       }
   },
   watch:{
@@ -131,13 +148,32 @@ export default {
     requiredData.forEach(d => {
       this.$watch(d, val => {
         if (val) cnt++
-        if (cnt === requiredData.length) {
+        if (cnt === requiredData.length)
           this.versions.forEach((d, i) => {
             this.preOptions.push({value: i, label: d })
+            this.curOptions.push({value: i, label: d })
           })
-        }
       })
     })
+    this.$bus.$on('version-selected', d => {
+      this.curVersion = d
+      this.selectCurTrigger(d)
+      let i = this.versions.indexOf(d)
+      if( i === 0){
+        this.preVersion = ''
+        this.disabled = true
+      }
+      else{
+        this.preVersion = this.versions[i-1]
+        this.disabled = false
+      }
+    })
+    this.$bus.$on('version-restored', d=>{
+      this.preVersion = ''
+      this.curVersion = ''
+      this.disabled = true
+    })
+
   }
 }
 </script>
@@ -185,6 +221,16 @@ export default {
             padding: 0 2px;
           }
         }
+      }
+    }
+    .button{
+      // border-top: 1px solid rgb(206, 206, 206);
+      margin-top: 10px;
+      .el-button--mini, .el-button--small{
+        margin-top: 3px;
+        margin-left: 10px;
+        font-size: 14px;
+        width: 90%;
       }
     }
     .th{

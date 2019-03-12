@@ -208,10 +208,10 @@ html {
     display: flex;
     flex-direction: column;
     .radar-control-panel{
-      flex: 5;
+      flex: 4.9;
     }
     .args-wrapper{
-      flex: 2.1;
+      flex: 2.5;
       margin-bottom: 5px;
     }
   }
