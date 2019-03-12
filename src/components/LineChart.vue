@@ -388,9 +388,12 @@ export default {
       this.$watch(d, val => {
         if (val) cnt++
         if (cnt === requiredData.length) {
+          let sum = 0, mean = 0
+          this.normData.forEach(d=>sum = sum+d.val)
+          mean = sum/this.normData.length
           this.showVersions.push(this.versions[0])
           for(let i=1; i<this.normData.length; i++) {
-            if(this.normData[i].val >= 2) 
+            if(this.normData[i].val >= mean) 
               this.showVersions.push(this.versions[i])
           }
           this.topicsGroup.forEach(topic => {
