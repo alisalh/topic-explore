@@ -82,6 +82,8 @@ export default {
                             .attr('x', 10-spaceForLabel)
                             .attr('dy', '.7em')
                             .text(d.topic)
+                        if(d.type === 'del')
+                            g.selectAll('rect').attr('stroke-dasharray', '3,3')
                         i1++
                         i2++
                     }
@@ -189,18 +191,18 @@ export default {
             })
             if(data[0].type === 'add'){
                 curVec.forEach((d, i) => {
-                    if(d != 0) chartData.push({topic: i, val: [d] })
+                    if(d != 0) chartData.push({topic: i, val: [d], type: 'add'})
                 })
             }
             if(data[0].type === 'del'){
                 preVec.forEach((d, i) => {
-                    if(d != 0) chartData.push({topic: i, val: [d] })
+                    if(d != 0) chartData.push({topic: i, val: [d], type: 'del' })
                 })
             }
             if(data[0].type === 'edit'){
                 preVec.forEach((d, i) => {
                     if(d!=0 || curVec[i]!=0)
-                        chartData.push({topic: i, val: [d, curVec[i]] })
+                        chartData.push({topic: i, val: [d, curVec[i]], type: 'edit'})
                 })
             }
             return chartData
@@ -223,16 +225,16 @@ export default {
     mounted(){
         this.$bus.$on('tip-show', d =>{
             this.draw(this.getChartData(d.docs))
-            this.x = d.x+20
-            this.y = d.y+20
+            this.x = d.x+10
+            this.y = d.y+10
             if(this.x <= d.args.left)
-                this.x = d.args.left + 20
+                this.x = d.args.left + 10
             else if(this.x + this.width >= d.args.right)
-                this.x = d.args.right - this.width - 20
+                this.x = d.args.right - this.width - 10
             if(this.y <= d.args.top)
-                this.y = d.args.top+20
+                this.y = d.args.top+10
             else if(this.y + this.height >= d.args.bottom)
-                this.y = d.args.bottom-this.height-20
+                this.y = d.args.bottom-this.height-10
             this.isShow = true
         })
         this.$bus.$on('tip-close', d =>{

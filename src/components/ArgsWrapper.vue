@@ -2,12 +2,12 @@
   <div class='args-wrapper'
        ref='root'>
   <div class='select-wrapper'>
-    <div class='title'>previous version</div>
-      <el-select v-model="preVersion" size="mini"
+    <div class='title'>current version</div>
+      <el-select v-model="curVersion" size="mini"
         placeholder="please select"
-        @change="selectPreTrigger(preVersion)">
+        @change="selectCurTrigger(curVersion)"> 
         <el-option
-          v-for="item in preOptions"
+          v-for="item in curOptions"
           :key="item.value"
           :value="item.label"
           :label="item.label">
@@ -15,12 +15,12 @@
       </el-select>
   </div>
   <div class='select-wrapper'>
-    <div class='title'>current version</div>
-      <el-select v-model="curVersion" size="mini"
+    <div class='title'>previous version</div>
+      <el-select v-model="preVersion" size="mini"
         placeholder="please select"
-        @change="selectCurTrigger(curVersion)"> 
+        @change="selectPreTrigger(preVersion)">
         <el-option
-          v-for="item in curOptions"
+          v-for="item in preOptions"
           :key="item.value"
           :value="item.label"
           :label="item.label">

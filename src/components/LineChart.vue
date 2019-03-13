@@ -49,16 +49,16 @@ export default {
         g
           .attr('transform', `translate(0,${this.height - margin.bottom + gap})`)
           .call(d3.axisBottom(x))
-          // .call(g =>
-          //   g
-          //     .select('.tick:last-of-type text')   // 设置x轴文字
-          //     .clone()
-          //     .attr('text-anchor', 'end')
-          //     .attr('font-weight', 'bold')
-          //     .attr('class', 'x-label')
-          //     .attr('y', -10)
-          //     .text('versions')
-          // )
+          .call(g =>
+            g
+              .select('.tick:last-of-type text')   // 设置x轴文字
+              .clone()
+              .attr('text-anchor', 'end')
+              .attr('font-weight', 'bold')
+              .attr('class', 'x-label')
+              .attr('y', -10)
+              .text('versions')
+          )
           .call(g =>                            // 设置tick
             g
               .style('cursor', 'default')
@@ -80,7 +80,7 @@ export default {
               .attr('x', 3)
               .attr('text-anchor', 'start')
               .attr('font-weight', 'bold')
-              // .text('number of files(#)')
+              .text('number of files')
           )
       svg.append('g').attr('class','axis axis--x').call(xAxis)
 

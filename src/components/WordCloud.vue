@@ -53,8 +53,6 @@ export default {
   },
   methods: {
     draw (data) {
-      console.log('draw wordcloud', data)
-
       let fontSizeScale = d3.scaleLinear().range([10, 40])
       let fontWeightScale = d3
         .scaleQuantize()

@@ -176,17 +176,18 @@ export default {
         // 添加不可见的arc, text根据该arc显示(详情见https://www.visualcinnamon.com/2015/09/placing-text-on-arcs.html)
         .each((d, i) => {
           var firstArcSection = /(^.+?)L/
-          var newArc = firstArcSection.exec(node.select('#hierarchy-node-'+i).attr('d'))[1]
+          let curNode = node.select('#hierarchy-node-'+i)
+          var newArc = firstArcSection.exec(curNode.attr('d'))[1]
           newArc = newArc.replace(/,/g, ' ')
-          // if(newArc.split(' ')[7] > Math.PI/2){
-          //   var startLoc = /M(.*?)A/,
-          //     middleLoc = /A(.*?)0 0 1/,
-          //     endLoc = /0 0 1 (.*?)$/
-          //   var newStart = endLoc.exec(newArc)[1],
-          //     newEnd = startLoc.exec(newArc)[1],
-          //     middleSec = middleLoc.exec(newArc)[1]
-          //   newArc = 'M' + newStart + 'A' + middleSec + '0 0 0' + newEnd 
-          // }
+          if(arc.centroid(d)[1] > 0){
+            var startLoc = /M(.*?)A/,
+              middleLoc = /A(.*?)0 0 1/,
+              endLoc = /0 0 1 (.*?)$/
+            var newStart = endLoc.exec(newArc)[1],
+              newEnd = startLoc.exec(newArc)[1],
+              middleSec = middleLoc.exec(newArc)[1]
+            newArc = 'M' + newStart + 'A' + middleSec + '0 0 0' + newEnd 
+          }
           node.append('path')
             .attr('class', 'hiddenDonutArcs')
             .attr('id', 'donutArc'+i)
@@ -240,15 +241,16 @@ export default {
 
       var tip = d3tip()
         .attr('class', 'd3-tip')
+        .offset([10, 2])
         .html(function(d) { 
-          let curNode = root
-            .descendants()
-            .filter(node => node.data.name === d.data.name)
-          let position = arc.centroid(curNode[0])
-          if(position[1] < 0)
-            tip.offset([10, 2])
-          else
-            tip.offset([2, 2])
+          // let curNode = root
+          //   .descendants()
+          //   .filter(node => node.data.name === d.data.name)
+          // let position = arc.centroid(curNode[0])
+          // if(position[1] < 0)
+          //   tip.offset([10, 2])
+          // else
+          //   tip.offset([8, 2])
           if(d.data.version === 'prev')
             return "<span style='color:lightgrey'>" +d.data.name.substr(d.data.name.lastIndexOf('\\') + 1) +"</span>"
           else
@@ -260,11 +262,11 @@ export default {
         .append('text')
         .style('cursor', 'default')
         .attr('id', (d, i) => 'text'+i)
-        .attr('dy', 16)
-        // .attr('dy', function(d) { 
-        //   var angle = arc(d).split(',')[7].split('L')
-        //   return (angle[0] > Math.PI/2 ? -6 : 18) 
-        // })
+        // .attr('dy', 16)
+        .attr('dy', function(d, i) { 
+          // let curNode = node.select('#hierarchy-node-'+i)
+          return (arc.centroid(d)[1] > 0 ? -8 : 18) 
+        })
         .append('textPath')
         .attr('startOffset','50%')
         .style('text-anchor','middle')
