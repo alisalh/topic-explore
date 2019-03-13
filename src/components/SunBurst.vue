@@ -239,10 +239,23 @@ export default {
         })
 
       var tip = d3tip()
-        .offset([2, 2])
         .attr('class', 'd3-tip')
-        .html(function(d) { return d.data.name.substr(d.data.name.lastIndexOf('\\') + 1) })
+        .html(function(d) { 
+          let curNode = root
+            .descendants()
+            .filter(node => node.data.name === d.data.name)
+          let position = arc.centroid(curNode[0])
+          if(position[1] < 0)
+            tip.offset([10, 2])
+          else
+            tip.offset([2, 2])
+          if(d.data.version === 'prev')
+            return "<span style='color:lightgrey'>" +d.data.name.substr(d.data.name.lastIndexOf('\\') + 1) +"</span>"
+          else
+            return d.data.name.substr(d.data.name.lastIndexOf('\\') + 1)
+        })
       svg.call(tip)
+
       node
         .append('text')
         .style('cursor', 'default')
@@ -268,7 +281,7 @@ export default {
             if(dist < name.length*10)
             {
               node.select('#text'+ i)
-                .on('mouseenter', tip.show)
+                .on('mouseover', tip.show)
                 .on('mouseout', tip.hide)
               return '...'
             }  
@@ -526,37 +539,38 @@ export default {
 </script>
 
 <style lang="less">
-// .sunburst {
-//   height: 100%;
-// }
+.sunburst {
+  // height: 100%;
+  font-size: 20px;
+}
 .d3-tip {
-  line-height: 1;
-  // font-weight: bold;
+  line-height: 0.8;
   padding: 5px;
-  background: rgba(100, 98, 98, 0.8);
+  font-size: 17px;
+  background: rgba(128, 125, 125, 0.8);
   color: #fff;
   border-radius: 3px;
 }
 
-/* Creates a small triangle extender for the tooltip */
-.d3-tip:after {
-  box-sizing: border-box;
-  display: inline;
-  font-size: 8px;
-  width: 100%;
-  line-height: 1;
-  color: rgba(100, 98, 98, 0.8);
-  content: "\25BC";
-  position: absolute;
-  text-align: center;
-}
+// /* Creates a small triangle extender for the tooltip */
+// .d3-tip:after {
+//   box-sizing: border-box;
+//   display: inline;
+//   font-size: 8px;
+//   line-height: 1;
+//   width: 100%;
+//   color: rgba(100, 98, 98, 0.8);
+//   content: "\25BC";
+//   position: absolute;
+//   text-align: center;
+// }
 
-/* Style northward tooltips differently */
-.d3-tip.n:after {
-  margin: -2px 0 0 0;
-  top: 100%;
-  left: 0;
-}
+// /* Style northward tooltips differently */
+// .d3-tip.n:after {
+//   margin: -2px 0 0 0;
+//   top: 100%;
+//   left: 0;
+// }
 .link {
   stroke: steelblue;
   stroke-opacity: 0.5;

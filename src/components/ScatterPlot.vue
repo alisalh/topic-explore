@@ -21,7 +21,8 @@ export default {
       threshold: 0.1,
       // markerG: null,
       selectedCluster: null,
-      chartData: null
+      chartData: null,
+      dom_args: null
     }
   },
   props: ['topicColormap', 'docData'],
@@ -75,10 +76,12 @@ export default {
     // }
   },
   mounted () {
+    this.dom_args = this.$refs.root.getBoundingClientRect()
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.width = Math.floor(this.$refs.root.clientWidth)
     this.$bus.$on('version-range-selected', d => {
       this.$refs.root.innerHTML = ''
+      this.$bus.$emit('tip-close', {})
       this.$axios.get('topics/getDiffDocs', d)
         .then(({ data }) => {
          this.diffDocs = data
@@ -86,13 +89,24 @@ export default {
     })
     this.$bus.$on('version-restored', d => {
       this.$refs.root.innerHTML = ''
+      this.$bus.$emit('tip-close', {})
     })
     this.$bus.$on('version-selected', d => {
       this.$refs.root.innerHTML = ''
+      this.$bus.$emit('tip-close', {})
     })
-    this.$bus.$on('min-samples-selected', d => this.min_samples = d)
-    this.$bus.$on('eps-selected', d => this.eps = d)
-    this.$bus.$on('threshold-selected', d => this.threshold = d)
+    this.$bus.$on('min-samples-selected', d => {
+      this.min_samples = d
+      this.$bus.$emit('tip-close', {})
+    })
+    this.$bus.$on('eps-selected', d => {
+      this.eps = d
+      this.$bus.$emit('tip-close', {})
+    })
+    this.$bus.$on('threshold-selected', d => {
+      this.threshold = d
+      this.$bus.$emit('tip-close', {})
+    })
   },
   methods: {
     getCluster(){
@@ -270,18 +284,28 @@ export default {
           }
         })
         // .attr('opacity', 0.8)
-        .on('mouseenter', d => {
+        .on('mouseenter', (d) => {
+          let x = d3.event.pageX, y = d3.event.pageY
           if (this.selectedCluster) return
-            resetStatus()
-            highlightMarker(d.cluster)
+          resetStatus()
+          highlightMarker(d.cluster)
+          let selectedDocs = this.chartData.filter(doc => doc.cluster === d.cluster)
+          this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
         })
-        .on('mouseleave', function() {
+        .on('mouseleave', () => {
            if(!this.selectedCluster)
             resetStatus()
+           this.$bus.$emit('tip-close', {})
         })
         .on('click', ({ cluster: selectedCluster }) => {
           // 解绑mouseleave事件
           circle.on('mouseleave', null)
+          if(this.selectedCluster && this.selectedCluster != selectedCluster){
+            // this.$bus.$emit('tip-close', {})
+            let x = d3.event.pageX, y = d3.event.pageY
+            let selectedDocs = this.chartData.filter(doc => doc.cluster === selectedCluster)
+            this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+          }
           this.selectedCluster = selectedCluster
           let clusters = [], selectedDocs = []
           circle
@@ -302,11 +326,13 @@ export default {
         this.selectedCluster = null
         this.$bus.$emit('cluster-restored', {})
         this.$bus.$emit('docs-selected', null)
-        circle.on('mouseleave', function() {
+        this.$bus.$emit('tip-close', {})
+        resetStatus()
+        circle.on('mouseleave', () => {
           if(!this.selectedCluster)
             resetStatus()
+          this.$bus.$emit('tip-close', {})
         })
-        resetStatus()
       })
 
       // 添加legend

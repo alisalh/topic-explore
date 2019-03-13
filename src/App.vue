@@ -31,10 +31,14 @@
       </div>
     </div>
     <code-wrapper class="bl-card-shadow"></code-wrapper>
-    <aspect-bar-chart 
+    <!-- <aspect-bar-chart 
       :topicColormap="topicColormap"
       :docData="docVerData&&docVerData.files"
-      class="bl-card-shadow"></aspect-bar-chart>
+      class="bl-card-shadow"></aspect-bar-chart> -->
+    <aspect-tip :topicColormap="topicColormap"
+      :topicData="topicData"
+      :docData="docVerData&&docVerData.files"
+      class="bl-card-shadow"></aspect-tip>
   </div>
 </template>
 
@@ -54,6 +58,7 @@ import ScatterPlot from './components/ScatterPlot.vue'
 import AspectBarChart from './components/AspectBarChart.vue'
 import CodeWrapper from './components/CodeWrapper.vue'
 import ArgsWrapper from './components/ArgsWrapper.vue'
+import AspectTip from './components/AspectTip.vue'
 // import FileList from './components/FileList.vue'
 // import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
@@ -86,7 +91,8 @@ export default {
     // DiffFilesWrapper
     AspectBarChart,
     CodeWrapper,
-    ArgsWrapper
+    ArgsWrapper,
+    AspectTip
     // FileList
   },
   computed: {
