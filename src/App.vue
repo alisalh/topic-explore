@@ -234,7 +234,7 @@ html {
         margin-right: 5px;
       }
       .word-cloud{
-        flex: 1;
+        flex: 1.3;
       }
     }
     .second-row {
