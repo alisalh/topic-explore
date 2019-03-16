@@ -98,9 +98,14 @@ export default {
         })
         .y(d => y(d.val.length))
       svg.on('click', ()=>{
-        this.resetLineStatus()
-        this.$bus.$emit('line-restored', {})
+        if(this.selectedVersion && this.selectedTopic>=0)
+          return
+        else{
+          this.resetLineStatus()
+          this.$bus.$emit('line-restored', {})
+        } 
       })
+        
       this.lineSvg = svg
         .append('g')
         // .attr('transform', `translate(${x.bandwidth() / 2},0)`)
@@ -490,7 +495,9 @@ export default {
     this.width = Math.floor(this.$refs.root.clientWidth)
     this.$bus.$on('topic-selected', topicId => {
       this.resetLineStatus()
+      this.selectedTopic = topicId
       if(topicId != -1) this.highlightLine(topicId)
+      else this.selectedTopic = null
     })
     this.$bus.$on('version-range-selected', d =>{
       this.selectedVersion = null
