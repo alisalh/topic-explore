@@ -14,17 +14,19 @@ export default {
       width: 0,
       lineSvg: null,
       gridLineG: null,
-      strokeWidth: 2,
+      strokeWidth: 1.5,
       curData: [],
       showVersions: [],
       selectedVersion: null,
-      selectedTopic: null
+      selectedTopic: null,
+      tickValues: null
       // verRange: {}
     }
   },
   props: ['topicColormap', 'topicsGroup', 'versions', 'normData'],
   methods: {
     draw (data) {
+      console.log(data)
       // const vm = this
       const margin = { top: 10, right: 25, bottom: 90, left: 40 }
       const brushHeight = 30, gap = 40  //gap表示brush和linechart之间的间隔
@@ -48,17 +50,17 @@ export default {
       var xAxis = g =>
         g
           .attr('transform', `translate(0,${this.height - margin.bottom + gap})`)
-          .call(d3.axisBottom(x))
-          .call(g =>
-            g
-              .select('.tick:last-of-type text')   // 设置x轴文字
-              .clone()
-              .attr('text-anchor', 'end')
-              .attr('font-weight', 'bold')
-              .attr('class', 'x-label')
-              .attr('y', -10)
-              .text('versions')
-          )
+          .call(d3.axisBottom(x).tickValues(this.tickValues))
+          // .call(g =>
+          //   g
+          //     .select('.tick:last-of-type text')   // 设置x轴文字
+          //     .clone()
+          //     .attr('text-anchor', 'end')
+          //     .attr('font-weight', 'bold')
+          //     .attr('class', 'x-label')
+          //     .attr('y', -10)
+          //     .text('versions')
+          // )
           .call(g =>                            // 设置tick
             g
               .style('cursor', 'default')
@@ -68,6 +70,7 @@ export default {
               .attr('dy', '.15em')
               .attr('transform', 'rotate(-65)')
           )
+
       var yAxis = g =>
         g
           .attr('transform', `translate(${margin.left},0)`)
@@ -102,7 +105,6 @@ export default {
         .append('g')
         // .attr('transform', `translate(${x.bandwidth() / 2},0)`)
         .attr('fill', 'none')
-        .attr('stroke-width', this.stokeWidth)
         .attr('stroke-linejoin', 'round')
         .attr('stroke-linecap', 'round')
         .selectAll('path')
@@ -114,7 +116,7 @@ export default {
           // console.log(d.key, this.topicColormap(parseInt(d.key)))
           return this.topicColormap(parseInt(d.key))
         })
-        .attr('stroke-width', 2)
+        .attr('stroke-width', 1.5)
         // .style('mix-blend-mode', 'multiply')
         .attr('d', d => {
           return line(d.val)
@@ -149,7 +151,7 @@ export default {
           xOffset = x(d)
           return d3.line()([
             [xOffset, margin.top+brushHeight+gap],
-            [xOffset, this.height - margin.bottom+gap]
+            [xOffset, 400 - margin.bottom+gap]
           ])
         })
         // .on('mouseenter', function () {
@@ -266,6 +268,28 @@ export default {
         let s = d3.event.selection
         if(!s){
           x.domain(brushX.domain())
+          // 更新刻度
+          this.tickValues = null
+          if(brushX.domain().length > 40){
+            let n = Math.round(brushX.domain().length/40)
+            this.tickValues = brushX.domain().filter((d, i) => i%n === 0)
+            this.tickValues.push(brushX.domain().slice(-1)[0])
+          }
+          else{
+            this.tickValues = brushX.domain()
+          }
+          xAxis = g => 
+            g
+            .call(d3.axisBottom(x).tickValues(this.tickValues))
+            .call(g =>                            // 设置tick
+              g
+                .style('cursor', 'default')
+                .selectAll('text:not(.x-label)')
+                .style('text-anchor', 'end')
+                .attr('dx', '-.8em')
+                .attr('dy', '.15em')
+                .attr('transform', 'rotate(-65)')
+            )
           svg.select('.axis--x').call(xAxis)
           this.lineSvg = svg.selectAll('.topic-line')
               .data(data)
@@ -324,7 +348,7 @@ export default {
               .filter(ver => ver === this.selectedVersion)
               .attr('opacity', 0.7)
           })
-          .on('click', d=>{
+          .on('click', (d)=>{
             gridLine.attr('opacity', 0.0)
             if(d === this.selectedVersion){
               this.selectedVersion = null
@@ -349,7 +373,29 @@ export default {
           this.showVersions = []
           for(let i=prevIndex; i<=curvIndex; i++)
             this.showVersions.push(brushX.domain()[i])
-          x.domain(this.showVersions)
+          x.domain(this.showVersions) 
+          // 更新刻度
+          this.tickValues = null
+          if(this.showVersions.length > 40){
+            let n = Math.round(this.showVersions.length/40)
+            this.tickValues = this.showVersions.filter((d, i) => i%n === 0)
+            this.tickValues.push(this.showVersions.slice(-1)[0])
+          }
+          else{
+            this.tickValues = this.showVersions
+          }
+          xAxis = g => 
+            g
+            .call(d3.axisBottom(x).tickValues(this.tickValues))
+            .call(g =>                            // 设置tick
+              g
+                .style('cursor', 'default')
+                .selectAll('text:not(.x-label)')
+                .style('text-anchor', 'end')
+                .attr('dx', '-.8em')
+                .attr('dy', '.15em')
+                .attr('transform', 'rotate(-65)')
+            )
           svg.select('.axis--x').call(xAxis)
           // 更新折线
           this.curData = []
@@ -376,6 +422,17 @@ export default {
       this.lineSvg
         .filter(d => parseInt(d.key) !== topicId)
         .attr('opacity', 0.1)
+    },
+    getTickValues(versions){
+      this.tickValues = null
+      if(versions.length > 40){
+        let n = Math.round(versions.length/40)
+        this.tickValues = versions.filter((d, i) => i%n === 0)
+        this.tickValues.push(versions.slice(-1)[0])
+      }
+      else{
+        this.tickValues = versions
+      }
     }
   },
   watch: {
@@ -388,20 +445,42 @@ export default {
       this.$watch(d, val => {
         if (val) cnt++
         if (cnt === requiredData.length) {
+          // 选择norm line显示的刻度
           let sum = 0, mean = 0
           this.normData.forEach(d=>sum = sum+d.val)
-          mean = sum/this.normData.length
+          mean = sum/this.normData.length+4
           this.showVersions.push(this.versions[0])
           for(let i=1; i<this.normData.length; i++) {
             if(this.normData[i].val >= mean) 
               this.showVersions.push(this.versions[i])
           }
-          this.topicsGroup.forEach(topic => {
+          // 版本对应的主导主题文件数用0填充
+          let chartData = []
+          this.topicsGroup.forEach((topic,i) =>{
+            if(topic.val.length < this.versions.length){
+              chartData.push({key: topic.key, val: []})
+              let index = this.versions.indexOf(topic.val[0].key)
+              let id = 0
+              this.versions.slice(index).forEach(d =>{
+                if(d === topic.val[id].key){
+                  chartData[i].val.push(topic.val[id])
+                  id++
+                }
+                else
+                  chartData[i].val.push({key: d, val: []})
+              })
+            }
+            else
+              chartData.push(topic)
+          })
+          chartData.forEach(topic => {
             let item = topic.val.filter(d => this.showVersions.indexOf(d.key) != -1)
             this.curData.push({key: topic.key, val: item})
           })
-          this.showVersions.push(this.versions.slice(-1))
-          this.draw(this.topicsGroup)
+          // 设置刻度
+          this.getTickValues(this.versions)
+          this.showVersions.push(this.versions.slice(-1)[0])
+          this.draw(chartData)
         }
       })
     })

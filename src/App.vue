@@ -46,7 +46,7 @@
 import * as d3 from 'd3'
 import _ from 'lodash'
 // import HelloWorld from './components/HelloWorld.vue'
-import LineChart from './components/LineChart'
+import LineChart from './components/LineChart.vue'
 import Sunburst from './components/SunBurst.vue'
 import WordCloud from './components/WordCloud.vue'
 // import BubbleChart from './components/BubbleChart.vue'

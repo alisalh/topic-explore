@@ -21,6 +21,7 @@ export default {
       dataRoot: null,
       selectedCluster: null,
       selectedDoc: null,
+      selectedTopic: null,
       links: [],
       linkG: null
       // doc: null,
@@ -229,6 +230,11 @@ export default {
                   if(d.source.norm < this.threshold || d.target.norm < this.threshold)
                     this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
                 })
+              }
+              if(this.selectedTopic){
+                
+                this.arcSvg.filter(d => d.data.type == 'file' && parseInt(d.data.topic) !== this.selectedTopic)
+                  .attr('opacity', '0.1')
               }
             }
             else{
@@ -473,8 +479,10 @@ export default {
     this.$bus.$on('topic-selected', topicId => {
       this.resetStatus()
       if (topicId === -1) {
+        this.topicId = null
         return
       }
+      this.selectedTopic = topicId
       this.arcSvg
         .filter(
           d => d.data.type !== 'dir' && parseInt(d.data.topic) !== topicId
@@ -502,6 +510,7 @@ export default {
       this.$axios
         .get('topics/getTopicDisByVersion', { curv: d, prev: null})
         .then(({ data }) => {
+          this.diffDocs = null
           this.draw(data)
         })
     })
