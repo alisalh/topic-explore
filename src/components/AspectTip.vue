@@ -240,6 +240,23 @@ export default {
         this.$bus.$on('tip-close', d =>{
             this.isShow = false
         })
+        this.$bus.$on('selected-tip-show', d =>{
+            this.draw(this.getChartData(d.docs))
+            this.x = d.x+d.args.left+20
+            this.y = d.y+d.args.top+20
+            if(this.x <= d.args.left)
+                this.x = d.args.left + 10
+            else if(this.x + this.width >= d.args.right)
+                this.x = d.args.right - this.width - 10
+            if(this.y <= d.args.top)
+                this.y = d.args.top+10
+            else if(this.y + this.height >= d.args.bottom)
+                this.y = d.args.bottom-this.height-10
+            this.isShow = true
+        })
+        this.$bus.$on('selected-tip-hide', d =>{
+            this.isShow = false
+        })
     }
 }
 </script>

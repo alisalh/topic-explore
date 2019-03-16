@@ -19,7 +19,8 @@ export default {
       showVersions: [],
       selectedVersion: null,
       selectedTopic: null,
-      tickValues: null
+      tickValues: null, 
+      flag: false
       // verRange: {}
     }
   },
@@ -98,12 +99,14 @@ export default {
         })
         .y(d => y(d.val.length))
       svg.on('click', ()=>{
-        if(this.selectedVersion && this.selectedTopic>=0)
-          return
-        else{
+        if(!this.flag){
           this.resetLineStatus()
+          this.selectedTopic = null
           this.$bus.$emit('line-restored', {})
-        } 
+        }
+        else{
+          this.flag = false
+        }
       })
         
       this.lineSvg = svg
@@ -204,7 +207,8 @@ export default {
                 .filter(ver => ver === d)
                 .attr('opacity', 0.7)
               this.selectedVersion = d
-              this.$bus.$emit('version-selected', d)
+              if(this.selectedTopic || this.selectedTopic === 0) this.flag = true
+              this.$bus.$emit('version-selected', {version: d, topic: this.selectedTopic})
             }
           })
        
@@ -364,7 +368,8 @@ export default {
                 .filter(ver => ver === d)
                 .attr('opacity', 0.7)
               this.selectedVersion = d
-              this.$bus.$emit('version-selected', d)
+              if(this.selectedTopic || this.selectedTopic === 0) this.flag = true
+              this.$bus.$emit('version-selected', {version: d, topic: this.selectedTopic})
             }
           })
       }

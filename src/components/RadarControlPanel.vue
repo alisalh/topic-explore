@@ -65,8 +65,8 @@ export default {
   },
   props:['topicsGroup', 'versions'],
   methods: {
-    legendClickHandler(selectedTopic) {
-      if(selectedTopic.isSelected){
+    legendClickHandler(selectedSlider) {
+      if(selectedSlider.isSelected){
         this.$bus.$emit('topic-selected', -1)
         this.sliderData
           .forEach(d => {
@@ -74,7 +74,6 @@ export default {
             if(d.value > 0)
               d.opacity = 1
           })
-        // this.selectedTopic = null
       }
       else {
         this.sliderData
@@ -83,14 +82,12 @@ export default {
             d.opacity = 0.2
           })
         this.sliderData
-          .filter(d => d === selectedTopic)
+          .filter(d => d === selectedSlider)
           .forEach(d => {
             d.isSelected = true
             d.opacity = 1
           })
-        // selectedTopic.isSelected = true
-        this.$bus.$emit('topic-selected', selectedTopic.topicId)
-        // this.selectedTopic = selectedTopic.topicId
+        this.$bus.$emit('topic-selected', selectedSlider.topicId)
       }
     },
     globalClickHandler() {
@@ -108,6 +105,10 @@ export default {
         this.topicsGroup.forEach(d => {
           this.sliderData[d.key].value=d.val.length
         })
+        this.sliderData.forEach(d => {
+          d.opacity = 1
+          d.isSelected = false
+        })
       }
       else {
         this.topicsGroup.forEach(topic => {
@@ -119,6 +120,11 @@ export default {
         this.sliderData.sort(function(a, b){
           return b.value - a.value
         })
+        this.sliderData.forEach(d => {
+          if(d.value === 0)d.opacity = 0.2
+          else d.opacity = 1
+          d.isSelected = false
+        })
       }
       var widthScale =  d3
         .scaleLinear()
@@ -128,12 +134,6 @@ export default {
         .range([0, 120])
       this.sliderData.forEach(d => {
         d.value = widthScale(d.value) 
-      })
-      this.sliderData.forEach(d => {
-        if(d.value === 0){
-          d.opacity = 0.2
-          d.isSelected = false
-        }
       })
       // this.$bus.$emit('topic-selected', -1) 
     }
@@ -165,7 +165,19 @@ export default {
       })
     })
 
-    this.$bus.$on('version-selected', d => {this.selectTrigger(d)})
+    this.$bus.$on('version-selected', obj => {
+      this.selectTrigger(obj.version)
+      this.sliderData.forEach(d =>{
+        if(d.topicId === obj.topic && d.value > 0){
+          d.opacity = 1
+          d.isSelected = true
+        }
+        else{
+          d.opacity = 0.2
+          d.isSelected = false
+        }
+      })
+    })
     this.$bus.$on('version-restored', d => {this.selectTrigger(d)})
     this.$bus.$on('version-range-selected', d=> {this.selectTrigger('all')})
     this.$bus.$on('line-selected', topicId =>{

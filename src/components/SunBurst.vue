@@ -52,7 +52,6 @@ export default {
       this.arcSvg
         .on('click', d => {
           if(d.data.type === 'file'){
-            this.$bus.$emit('doc-selected', this.docData[d.data.id])
             this.arcSvg.filter(d => d.data.type === 'file')
               .attr('opacity', '0.1')
             if(this.linkG){
@@ -88,9 +87,28 @@ export default {
               }
             }
             else{
-              this.selectedDoc = d.data.id
-              this.arcSvg.filter(arc => arc.data.id === d.data.id)
-                .attr('opacity', 1)
+                this.selectedDoc = d.data.id
+                this.arcSvg.filter(arc => arc.data.id === d.data.id)
+                  .attr('opacity', 1)
+                this.arcSvg
+                  .filter(d => d.norm < this.threshold)
+                  .attr('opacity', '0')
+                if(this.linkG){
+                  let selectId = d.data.id
+                  this.links.forEach((d, i) =>{
+                    if(selectId === d.source.data.id){
+                      this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                      this.arcSvg.filter(arc => arc.data.id === d.target.data.id)
+                        .attr('opacity', 1)
+                    }
+                    if(selectId === d.target.data.id){
+                      this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                      this.arcSvg.filter(arc => arc.data.id === d.source.data.id)
+                        .attr('opacity', 1)
+                    }
+                  })
+                }
+                this.$bus.$emit('doc-selected', this.docData[d.data.id])
             }
           } 
         })
@@ -117,12 +135,12 @@ export default {
       this.dataRoot = root
       // 后序遍历, value相加, 详情见https://github.com/xswei/d3-hierarchy
       root.sum(d => (d.children ? 0 : 1))
-      let svg = d3
+      let main_svg = d3
         .select(this.$refs.root)
         .append('svg')
         .attr('width', this.width-20)
         .attr('height', this.height)
-        .append('g')
+      let svg = main_svg.append('g')
         .attr(
           'transform',
           'translate(' + (this.width / 2 - 5) + ',' + this.height / 2 + ')'
@@ -197,7 +215,6 @@ export default {
         })
         .on('click', d => {
           if(d.data.type === 'file'){
-            this.$bus.$emit('doc-selected', this.docData[d.data.id])
             this.arcSvg.filter(d => d.data.type === 'file')
               .attr('opacity', '0.1')
             if(this.linkG){
@@ -218,6 +235,7 @@ export default {
                 }
               }
               else{
+                this.$bus.$emit('cluster-restored', {})
                 this.arcSvg.filter(d => d.data.type === 'file')
                   .attr('opacity', '1')
                 this.arcSvg.filter(d => d.norm >= this.threshold && d.data.version === 'prev')
@@ -231,19 +249,68 @@ export default {
                     this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
                 })
               }
-              if(this.selectedTopic){
-                
+              if(this.selectedTopic){ 
                 this.arcSvg.filter(d => d.data.type == 'file' && parseInt(d.data.topic) !== this.selectedTopic)
                   .attr('opacity', '0.1')
               }
             }
             else{
-              this.selectedDoc = d.data.id
-              this.arcSvg.filter(arc => arc.data.id === d.data.id)
-                .attr('opacity', 1)
+              // this.selectedTopic === null
+              if(this.diffDocs){
+                this.selectedDoc = d.data.id
+                this.arcSvg.filter(arc => arc.data.id === d.data.id)
+                  .attr('opacity', 1)
+                this.arcSvg
+                  .filter(d => d.norm < this.threshold)
+                  .attr('opacity', '0')
+                if(this.linkG){
+                  let selectId = d.data.id
+                  this.links.forEach((d, i) =>{
+                    if(selectId === d.source.data.id){
+                      this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                      this.arcSvg.filter(arc => arc.data.id === d.target.data.id)
+                        .attr('opacity', 1)
+                    }
+                    if(selectId === d.target.data.id){
+                      this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+                      this.arcSvg.filter(arc => arc.data.id === d.source.data.id)
+                        .attr('opacity', 1)
+                    }
+                  })
+                }
+                if(!this.selectedCluster)
+                  this.$bus.$emit('show-cluster', d.data.id)
+                this.$bus.$emit('doc-selected', this.docData[d.data.id])
+              }else{
+                if(this.selectedTopic != d.data.topic){
+                  this.$bus.$emit('topic-selected', parseInt(d.data.topic))
+                  this.$bus.$emit('line-selected', parseInt(d.data.topic))
+                }
+                else{
+                  this.selectedDoc = d.data.id
+                  this.arcSvg.filter(arc => arc.data.id === d.data.id)
+                    .attr('opacity', 1)
+                  this.$bus.$emit('doc-selected', this.docData[d.data.id])
+                }
+              }
             }
           } 
         })
+      main_svg.on('click', ()=>{
+        let left = Math.floor(this.$refs.root.offsetLeft),
+          top = Math.floor(this.$refs.root.offsetTop),
+          width = Math.floor(this.$refs.root.clientWidth)
+        let x = d3.event.pageX, y = d3.event.pageY
+        // 圆内空白处点击
+        if((x-left > width/2-100) && (x-left < width/2+100)
+            &&(y-top > this.height/2-100) && (y-top < this.height/2+100)){
+          if(this.selectedTopic || this.selectedTopic === 0){
+            this.selectedTopic = null
+            this.$bus.$emit('topic-selected', -1)
+            this.$bus.$emit('line-restored', {})
+          }
+        }
+      })
 
       var tip = d3tip()
         .attr('class', 'd3-tip')
@@ -300,6 +367,12 @@ export default {
           if(d.data.version === 'prev')
             return 0.5
         })
+        // node.each((d,i) =>{
+        //   if(d.data.type === 'file')
+        //     node.select('#hierarchy-node-'+i)
+        //       .on('mouseover', tip.show)
+        //       .on('mouseout', tip.hide)
+        // })
       
     // // 添加虚线
     // node
@@ -318,14 +391,22 @@ export default {
     //         .attr('stroke-dasharray', '5,5')
     //     })
        
-      // this.arcSvg
-      //   .append('title')
-      //   .text(d => d.data.name)
+      this.arcSvg
+        .filter(d => d.data.type === 'file')
+        .append('title')
+        .text(d => d.data.name.substr(d.data.name.lastIndexOf('\\') + 1))
       // 前一版本用虚线
       this.arcSvg
         .filter(d => d.data.version === 'prev')
         .attr('opacity', '0.5')
         .attr('stroke-dasharray', '5,5')
+      // 显示特定版本特定主题的分布
+      // null >= 0为true
+      if(this.selectedTopic || this.selectedTopic === 0){
+          this.arcSvg
+            .filter(d => d.data.type !== 'dir' && parseInt(d.data.topic) !== this.selectedTopic)
+            .attr('opacity', 0.1)
+      }
       
       if(this.diffDocs){
         var leafNodes = root.leaves()
@@ -398,10 +479,10 @@ export default {
             .attr('offset', '0%')
             .attr('stop-color', this.topicColormap(parseInt(d.source.data.topic)))
           linearGradient.append('stop')
-            .attr('offset', '49%')
+            .attr('offset', '33%')
             .attr('stop-color', this.topicColormap(parseInt(d.source.data.topic)))
           linearGradient.append('stop')
-            .attr('offset', '50%')
+            .attr('offset', '66%')
             .attr('stop-color', this.topicColormap(parseInt(d.target.data.topic)))
           linearGradient.append('stop')
             .attr('offset', '100%')
@@ -477,16 +558,25 @@ export default {
   },
   created () {
     this.$bus.$on('topic-selected', topicId => {
+      if(this.diffDocs){
+        this.selectedTopic = null
+        return
+      }
       this.resetStatus()
       if (topicId === -1) {
-        this.topicId = null
+        this.selectedTopic = null
         return
       }
       this.selectedTopic = topicId
       this.arcSvg
-        .filter(
-          d => d.data.type !== 'dir' && parseInt(d.data.topic) !== topicId
-        )
+        .filter(d => d.data.type !== 'dir' && parseInt(d.data.topic) !== topicId)
+        .attr('opacity', 0.1)
+    })
+    this.$bus.$on('line-selected', topicId => {
+      this.resetStatus()
+      this.selectedTopic = topicId
+      this.arcSvg
+        .filter(d => d.data.type !== 'dir' && parseInt(d.data.topic) !== topicId)
         .attr('opacity', 0.1)
     })
     this.$bus.$on('cluster-selected', ids => {
@@ -507,8 +597,9 @@ export default {
     this.$bus.$on('version-selected', d => {
       // var prev = this.versions[this.versions.indexOf(d)-1]
       this.$refs.root.innerHTML = ''
+      this.selectedTopic = d.topic
       this.$axios
-        .get('topics/getTopicDisByVersion', { curv: d, prev: null})
+        .get('topics/getTopicDisByVersion', { curv: d.version, prev: null})
         .then(({ data }) => {
           this.diffDocs = null
           this.draw(data)
@@ -516,6 +607,7 @@ export default {
     })
     this.$bus.$on('version-range-selected', d => {
       this.$refs.root.innerHTML = ''
+      this.selectedTopic = null
       this.$axios
         .get('topics/getTopicDisByVersion', d)
         .then(({ data }) => {
@@ -545,6 +637,7 @@ export default {
       })
     })
     this.$bus.$on('threshold-selected', d => this.threshold=d)
+    this.$bus.$on('line-restored', () => this.resetStatus())
   }
 }
 </script>

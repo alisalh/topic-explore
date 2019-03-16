@@ -115,11 +115,14 @@ export default {
       },
       selectCurTrigger(val){
         this.preOptions = []
-        let id = this.versions.indexOf(val)-1
+        let id = this.versions.indexOf(val)
         this.versions
           .slice(0, id)
           .forEach((d, i) =>{
             this.preOptions.push({value: i, label: d})
+        })
+        this.preOptions.sort(function(a, b){
+          return b.value - a.value
         })
         // this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion})
       },
@@ -156,9 +159,9 @@ export default {
       })
     })
     this.$bus.$on('version-selected', d => {
-      this.curVersion = d
-      this.selectCurTrigger(d)
-      let i = this.versions.indexOf(d)
+      this.curVersion = d.version
+      this.selectCurTrigger(d.version)
+      let i = this.versions.indexOf(d.version)
       if( i === 0){
         this.preVersion = ''
         this.disabled = true

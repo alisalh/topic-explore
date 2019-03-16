@@ -22,7 +22,10 @@ export default {
       // markerG: null,
       selectedCluster: null,
       chartData: null,
-      dom_args: null
+      dom_args: null,
+      allCircle: null,
+      xScale: null,
+      yScale: null
     }
   },
   props: ['topicColormap', 'docData'],
@@ -107,6 +110,70 @@ export default {
       this.threshold = d
       this.$bus.$emit('tip-close', {})
     })
+    this.$bus.$on('show-cluster', d=>{
+      if(d){
+        let cluster = this.chartData
+          .filter(doc => doc.fileIds.indexOf(d) != -1)
+        this.allCircle.attr('opacity', 0.1)
+        this.allCircle
+          .filter(circle => circle.cluster === cluster[0].cluster)
+          .attr('opacity', 1)
+        // this.selectedCluster = cluster.cluster
+        this.allCircle
+          .on('mouseenter', null)
+          .on('mouseleave', null)
+          .on('click', null)
+        this.$bus.$emit('selected-tip-show', 
+          { x: this.xScale(cluster[0].x),
+            y: this.yScale(cluster[0].y), 
+            args: this.dom_args,
+            docs: this.chartData.filter(doc => doc.cluster === cluster[0].cluster)
+          })
+      }
+    })
+    this.$bus.$on('cluster-restored', () => {
+       this.$bus.$emit('selected-tip-hide', {})
+       this.allCircle
+          .attr('opacity', 1)
+          .on('mouseenter', (d) => {
+            console.log(this.selectedCluster)
+            let x = d3.event.pageX, y = d3.event.pageY
+            if (this.selectedCluster || this.selectedCluster === 0) return
+            this.resetStatus()
+            this.highlightMarker(d.cluster)
+            let selectedDocs = this.chartData.filter(doc => doc.cluster === d.cluster)
+            this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+          })
+          .on('mouseleave', () => {
+            if(!this.selectedCluster)
+              this.resetStatus()
+            this.$bus.$emit('tip-close', {})
+          })
+          .on('click', ({ cluster: selectedCluster }) => {
+            // 解绑mouseleave事件
+            this.allCircle.on('mouseleave', null)
+            if(this.selectedCluster && this.selectedCluster != selectedCluster){
+              // this.$bus.$emit('tip-close', {})
+              let x = d3.event.pageX, y = d3.event.pageY
+              let selectedDocs = this.chartData.filter(doc => doc.cluster === selectedCluster)
+              this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+            }
+            this.selectedCluster = selectedCluster
+            let clusters = [], selectedDocs = []
+            this.allCircle
+              .filter(d => d.cluster === selectedCluster)
+              .each(d => {
+                // 合并数组concat
+                clusters = clusters.concat(d['fileIds'])
+                selectedDocs.push(d)
+              })
+            // 多事件结合使用时，可以阻止其他事件的发生，避免产生多个动作
+            d3.event.stopPropagation()
+            this.highlightMarker(selectedCluster)
+            this.$bus.$emit('cluster-selected', clusters)
+            this.$bus.$emit('docs-selected', selectedDocs)
+          })
+    })
   },
   methods: {
     getCluster(){
@@ -144,11 +211,13 @@ export default {
         .domain(d3.extent(data, d => d.x))
         .nice()
         .range([margin.left, width - margin.right])
+      this.xScale = x
       const y = d3
         .scaleLinear()
         .domain(d3.extent(data, d => d.y))
         .nice()
         .range([height - margin.bottom, margin.top])
+      this.yScale = y
       // const xAxis = g =>
       //   g
       //     .attr('transform', `translate(0,${height - margin.bottom})`)
@@ -285,16 +354,17 @@ export default {
         })
         // .attr('opacity', 0.8)
         .on('mouseenter', (d) => {
+          console.log(this.selectedCluster)
           let x = d3.event.pageX, y = d3.event.pageY
-          if (this.selectedCluster) return
-          resetStatus()
-          highlightMarker(d.cluster)
+          if (this.selectedCluster || this.selectedCluster === 0) return
+          this.resetStatus()
+          this.highlightMarker(d.cluster)
           let selectedDocs = this.chartData.filter(doc => doc.cluster === d.cluster)
           this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
         })
         .on('mouseleave', () => {
            if(!this.selectedCluster)
-            resetStatus()
+            this.resetStatus()
            this.$bus.$emit('tip-close', {})
         })
         .on('click', ({ cluster: selectedCluster }) => {
@@ -317,23 +387,56 @@ export default {
             })
           // 多事件结合使用时，可以阻止其他事件的发生，避免产生多个动作
           d3.event.stopPropagation()
-          highlightMarker(selectedCluster)
+          this.highlightMarker(selectedCluster)
           this.$bus.$emit('cluster-selected', clusters)
           this.$bus.$emit('docs-selected', selectedDocs)
         })
-
+      this.allCircle = circle
       svg.on('click', () => {
         this.selectedCluster = null
         this.$bus.$emit('cluster-restored', {})
         this.$bus.$emit('docs-selected', null)
         this.$bus.$emit('tip-close', {})
-        resetStatus()
-        circle.on('mouseleave', () => {
-          if(!this.selectedCluster)
-            resetStatus()
-          this.$bus.$emit('tip-close', {})
+        this.resetStatus()
+        circle.on('mouseenter', (d) => {
+            console.log(this.selectedCluster)
+            let x = d3.event.pageX, y = d3.event.pageY
+            if (this.selectedCluster || this.selectedCluster === 0) return
+            this.resetStatus()
+            this.highlightMarker(d.cluster)
+            let selectedDocs = this.chartData.filter(doc => doc.cluster === d.cluster)
+            this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+            })
+          .on('mouseleave', () => {
+            if(!this.selectedCluster)
+              this.resetStatus()
+            this.$bus.$emit('tip-close', {})
+          })
+          .on('click', ({ cluster: selectedCluster }) => {
+            // 解绑mouseleave事件
+            circle.on('mouseleave', null)
+            if(this.selectedCluster && this.selectedCluster != selectedCluster){
+              // this.$bus.$emit('tip-close', {})
+              let x = d3.event.pageX, y = d3.event.pageY
+              let selectedDocs = this.chartData.filter(doc => doc.cluster === selectedCluster)
+              this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+            }
+            this.selectedCluster = selectedCluster
+            let clusters = [], selectedDocs = []
+            circle
+              .filter(d => d.cluster === selectedCluster)
+              .each(d => {
+                // 合并数组concat
+                clusters = clusters.concat(d['fileIds'])
+                selectedDocs.push(d)
+              })
+            // 多事件结合使用时，可以阻止其他事件的发生，避免产生多个动作
+            d3.event.stopPropagation()
+            this.highlightMarker(selectedCluster)
+            this.$bus.$emit('cluster-selected', clusters)
+            this.$bus.$emit('docs-selected', selectedDocs)
+          })
         })
-      })
 
       // 添加legend
       var legend = svg.append('g')
@@ -490,27 +593,16 @@ export default {
       //     .attr('opacity', 1)
       //     .attr('stroke-dasharray', '3,5')
       //     .attr('stroke-dashoffset', '3')
-        
-        // 状态重置和高亮
-        function resetStatus () {
-          circle.attr('opacity', 1)
-          // solidPath.attr('opacity', 1)
-          // dashedPath.attr('opacity', 1)
-        }
-        function highlightMarker (selectedCluster) {
-          circle.attr('opacity', 0.1)
-          // solidPath.attr('opacity', 0.1)
-          // dashedPath.attr('opacity', 0.1)
-          circle
-            .filter(d => d.cluster === selectedCluster)
-            .attr('opacity', 1)
-          // solidPath
-          //   .filter(d => d.cluster === selectedCluster)
-          //   .attr('opacity', d => {if(d.type === 'edit') return 1})
-          // dashedPath
-          //   .filter(d => d.cluster === selectedCluster)
-          //   .attr('opacity', d => {if(d.type === 'edit') return 1})
-        }
+    },
+    // 状态重置和高亮
+    resetStatus () {
+      this.allCircle.attr('opacity', 1)
+    },
+    highlightMarker (selectedCluster) {
+     this.allCircle.attr('opacity', 0.1)
+      this.allCircle
+        .filter(d => d.cluster === selectedCluster)
+        .attr('opacity', 1)
     },
     fieldAdapter (doc) {
       return {
