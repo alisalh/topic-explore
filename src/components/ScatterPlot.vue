@@ -25,22 +25,25 @@ export default {
       dom_args: null,
       allCircle: null,
       xScale: null,
-      yScale: null
+      yScale: null,
+      percentSum: null,
+      topicNum: 0, 
+      maxVal: 0
     }
   },
-  props: ['topicColormap', 'docData'],
-  computed: {
-    clusterColormap () {
-      return d3
-        .scaleOrdinal()
-        .domain(
-          Array(this.clusterNum + 1)
-            .fill(null)
-            .map((d, i) => i - 1)
-        )
-        .range(CLUSTER_COLOR)
-    }
-  },
+  props: ['topicColormap', 'docData', 'topicData'],
+  // computed: {
+  //   clusterColormap () {
+  //     return d3
+  //       .scaleOrdinal()
+  //       .domain(
+  //         Array(this.clusterNum + 1)
+  //           .fill(null)
+  //           .map((d, i) => i - 1)
+  //       )
+  //       .range(CLUSTER_COLOR)
+  //   }
+  // },
   watch: {
     // fileGroup () {
     //   const allDocs = this.getDocData()
@@ -77,6 +80,19 @@ export default {
     // chartData(){
     //   this.$bus.$emit('diff-docs-changed', this.chartData)
     // }
+  },
+  created(){
+    const requiredData = ['topicColormap', 'docData', 'topicData']
+    let cnt = 0
+    requiredData.forEach(d => {
+        this.$watch(d, val => {
+            if (val) 
+                cnt++
+            if (cnt === requiredData.length) {
+                this.topicNum = this.topicData.length
+            }
+        })
+    })
   },
   mounted () {
     this.dom_args = this.$refs.root.getBoundingClientRect()
@@ -127,7 +143,8 @@ export default {
           { x: this.xScale(cluster[0].x),
             y: this.yScale(cluster[0].y), 
             args: this.dom_args,
-            docs: this.chartData.filter(doc => doc.cluster === cluster[0].cluster)
+            max: this.maxVal,
+            docs: this.percentSum.filter(item=>item.cluster===cluster[0].cluster)
           })
       }
     })
@@ -136,13 +153,15 @@ export default {
        this.allCircle
           .attr('opacity', 1)
           .on('mouseenter', (d) => {
-            console.log(this.selectedCluster)
             let x = d3.event.pageX, y = d3.event.pageY
             if (this.selectedCluster || this.selectedCluster === 0) return
             this.resetStatus()
             this.highlightMarker(d.cluster)
             let selectedDocs = this.chartData.filter(doc => doc.cluster === d.cluster)
-            this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+            this.$bus.$emit('tip-show', {x: x, y: y, 
+              args: this.dom_args, 
+              max: this.maxVal,
+              docs: this.percentSum.filter(item=>item.cluster===d.cluster)})
           })
           .on('mouseleave', () => {
             if(!this.selectedCluster)
@@ -156,7 +175,10 @@ export default {
               // this.$bus.$emit('tip-close', {})
               let x = d3.event.pageX, y = d3.event.pageY
               let selectedDocs = this.chartData.filter(doc => doc.cluster === selectedCluster)
-              this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+              this.$bus.$emit('tip-show', {x: x, y: y, 
+                args: this.dom_args,
+                max: this.maxVal, 
+                docs: this.percentSum.filter(item=>item.cluster===selectedCluster)})
             }
             this.selectedCluster = selectedCluster
             let clusters = [], selectedDocs = []
@@ -186,15 +208,77 @@ export default {
           this.clusterNum = clusterNum
           this.selectedCluster = null
           let step = 0
+          this.percentSum = []
           chartData.forEach(d => {
             if(d.cluster === -1) {
               d.cluster = d.cluster - step
               step = step + 1
             }
+            let temp = this.percentSum.filter(item => item.cluster === d.cluster)
+            if(temp.length === 0)
+              this.percentSum.push({cluster: d.cluster, type: d.type, vec:[]})
           })
+          let max = 0
+          this.percentSum.forEach(item =>{
+            let curData = chartData.filter(data => data.cluster === item.cluster)
+            item.vec = this.getChartData(curData)
+            item.vec.forEach(vec => {
+              if(max < Math.max(vec.val))
+                max = Math.max(vec.val)
+            })
+          })
+          this.maxVal = max
           this.chartData = chartData
           this.draw(chartData)
         })
+    },
+    getChartData(data){
+      let preVec = Array(this.topicNum).fill(0), 
+          curVec = Array(this.topicNum).fill(0)
+      let chartData = []
+      data.forEach(doc => {
+        if(doc.type === 'edit'){
+            let preId = doc.fileIds[0], curId = doc.fileIds[1]
+            let preDoc = this.docData[preId], curDoc = this.docData[curId]
+            let edit_preVec = preDoc['Topic_Contribution'].map(topic => topic['percent']),
+                edit_curVec = curDoc['Topic_Contribution'].map(topic => topic['percent'])
+            preVec = preVec.map((d, i) => d+edit_preVec[i])
+            curVec = curVec.map((d, i) => d+edit_curVec[i])
+        }
+        if(doc.type === 'add'){
+            let curId = doc.fileIds[0]
+            let curDoc = this.docData[curId]
+            let add_preVec = Array(this.topicNum).fill(0),
+                add_curVec = curDoc['Topic_Contribution'].map(topic => topic['percent'])
+            preVec = preVec.map((d, i) => d+add_preVec[i])
+            curVec = curVec.map((d, i) => d+add_curVec[i])
+        }
+        if(doc.type === 'del'){
+            let preId = doc.fileIds[0]
+            let preDoc = this.docData[preId]
+            let del_preVec = preDoc['Topic_Contribution'].map(topic => topic['percent']),
+                del_curVec = Array(this.topicNum).fill(0)
+            preVec = preVec.map((d, i) => d+del_preVec[i])
+            curVec = curVec.map((d, i) => d+del_curVec[i])
+        }
+      })
+      if(data[0].type === 'add'){
+        curVec.forEach((d, i) => {
+            if(d != 0) chartData.push({topic: i, val: [d], type: 'add'})
+        })
+      }
+      if(data[0].type === 'del'){
+        preVec.forEach((d, i) => {
+            if(d != 0) chartData.push({topic: i, val: [d], type: 'del' })
+        })
+      }
+      if(data[0].type === 'edit'){
+        preVec.forEach((d, i) => {
+            if(d!=0 || curVec[i]!=0)
+                chartData.push({topic: i, val: [d, curVec[i]], type: 'edit'})
+        })
+      }
+      return chartData
     },
     draw (data) {
       this.$refs.root.innerHTML = ''
@@ -354,13 +438,15 @@ export default {
         })
         // .attr('opacity', 0.8)
         .on('mouseenter', (d) => {
-          console.log(this.selectedCluster)
           let x = d3.event.pageX, y = d3.event.pageY
           if (this.selectedCluster || this.selectedCluster === 0) return
           this.resetStatus()
           this.highlightMarker(d.cluster)
           let selectedDocs = this.chartData.filter(doc => doc.cluster === d.cluster)
-          this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+          this.$bus.$emit('tip-show', {x: x, y: y, 
+            args: this.dom_args, 
+            max: this.maxVal,
+            docs: this.percentSum.filter(item=>item.cluster===d.cluster)})
         })
         .on('mouseleave', () => {
            if(!this.selectedCluster)
@@ -374,7 +460,10 @@ export default {
             // this.$bus.$emit('tip-close', {})
             let x = d3.event.pageX, y = d3.event.pageY
             let selectedDocs = this.chartData.filter(doc => doc.cluster === selectedCluster)
-            this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+            this.$bus.$emit('tip-show', {x: x, y: y, 
+              args: this.dom_args, 
+              max: this.maxVal,
+              docs: this.percentSum.filter(item=>item.cluster===selectedCluster)})
           }
           this.selectedCluster = selectedCluster
           let clusters = [], selectedDocs = []
@@ -399,13 +488,15 @@ export default {
         this.$bus.$emit('tip-close', {})
         this.resetStatus()
         circle.on('mouseenter', (d) => {
-            console.log(this.selectedCluster)
             let x = d3.event.pageX, y = d3.event.pageY
             if (this.selectedCluster || this.selectedCluster === 0) return
             this.resetStatus()
             this.highlightMarker(d.cluster)
             let selectedDocs = this.chartData.filter(doc => doc.cluster === d.cluster)
-            this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+            this.$bus.$emit('tip-show', {x: x, y: y, 
+              args: this.dom_args, 
+              max: this.maxVal,
+              docs: this.percentSum.filter(item=>item.cluster===d.cluster)})
             })
           .on('mouseleave', () => {
             if(!this.selectedCluster)
@@ -419,7 +510,10 @@ export default {
               // this.$bus.$emit('tip-close', {})
               let x = d3.event.pageX, y = d3.event.pageY
               let selectedDocs = this.chartData.filter(doc => doc.cluster === selectedCluster)
-              this.$bus.$emit('tip-show', {x: x, y: y, args: this.dom_args, docs: selectedDocs})
+              this.$bus.$emit('tip-show', {x: x, y: y, 
+                args: this.dom_args, 
+                max: this.maxVal,
+                docs: this.percentSum.filter(item=>item.cluster===selectedCluster)})
             }
             this.selectedCluster = selectedCluster
             let clusters = [], selectedDocs = []

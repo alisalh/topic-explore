@@ -17,7 +17,9 @@ export default {
             y: 0,
             width: 100,
             height: 50,
-            topicNum: 0
+            topicNum: 0,
+            type: '',
+            maxVal: 0
         }
     },
     props: ['topicColormap','topicData', 'docData'],
@@ -37,7 +39,8 @@ export default {
             var chartWidth = this.width-10,
                 barHeight = 10,
                 gap=10, spaceForLabel = 50,
-                chartHeight=0
+                spaceForTitle = 20,
+                chartHeight=spaceForTitle
             data.forEach(d =>{
                 if(d.val.length === 1){
                     if(d.val[0] >= 0.2)
@@ -59,19 +62,24 @@ export default {
             })
             this.height = chartHeight+20 - gap
             var x = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d3.max(d.val))])
+                .domain([0, this.maxVal])
                 .range([0, chartWidth-spaceForLabel])
             const svg = d3.select(this.$refs.root)
                 .append('svg')
                 .attr('width', chartWidth)
                 .attr('height', this.height)
                 .append('g')
+            svg.append('g')
+                .attr('transform', 'translate(25,15)')
+                .append('text')
+                .text(this.type)
+                .style('font-size', 15+'px')
             var i1 = 0, i2 = 0
             data.forEach((d, i) => {
                 if(d.val.length === 1){
                     if(d.val[0] >= 0.2) {
                         let g = svg.append('g')
-                            .attr('transform', `translate(${spaceForLabel},${i1*barHeight+i2*gap+10})`)
+                            .attr('transform', `translate(${spaceForLabel},${i1*barHeight+i2*gap+10+spaceForTitle})`)
                         g.append('rect')
                             .attr('fill', this.topicColormap(d.topic))
                             .attr('class', 'bar')
@@ -91,7 +99,7 @@ export default {
                 if(d.val.length === 2){
                     if(d.val[0] >= 0.2){
                         let g = svg.append('g')
-                                .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10})`)
+                                .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10+spaceForTitle})`)
                             g.append('rect')
                                 .attr('fill', this.topicColormap(d.topic))
                                 .attr('class', 'bar')
@@ -125,7 +133,7 @@ export default {
                     else{
                         if(d.val[1] >= 0.2){
                             let g = svg.append('g')
-                                .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10})`)
+                                .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10+spaceForTitle})`)
                             g.append('rect')
                                 .attr('fill', this.topicColormap(d.topic))
                                 .attr('class', 'bar')
@@ -159,54 +167,7 @@ export default {
         //     })
         //     return chartData
         // },
-        getChartData(data){
-            var preVec = Array(this.topicNum).fill(0), 
-                curVec = Array(this.topicNum).fill(0)
-            var chartData = []
-            data.forEach(doc => {
-                if(doc.type === 'edit'){
-                    let preId = doc.fileIds[0], curId = doc.fileIds[1]
-                    let preDoc = this.docData[preId], curDoc = this.docData[curId]
-                    let edit_preVec = preDoc['Topic_Contribution'].map(topic => topic['percent']),
-                        edit_curVec = curDoc['Topic_Contribution'].map(topic => topic['percent'])
-                    preVec = preVec.map((d, i) => d+edit_preVec[i])
-                    curVec = curVec.map((d, i) => d+edit_curVec[i])
-                }
-                if(doc.type === 'add'){
-                    let curId = doc.fileIds[0]
-                    let curDoc = this.docData[curId]
-                    let add_preVec = Array(this.topicNum).fill(0),
-                        add_curVec = curDoc['Topic_Contribution'].map(topic => topic['percent'])
-                    preVec = preVec.map((d, i) => d+add_preVec[i])
-                    curVec = curVec.map((d, i) => d+add_curVec[i])
-                }
-                if(doc.type === 'del'){
-                    let preId = doc.fileIds[0]
-                    let preDoc = this.docData[preId]
-                    let del_preVec = preDoc['Topic_Contribution'].map(topic => topic['percent']),
-                        del_curVec = Array(this.topicNum).fill(0)
-                    preVec = preVec.map((d, i) => d+del_preVec[i])
-                    curVec = curVec.map((d, i) => d+del_curVec[i])
-                }
-            })
-            if(data[0].type === 'add'){
-                curVec.forEach((d, i) => {
-                    if(d != 0) chartData.push({topic: i, val: [d], type: 'add'})
-                })
-            }
-            if(data[0].type === 'del'){
-                preVec.forEach((d, i) => {
-                    if(d != 0) chartData.push({topic: i, val: [d], type: 'del' })
-                })
-            }
-            if(data[0].type === 'edit'){
-                preVec.forEach((d, i) => {
-                    if(d!=0 || curVec[i]!=0)
-                        chartData.push({topic: i, val: [d, curVec[i]], type: 'edit'})
-                })
-            }
-            return chartData
-        }
+        
 
     },
     created(){
@@ -224,7 +185,10 @@ export default {
     },
     mounted(){
         this.$bus.$on('tip-show', d =>{
-            this.draw(this.getChartData(d.docs))
+            this.type = d.docs[0].type + ' files'
+            this.maxVal = d.max
+            // this.draw(this.getChartData(d.docs))
+            this.draw(d.docs[0].vec)
             this.x = d.x+10
             this.y = d.y+10
             if(this.x <= d.args.left)
@@ -241,7 +205,10 @@ export default {
             this.isShow = false
         })
         this.$bus.$on('selected-tip-show', d =>{
-            this.draw(this.getChartData(d.docs))
+            this.type = d.docs[0].type + ' files'
+            // this.draw(this.getChartData(d.docs))
+            this.maxVal = d.max
+            this.draw(d.docs[0].vec)
             this.x = d.x+d.args.left+20
             this.y = d.y+d.args.top+20
             if(this.x <= d.args.left)

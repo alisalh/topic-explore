@@ -25,6 +25,7 @@
           class="bl-card-shadow"></sunburst>
         <scatter-plot :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
+          :topicData="topicData"
           class="bl-card-shadow"></scatter-plot>
         <comment-charts-wrapper :docData="docVerData&&docVerData.files"
         :topicData="topicData" class="bl-card-shadow"></comment-charts-wrapper>
