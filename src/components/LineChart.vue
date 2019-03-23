@@ -27,7 +27,6 @@ export default {
   props: ['topicColormap', 'topicsGroup', 'versions', 'normData'],
   methods: {
     draw (data) {
-      console.log(data)
       // const vm = this
       const margin = { top: 10, right: 25, bottom: 90, left: 40 }
       const brushHeight = 30, gap = 40  //gap表示brush和linechart之间的间隔
@@ -464,29 +463,21 @@ export default {
             if(this.normData[i].val >= mean) 
               this.showVersions.push(this.versions[i])
           }
-          // 版本对应的主导主题文件数用0填充
+          // 过滤特殊值
           let chartData = []
           this.topicsGroup.forEach((topic,i) =>{
-            if(topic.val.length < this.versions.length){
-              chartData.push({key: topic.key, val: []})
-              let index = this.versions.indexOf(topic.val[0].key)
-              let id = 0
-              this.versions.slice(index).forEach(d =>{
-                if(d === topic.val[id].key){
-                  chartData[i].val.push(topic.val[id])
-                  id++
-                }
-                else
-                  chartData[i].val.push({key: d, val: []})
+            if(topic.key===1 || topic.key===6){
+              let temp = {key: topic.key, val:[]}
+              topic.val.forEach(d => {
+                if(this.versions.indexOf(d.key) >= this.versions.indexOf('2.0.0'))
+                  temp.val.push(d)
               })
+              chartData.push(temp)
             }
             else
               chartData.push(topic)
           })
-          chartData.forEach(topic => {
-            let item = topic.val.filter(d => this.showVersions.indexOf(d.key) != -1)
-            this.curData.push({key: topic.key, val: item})
-          })
+          console.log(chartData)
           // 设置刻度
           this.getTickValues(this.versions)
           this.showVersions.push(this.versions.slice(-1)[0])

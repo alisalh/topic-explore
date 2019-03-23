@@ -18,12 +18,17 @@
       <div v-for="item in sliderData"
         :key="item.id"
         class='select-control-wrapper'>
-        <div class="topic-idx"
-          :style="{opacity:item.opacity}">{{item.topicId}}</div>
-        <div class="legend"
-          :style="{background:item.color, opacity: item.opacity, width:item.value+'px'}"
-          @click='legendClickHandler(item)'
-          :class='{selected:item.isSelected}'>
+        <div class="topic-idx">
+          <div :style="{opacity:item.opacity}">{{item.topicId}}</div>
+        </div>
+        <div class="topic-text">
+           <div :style="{opacity:item.opacity}">{{topics[item.topicId]}}</div>
+        </div>
+        <div class="legend">
+          <div class="bar"
+            :style="{background:item.color, opacity: item.opacity, width:item.value+'px'}"
+            @click='legendClickHandler(item)'
+            :class='{selected:item.isSelected}'></div>
         </div>
         <!-- <el-slider v-model="item.value"
           :min="0"
@@ -61,6 +66,9 @@ export default {
       selectedVersion: 'all',
       // legendWdith: [],
       // options:[{value:0, label: 'all'}],
+      topics: ['option', 'vdom', 'component','model', 'dom','template',
+          'SSR','instance','directives','merge','watcher', 'html-parser',
+          'text-parser','observer', 'transition', 'complier']
     }
   },
   props:['topicsGroup', 'versions'],
@@ -102,8 +110,16 @@ export default {
           return a.topicId - b.topicId
       })
       if(this.selectedVersion === 'all') {
-        this.topicsGroup.forEach(d => {
-          this.sliderData[d.key].value=d.val.length
+        this.topicsGroup.forEach(topic => {
+          // 过滤特殊值, 与linechat对应
+          let w = topic.val.length
+          if(topic.key===1 || topic.key===6){
+              topic.val.forEach(d => {
+              if(this.versions.indexOf(d.key) < this.versions.indexOf('2.0.0'))
+                w--
+            })
+          }
+          this.sliderData[topic.key].value=w
         })
         this.sliderData.forEach(d => {
           d.opacity = 1
@@ -158,8 +174,16 @@ export default {
             .scaleLinear()
             .domain([0, this.versions.length])
             .range([0, 120])
-          this.topicsGroup.forEach(d => {
-            this.sliderData[d.key].value=widthScale(d.val.length)
+          this.topicsGroup.forEach(topic => {
+            // 过滤特殊值, 与linechat对应
+            let w = topic.val.length
+            if(topic.key===1 || topic.key===6){
+               topic.val.forEach(d => {
+                if(this.versions.indexOf(d.key) < this.versions.indexOf('2.0.0'))
+                  w--
+              })
+            }
+            this.sliderData[topic.key].value=widthScale(w)
           })
         }
       })
@@ -211,6 +235,7 @@ export default {
   flex-direction: column;
   padding: 0 5px;
   cursor: default;
+  font-size: 14px;
   // .version-select-box{
   //   flex: 0.8;
   //   display: flex;
@@ -228,26 +253,34 @@ export default {
   // }
   .topic-select-control-panel {
     flex: 15;
-    margin-top:10px;
+    margin-top:20px;
     overflow: auto;
     // border-bottom: 1px solid black;
     .select-control-wrapper {
       display: flex;
       align-items: center;
-      margin-bottom: 9.5px;
+      margin-bottom: 17px;
       .topic-idx {
         // flex:none;
-        flex: 0 0 20px;
+        flex: 0.2;
         text-align: right;
-        margin-right: 10px;
+        margin-right: 5px;
+      }
+      .topic-text{
+        flex: 1;
+        text-align: left;
+        margin-right: 5px;
       }
       .legend {
         // width: 40px;
+        flex: 1.7;
         height: 10px;
-        flex: none;
-        // margin-right: 5px;
-        &.selected {
-          border: 1px solid black;
+        margin-right: 2px;
+        .bar{
+          height: 100%;
+          &.selected {
+            border: 1px solid black;
+          }
         }
       }
       // .topic-slider {

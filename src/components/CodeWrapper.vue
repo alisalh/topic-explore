@@ -10,8 +10,14 @@
         <i class="el-icon-close"
          @click="iconClick"></i>
     </div>
-    <div class="code" v-highlight 
-        v-html="codeText"></div>
+    <div class="code"> 
+        <div id="no-diff-lines" v-show="isShow1"
+            v-highlight v-html="`<pre><code>${codeText}</code></pre>`"></div>
+        <code-diff id="diff-lines" v-show="isShow2"
+            :old-string="oldCodeText"
+            :new-string="codeText"
+            :context="10"/>
+    </div>
   </div>
 </template>
 
@@ -31,7 +37,10 @@ export default {
             height: 550, 
             width: 400,
             clientHeight: document.body.clientHeight,
-            clientWidth: document.body.clientWidth
+            clientWidth: document.body.clientWidth,
+            oldCodeText: '',
+            isShow1: false,
+            isShow2: false
         }
     },
     methods:{
@@ -75,11 +84,37 @@ export default {
     },
     created(){
         this.$bus.$on('doc-selected', selectedDoc => {
-            this.$axios
-            .get('topics/getCode', { filepath: selectedDoc.filename})
-            .then(({ data }) => {
-                this.codeText = `<pre><code>${data}</code></pre>`
-            })
+            if(selectedDoc.length === 1){
+                this.isShow1 = true
+                this.isShow2 = false
+                this.$axios
+                .get('topics/getCode', { filepath: selectedDoc[0].filename})
+                .then(({ data }) => {
+                    this.codeText = data
+                })
+            }
+            if(selectedDoc.length === 2){
+                this.isShow1 = false
+                this.isShow2 = true
+                if(selectedDoc[0]){
+                    this.$axios
+                    .get('topics/getCode', { filepath: selectedDoc[0].filename})
+                    .then(({ data }) => {
+                        this.oldCodeText = data
+                    })
+                }
+                else
+                    this.oldCodeText = ''
+                if(selectedDoc[1]){
+                    this.$axios
+                    .get('topics/getCode', { filepath: selectedDoc[1].filename})
+                    .then(({ data }) => {
+                        this.codeText = data
+                    })
+                }
+                else
+                    this.codeText = ''
+            }
         })
         this.$bus.$on('show-code', d => this.isShow = d)
     }
@@ -110,6 +145,39 @@ export default {
     .code{
         flex: 10;
         overflow: auto;
+        width: 100%;
+        #no-diff-lines{
+            font-size: 15px;
+            padding: 0 10px;
+        }
+        #diff-lines{
+            .d2h-file-wrapper{
+                margin-bottom: 0cm;
+            }
+            .d2h-diff-tbody > tr > td{
+                height: 100%;
+            }
+            .d2h-code-linenumber {
+                position: relative;
+                display: flex;
+                width: 100%;
+                .line-num1{
+                    width: 30px;
+                }
+                .line-num2{
+                    width: 50px;
+                }
+            }
+            .d2h-file-wrapper{
+                border: 0cm;
+            }
+            .d2h-file-diff{
+                overflow: unset;
+            }
+            .d2h-code-line {
+                margin-left: 0;
+            }
+        }
     }
 }
 </style>

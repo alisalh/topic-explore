@@ -188,7 +188,7 @@ export default {
     display: flex;
     flex-direction: column;
     .select-wrapper{
-      margin-top: 10px;
+      margin-top: 15px;
       .title{
         margin-left: 10px;
       }

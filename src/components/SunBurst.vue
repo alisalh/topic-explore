@@ -23,7 +23,9 @@ export default {
       selectedDoc: null,
       selectedTopic: null,
       links: [],
-      linkG: null
+      linkG: null,
+      preDoc: null,
+      curDoc: null
       // doc: null,
     }
   },
@@ -93,22 +95,34 @@ export default {
                 this.arcSvg
                   .filter(d => d.norm < this.threshold)
                   .attr('opacity', '0')
+                if(d.data.version === 'prev'){
+                  this.preDoc = this.docData[d.data.id]
+                  this.curDoc = null
+                }
+                else{
+                  this.preDoc = null
+                  this.curDoc = this.docData[d.data.id]
+                }
                 if(this.linkG){
                   let selectId = d.data.id
                   this.links.forEach((d, i) =>{
                     if(selectId === d.source.data.id){
+                      this.preDoc = this.docData[d.source.data.id]
+                      this.curDoc = this.docData[d.target.data.id]
                       this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
                       this.arcSvg.filter(arc => arc.data.id === d.target.data.id)
                         .attr('opacity', 1)
                     }
                     if(selectId === d.target.data.id){
+                      this.preDoc = this.docData[d.source.data.id]
+                      this.curDoc = this.docData[d.target.data.id]
                       this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
                       this.arcSvg.filter(arc => arc.data.id === d.source.data.id)
                         .attr('opacity', 1)
                     }
                   })
                 }
-                this.$bus.$emit('doc-selected', this.docData[d.data.id])
+                this.$bus.$emit('doc-selected', [this.preDoc, this.curDoc])
             }
           } 
         })
@@ -117,10 +131,10 @@ export default {
         .on('click', null)
       this.arcSvg.filter(d => d.norm >= this.threshold && d.data.version === 'prev')
         .attr('opacity', '0.5')
-      this.arcSvg
-        .filter(d => d.norm >= this.threshold && d.fileType === 'edit' && d.data.version === 'curv')
-        .attr('stroke-width', '2.5')
-        .attr('stroke-opacity', 1)
+      // this.arcSvg
+      //   .filter(d => d.norm >= this.threshold && d.fileType === 'edit' && d.data.version === 'curv')
+      //   .attr('stroke-width', '2.5')
+      //   .attr('stroke-opacity', 1)
       this.links.forEach((d, i) =>{
         this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
         if(d.source.norm < this.threshold || d.target.norm < this.threshold)
@@ -249,7 +263,7 @@ export default {
                     this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
                 })
               }
-              if(this.selectedTopic){ 
+              if(this.selectedTopic || this.selectedTopic === 0){ 
                 this.arcSvg.filter(d => d.data.type == 'file' && parseInt(d.data.topic) !== this.selectedTopic)
                   .attr('opacity', '0.1')
               }
@@ -263,15 +277,27 @@ export default {
                 this.arcSvg
                   .filter(d => d.norm < this.threshold)
                   .attr('opacity', '0')
+                if(d.data.version === 'prev'){
+                  this.preDoc = this.docData[d.data.id]
+                  this.curDoc = null
+                }
+                else{
+                  this.preDoc = null
+                  this.curDoc = this.docData[d.data.id]
+                }
                 if(this.linkG){
                   let selectId = d.data.id
                   this.links.forEach((d, i) =>{
                     if(selectId === d.source.data.id){
+                      this.preDoc = this.docData[d.source.data.id]
+                      this.curDoc = this.docData[d.target.data.id]
                       this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
                       this.arcSvg.filter(arc => arc.data.id === d.target.data.id)
                         .attr('opacity', 1)
                     }
                     if(selectId === d.target.data.id){
+                      this.preDoc = this.docData[d.source.data.id]
+                      this.curDoc = this.docData[d.target.data.id]
                       this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
                       this.arcSvg.filter(arc => arc.data.id === d.source.data.id)
                         .attr('opacity', 1)
@@ -280,7 +306,7 @@ export default {
                 }
                 if(!this.selectedCluster)
                   this.$bus.$emit('show-cluster', d.data.id)
-                this.$bus.$emit('doc-selected', this.docData[d.data.id])
+                this.$bus.$emit('doc-selected', [this.preDoc, this.curDoc])
               }else{
                 if(this.selectedTopic != d.data.topic){
                   this.$bus.$emit('topic-selected', parseInt(d.data.topic))
@@ -290,7 +316,7 @@ export default {
                   this.selectedDoc = d.data.id
                   this.arcSvg.filter(arc => arc.data.id === d.data.id)
                     .attr('opacity', 1)
-                  this.$bus.$emit('doc-selected', this.docData[d.data.id])
+                  this.$bus.$emit('doc-selected', [this.docData[d.data.id]])
                 }
               }
             }
@@ -302,8 +328,8 @@ export default {
           width = Math.floor(this.$refs.root.clientWidth)
         let x = d3.event.pageX, y = d3.event.pageY
         // 圆内空白处点击
-        if((x-left > width/2-100) && (x-left < width/2+100)
-            &&(y-top > this.height/2-100) && (y-top < this.height/2+100)){
+        if((x-left > width/2-80) && (x-left < width/2+80)
+            &&(y-top > this.height/2-80) && (y-top < this.height/2+80)){
           if(this.selectedTopic || this.selectedTopic === 0){
             this.selectedTopic = null
             this.$bus.$emit('topic-selected', -1)
@@ -422,10 +448,10 @@ export default {
           .filter(d => d.norm < this.threshold)
           .attr('opacity', '0')
           .on('click', null)
-        this.arcSvg
-          .filter(d => d.norm >= this.threshold && d.fileType === 'edit'&& d.data.version === 'curv')
-          .attr('stroke-width', '2.5')
-          .attr('stroke-opacity', 1)
+        // this.arcSvg
+        //   .filter(d => d.norm >= this.threshold && d.fileType === 'edit'&& d.data.version === 'curv')
+        //   .attr('stroke-width', '2.5')
+        //   .attr('stroke-opacity', 1)
       
       // 绘制连线
       //   var cluster = d3.cluster().size([360, this.height / 2-110]).separation(() => 1)
@@ -585,6 +611,9 @@ export default {
       this.arcSvg
         .filter(d => d.data.type !== 'dir' && ids.indexOf(d.data.id) === -1)
         .attr('opacity', 0.1)
+      this.arcSvg
+        .filter(d => d.norm < this.threshold)
+        .attr('opacity', '0')
       this.links.forEach((d, i) =>{
         this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
         if(ids.indexOf(d.source.data.id) != -1 && ids.indexOf(d.target.data.id) != -1)
@@ -626,10 +655,10 @@ export default {
         .attr('opacity', '0')
       this.arcSvg.filter(d => d.norm >= this.threshold && d.data.version === 'prev')
         .attr('opacity', '0.5')
-      this.arcSvg
-        .filter(d => d.norm >= this.threshold && d.fileType === 'edit' && d.data.version === 'curv')
-        .attr('stroke-width', '2.5')
-        .attr('stroke-opacity', 1)
+      // this.arcSvg
+      //   .filter(d => d.norm >= this.threshold && d.fileType === 'edit' && d.data.version === 'curv')
+      //   .attr('stroke-width', '2.5')
+      //   .attr('stroke-opacity', 1)
       this.links.forEach((d, i) =>{
         this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
         if(d.source.norm < this.threshold || d.target.norm < this.threshold)

@@ -223,8 +223,14 @@ export default {
             let curData = chartData.filter(data => data.cluster === item.cluster)
             item.vec = this.getChartData(curData)
             item.vec.forEach(vec => {
-              if(max < Math.max(vec.val))
-                max = Math.max(vec.val)
+              if(vec.val.length === 1){
+                if(max < vec.val[0])
+                  max = vec.val[0]
+              }
+              if(vec.val.length === 2){
+                if(max < Math.max(vec.val[0], vec.val[1]))
+                  max = Math.max(vec.val[0], vec.val[1])
+              }
             })
           })
           this.maxVal = max

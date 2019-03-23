@@ -77,7 +77,7 @@ export default {
   // },
   methods: {
     docSelectedHandler (doc) {
-      console.log(doc)
+      console.log(doc['id'], doc['Topic_Contribution'].map(topic => topic['percent']))
       this.selectedDoc = doc
       this.getIdCnt(doc.identifiers).then(data => {
         this.uniqueIdentifiers = data
@@ -174,13 +174,22 @@ export default {
     //   this.docSelectedHandler(selectedDoc)
     // })
     this.$bus.$on('doc-selected', selectedDoc => {
+      let doc
+      if(selectedDoc.length === 1)
+        doc = selectedDoc[0]
+      else{
+        if(selectedDoc[1])
+          doc = selectedDoc[1]
+        else
+          doc = selectedDoc[0]
+      }
       this.selectedTopicKeywords = this.topicData
-        .find(d => d.index === selectedDoc.Dominant_Topic)
+        .find(d => d.index === doc.Dominant_Topic)
         .keywords.map(d => ({
           keyword: d.keyword,
           cost: d.weight
         }))
-      this.docSelectedHandler(selectedDoc)
+      this.docSelectedHandler(doc)
       // this.$axios
       //   .get('topics/getCode', { filepath: selectedDoc.filename})
       //   .then(({ data }) => {

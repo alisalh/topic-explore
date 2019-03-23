@@ -215,10 +215,10 @@ html {
     display: flex;
     flex-direction: column;
     .radar-control-panel{
-      flex: 4.9;
+      flex: 5.5;
     }
     .args-wrapper{
-      flex: 2.5;
+      flex: 3;
       margin-bottom: 5px;
     }
   }
