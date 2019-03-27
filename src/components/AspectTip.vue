@@ -89,7 +89,7 @@ export default {
                         g.append('text')
                             .attr('x', 10-spaceForLabel)
                             .attr('dy', '.7em')
-                            .text(d.topic)
+                            .text(d.topic+1)
                         if(d.type === 'del')
                             g.selectAll('rect').attr('stroke-dasharray', '3,3')
                         i1++
@@ -118,14 +118,14 @@ export default {
                             g.append('text')
                                 .attr('x', 10-spaceForLabel)
                                 .attr('dy', '1em')
-                                .text(d.topic)
+                                .text(d.topic+1)
                             i1 = i1+2
                         }  
                         else{
                             g.append('text')
                                 .attr('x', 10-spaceForLabel)
                                 .attr('dy', '.7em')
-                                .text(d.topic)
+                                .text(d.topic+1)
                             i1++
                         }
                         i2++   
@@ -143,7 +143,7 @@ export default {
                             g.append('text')
                                 .attr('x', 10-spaceForLabel)
                                 .attr('dy', '.7em')
-                                .text(d.topic)
+                                .text(d.topic+1)
                             i1++
                             i2++
                         }

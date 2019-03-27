@@ -174,6 +174,7 @@ export default {
     //   this.docSelectedHandler(selectedDoc)
     // })
     this.$bus.$on('doc-selected', selectedDoc => {
+      console.log(selectedDoc)
       let doc
       if(selectedDoc.length === 1)
         doc = selectedDoc[0]

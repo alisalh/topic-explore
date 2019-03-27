@@ -604,6 +604,18 @@ export default {
       this.arcSvg
         .filter(d => d.data.type !== 'dir' && parseInt(d.data.topic) !== topicId)
         .attr('opacity', 0.1)
+      if(this.linkG){
+          this.links.forEach((d, i) =>{
+            if(parseInt(d.source.data.topic) !== topicId && parseInt(d.target.data.topic) !== topicId)
+              this.linkG.select('#node-link'+i).attr('stroke-opacity', 0)
+            else{
+              this.linkG.select('#node-link'+i).attr('stroke-opacity', 1)
+              this.arcSvg
+                .filter(node => node.data.id === d.source.data.id || node.data.id === d.target.data.id)
+                .attr('opacity', 1)
+            }
+          })
+      }
     })
     this.$bus.$on('cluster-selected', ids => {
       this.resetStatus()

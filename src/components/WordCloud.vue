@@ -62,7 +62,8 @@ export default {
   },
   methods: {
     draw (data) {
-      let fontSizeScale = d3.scaleLinear().range([10, 40])
+      console.log(data)
+      let fontSizeScale = d3.scaleLinear().range([10, 30])
       let fontWeightScale = d3
         .scaleQuantize()
         .range([100, 200, 300, 400, 500, 600, 700, 800, 900])
@@ -146,13 +147,13 @@ export default {
         .fontSize(function (d, i) {
           return fontSizeScale(d.cost)
         })
-        .fontWeight(d => fontWeightScale(d.cost))
+        // .fontWeight(d => fontWeightScale(d.cost))
         .text(function (d) {
           return d.keyword
         })
-        .spiral('rectangular')
-        // .random(d => Math.random())
-        .padding(d => 6)
+        .spiral('rectangular') // "archimedean" or "rectangular"
+        .random(d => Math.random())
+        .padding(d => 4)
         .on('end', this.drawWords)
         .start()
     },

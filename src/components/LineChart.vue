@@ -51,16 +51,16 @@ export default {
         g
           .attr('transform', `translate(0,${this.height - margin.bottom + gap})`)
           .call(d3.axisBottom(x).tickValues(this.tickValues))
-          // .call(g =>
-          //   g
-          //     .select('.tick:last-of-type text')   // 设置x轴文字
-          //     .clone()
-          //     .attr('text-anchor', 'end')
-          //     .attr('font-weight', 'bold')
-          //     .attr('class', 'x-label')
-          //     .attr('y', -10)
-          //     .text('versions')
-          // )
+          .call(g =>
+            g
+              .select('.tick:last-of-type text')   // 设置x轴文字
+              .clone()
+              .attr('text-anchor', 'end')
+              .attr('font-weight', 'bold')
+              .attr('class', 'x-label')
+              .attr('y', -10)
+              .text('versions')
+          )
           .call(g =>                            // 设置tick
             g
               .style('cursor', 'default')
@@ -289,6 +289,16 @@ export default {
           xAxis = g => 
             g
             .call(d3.axisBottom(x).tickValues(this.tickValues))
+            .call(g =>
+            g
+              .select('.tick:last-of-type text')   // 设置x轴文字
+              .clone()
+              .attr('text-anchor', 'end')
+              .attr('font-weight', 'bold')
+              .attr('class', 'x-label')
+              .attr('y', -10)
+              .text('versions')
+            )
             .call(g =>                            // 设置tick
               g
                 .style('cursor', 'default')
@@ -396,6 +406,16 @@ export default {
           xAxis = g => 
             g
             .call(d3.axisBottom(x).tickValues(this.tickValues))
+            // .call(g =>
+            // g
+            //   .select('.tick:last-of-type text')   // 设置x轴文字
+            //   .clone()
+            //   .attr('text-anchor', 'end')
+            //   .attr('font-weight', 'bold')
+            //   .attr('class', 'x-label')
+            //   .attr('y', -10)
+            //   .text('versions')
+            // )
             .call(g =>                            // 设置tick
               g
                 .style('cursor', 'default')
@@ -466,6 +486,7 @@ export default {
           // 过滤特殊值
           let chartData = []
           this.topicsGroup.forEach((topic,i) =>{
+            // vue的处理
             if(topic.key===1 || topic.key===6){
               let temp = {key: topic.key, val:[]}
               topic.val.forEach(d => {
@@ -476,6 +497,21 @@ export default {
             }
             else
               chartData.push(topic)
+
+            // // d3的处理
+            // let temp = {key: topic.key, val: []}
+            // topic.val.forEach(ver => {
+            //     let vers = {key: ver.key, val: []}
+            //     let docs = []
+            //     ver.val.forEach(doc =>{
+            //       let vec = doc['Topic_Contribution'].map(topic => topic['percent'])
+            //       if(new Set(vec).size !== 1)
+            //         docs.push(doc)
+            //     })
+            //     vers.val = docs
+            //     temp.val.push(vers)
+            // })
+            // chartData.push(temp)
           })
           console.log(chartData)
           // 设置刻度

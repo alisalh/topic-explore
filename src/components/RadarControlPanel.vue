@@ -19,7 +19,7 @@
         :key="item.id"
         class='select-control-wrapper'>
         <div class="topic-idx">
-          <div :style="{opacity:item.opacity}">{{item.topicId}}</div>
+          <div :style="{opacity:item.opacity}">{{item.topicId+1}}</div>
         </div>
         <div class="topic-text">
            <div :style="{opacity:item.opacity}">{{topics[item.topicId]}}</div>
@@ -133,6 +133,15 @@ export default {
               this.sliderData[topic.key].value += d.val.length
           })
         })
+
+        // // 过滤特殊值, 与linechat对应
+        // if(this.versions.indexOf(this.selectedVersion) < this.versions.indexOf('2.0.0')){
+        //   this.sliderData.forEach((d, i) =>{
+        //     if(i === 1 || i === 6)
+        //       d.value = 0
+        //   })
+        // }
+        
         this.sliderData.sort(function(a, b){
           return b.value - a.value
         })

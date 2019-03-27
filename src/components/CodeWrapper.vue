@@ -176,6 +176,7 @@ export default {
             }
             .d2h-code-line {
                 margin-left: 0;
+                font-size: 15px;
             }
         }
     }
