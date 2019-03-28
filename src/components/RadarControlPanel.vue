@@ -113,12 +113,12 @@ export default {
         this.topicsGroup.forEach(topic => {
           // 过滤特殊值, 与linechat对应
           let w = topic.val.length
-          if(topic.key===1 || topic.key===6){
-              topic.val.forEach(d => {
-              if(this.versions.indexOf(d.key) < this.versions.indexOf('2.0.0'))
-                w--
-            })
-          }
+          // if(topic.key===1 || topic.key===6){
+          //     topic.val.forEach(d => {
+          //     if(this.versions.indexOf(d.key) < this.versions.indexOf('2.0.0'))
+          //       w--
+          //   })
+          // }
           this.sliderData[topic.key].value=w
         })
         this.sliderData.forEach(d => {
@@ -186,12 +186,12 @@ export default {
           this.topicsGroup.forEach(topic => {
             // 过滤特殊值, 与linechat对应
             let w = topic.val.length
-            if(topic.key===1 || topic.key===6){
-               topic.val.forEach(d => {
-                if(this.versions.indexOf(d.key) < this.versions.indexOf('2.0.0'))
-                  w--
-              })
-            }
+            // if(topic.key===1 || topic.key===6){
+            //    topic.val.forEach(d => {
+            //     if(this.versions.indexOf(d.key) < this.versions.indexOf('2.0.0'))
+            //       w--
+            //   })
+            // }
             this.sliderData[topic.key].value=widthScale(w)
           })
         }

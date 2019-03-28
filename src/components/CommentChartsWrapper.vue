@@ -17,7 +17,6 @@
       </div>
       <div class="content">
         <div class="comment"
-          v-if="processedComments"
           v-for="comment in processedComments"
           :key="comment.id">
           <div v-for="token in comment"

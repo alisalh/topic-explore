@@ -162,7 +162,7 @@ export default {
       var x = d3.scaleLinear().range([0, 2 * Math.PI])
       var y = d3
         .scaleLinear()
-        .range([100, this.height / 2])
+        .range([200, this.height / 2])
         .domain([1, 0])
         
       var partition = d3.partition()
@@ -490,7 +490,7 @@ export default {
             sourceAngle = (arc.startAngle()(d.source)+arc.endAngle()(d.source))/2,
             targetOuterR = arc.outerRadius()(d.target),
             targetAngle = (arc.startAngle()(d.target)+arc.endAngle()(d.target))/2
-          let start = [Math.sin(sourceAngle)*sourceOuterR, Math.abs(Math.cos(sourceAngle)*sourceOuterR)],
+          let start = [Math.sin(sourceAngle)*sourceOuterR, -Math.cos(sourceAngle)*sourceOuterR],
             end = [Math.sin(targetAngle)*targetOuterR, -Math.cos(targetAngle)*targetOuterR]
           let linearGradient = svg.append('defs')
             .append('linearGradient')

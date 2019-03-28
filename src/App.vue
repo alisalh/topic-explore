@@ -46,22 +46,15 @@
 <script>
 import * as d3 from 'd3'
 import _ from 'lodash'
-// import HelloWorld from './components/HelloWorld.vue'
 import LineChart from './components/LineChart.vue'
 import Sunburst from './components/SunBurst.vue'
 import WordCloud from './components/WordCloud.vue'
-// import BubbleChart from './components/BubbleChart.vue'
-// import RadarChartWrapper from './components/RadarChartWrapper.vue'
-// import DiffFilesWrapper from './components/DiffFilesWrapper.vue'
 import RadarControlPanel from './components/RadarControlPanel.vue'
 import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
-import AspectBarChart from './components/AspectBarChart.vue'
 import CodeWrapper from './components/CodeWrapper.vue'
 import ArgsWrapper from './components/ArgsWrapper.vue'
 import AspectTip from './components/AspectTip.vue'
-// import FileList from './components/FileList.vue'
-// import ParallelCoordinate from './components/ParallelCoordinate.vue'
 import { TOPIC_COLOR } from './utils/constant.js'
 import { groupBy, getVersion, getRelPath } from './utils/index.js'
 export default {
@@ -79,22 +72,15 @@ export default {
     }
   },
   components: {
-    // HelloWorld,
     LineChart,
     Sunburst,
     WordCloud,
-    // BubbleChart,
-    // RadarChartWrapper,
     RadarControlPanel,
     CommentChartsWrapper,
     ScatterPlot,
-    // ParallelCoordinate,
-    // DiffFilesWrapper
-    AspectBarChart,
     CodeWrapper,
     ArgsWrapper,
     AspectTip
-    // FileList
   },
   computed: {
     topicColormap() {
@@ -159,7 +145,7 @@ export default {
         d => (d['Dominant_Topic'] = parseInt(d['Dominant_Topic']))
       )
       let topicsGroup = groupBy(rawData, 'Dominant_Topic')
-      let verReg = /vue-(\d*\.\d*\.\d*)/
+      let verReg = /d3-(\d*\.\d*\.\d*)/
       topicsGroup.forEach(d => {
         d.val = groupBy(d.val, d => d.filename.match(verReg)[1]).sort(
           this.verCompare
@@ -205,9 +191,7 @@ html {
   user-select: none;
   height: 98%;
   width: 80%;
-  // text-align: center;
   color: #2c3e50;
-  // margin-top: 60px;
   display: flex;
   .left-panel{
     flex: 1;

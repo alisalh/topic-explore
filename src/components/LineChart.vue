@@ -486,38 +486,38 @@ export default {
           // 过滤特殊值
           let chartData = []
           this.topicsGroup.forEach((topic,i) =>{
-            // vue的处理
-            if(topic.key===1 || topic.key===6){
-              let temp = {key: topic.key, val:[]}
-              topic.val.forEach(d => {
-                if(this.versions.indexOf(d.key) >= this.versions.indexOf('2.0.0'))
-                  temp.val.push(d)
-              })
-              chartData.push(temp)
-            }
-            else
-              chartData.push(topic)
+            // // vue的处理
+            // if(topic.key===1 || topic.key===6){
+            //   let temp = {key: topic.key, val:[]}
+            //   topic.val.forEach(d => {
+            //     if(this.versions.indexOf(d.key) >= this.versions.indexOf('2.0.0'))
+            //       temp.val.push(d)
+            //   })
+            //   chartData.push(temp)
+            // }
+            // else
+            //   chartData.push(topic)
 
-            // // d3的处理
-            // let temp = {key: topic.key, val: []}
-            // topic.val.forEach(ver => {
-            //     let vers = {key: ver.key, val: []}
-            //     let docs = []
-            //     ver.val.forEach(doc =>{
-            //       let vec = doc['Topic_Contribution'].map(topic => topic['percent'])
-            //       if(new Set(vec).size !== 1)
-            //         docs.push(doc)
-            //     })
-            //     vers.val = docs
-            //     temp.val.push(vers)
-            // })
-            // chartData.push(temp)
+            // d3的处理
+            let temp = {key: topic.key, val: []}
+            topic.val.forEach(ver => {
+                let vers = {key: ver.key, val: []}
+                let docs = []
+                ver.val.forEach(doc =>{
+                  let vec = doc['Topic_Contribution'].map(topic => topic['percent'])
+                  if(new Set(vec).size !== 1)
+                    docs.push(doc)
+                })
+                vers.val = docs
+                temp.val.push(vers)
+            })
+            chartData.push(temp)
           })
           console.log(chartData)
           // 设置刻度
           this.getTickValues(this.versions)
           this.showVersions.push(this.versions.slice(-1)[0])
-          this.draw(chartData)
+          this.draw(this.topicsGroup)
         }
       })
     })
