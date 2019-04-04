@@ -1,22 +1,28 @@
 <template>
   <div class='comment-charts-wrapper'>
-    <file-bar-chart :docData="docData"
-                    @doc-selected='docSelectedHandler'></file-bar-chart>
+    <!-- <file-bar-chart :docData="docData"
+                    @doc-selected='docSelectedHandler'></file-bar-chart> -->
     <div class="selected-file-wrapper">
-      <div class="title">当前选中文件: </div>
+      <div class="title">
+        <div>the selected file: </div>
+        <i class='el-icon-document'
+        @click="iconClick"></i>
+      </div>
       <div class="content">{{relFilename}}</div>
     </div>
     <div class="comment-wrapper">
       <div class="title">
-        注释信息(#{{selectedDoc&&selectedDoc.commentArr.length}})
+        <!-- comments(#{{selectedDoc&&selectedDoc.commentArr.length}}) -->
+        comments:
       </div>
       <div class="content">
         <div class="comment"
-             v-if="processedComments"
-             v-for="comment in processedComments">
+          v-for="comment in processedComments"
+          :key="comment.id">
           <div v-for="token in comment"
-               :style="getWordStyle(token)"
-               class="token">
+            :key="token.id"
+            :style="getWordStyle(token)"
+            class="token">
             {{token.word}}
           </div>
         </div>
@@ -24,23 +30,31 @@
     </div>
     <div class="identifier-wrapper">
       <div class="title">
-        变量信息(#{{uniqueIdentifiers.length}})
+        <!-- variables(#{{uniqueIdentifiers.length}}) -->
+        variables:
       </div>
       <div class="content">
         <div v-for="word in uniqueIdentifiers"
-             :style="getWordStyle(word)"
-             class="variable">
+          :key="word.id"
+          :style="getWordStyle(word)"
+          class="variable">
           {{word.identifier}}
         </div>
       </div>
     </div>
+    <!-- <div class="code-wrapper">
+      <div class="title">code:</div>
+      <div class="content" v-highlight v-html="codeText">
+      </div>
+    </div> -->
   </div>
 </template>
 
 <script>
 import * as d3 from 'd3'
+// import CodeWrapper from './CodeWrapper.vue'
 import { getRelPathWithVersion } from '../utils/index.js'
-import FileBarChart from './FileBarChart.vue'
+// import FileBarChart from './FileBarChart.vue'
 
 export default {
   name: 'component_name',
@@ -51,14 +65,18 @@ export default {
         commentArr: [],
         identifiers: ''
       },
+      // codeText: '',
       selectedTopicKeywords: null,
       uniqueIdentifiers: [],
       processedComments: null
     }
   },
+  // components:{
+  //   CodeWrapper
+  // },
   methods: {
     docSelectedHandler (doc) {
-      console.log(doc)
+      console.log(doc['id'], doc['Topic_Contribution'].map(topic => topic['percent']))
       this.selectedDoc = doc
       this.getIdCnt(doc.identifiers).then(data => {
         this.uniqueIdentifiers = data
@@ -98,7 +116,7 @@ export default {
             console.error(ids, data)
           } */
           const id2Cnt = {}
-          data.forEach((val, idx) => {
+          data.forEach(val => {
             if (!id2Cnt.hasOwnProperty(val)) id2Cnt[val] = 1
             else id2Cnt[val]++
           })
@@ -114,10 +132,10 @@ export default {
           })
           return Promise.resolve(resArr)
         })
+    },
+    iconClick(){
+      this.$bus.$emit('show-code', true)
     }
-  },
-  components: {
-    FileBarChart
   },
   computed: {
     bgColorScale () {
@@ -143,17 +161,42 @@ export default {
     }
   },
   created () {
-    this.$bus.$on('topic-selected', topicIdx => {
+    // this.$bus.$on('topic-selected', topicIdx => {
+    //   this.selectedTopicKeywords = this.topicData
+    //     .find(d => d.index === topicIdx)
+    //     .keywords.map(d => ({
+    //       keyword: d.keyword,
+    //       cost: d.weight
+    //     }))
+    // })
+    // this.$bus.$on('file-selected', selectedDoc => {
+    //   this.docSelectedHandler(selectedDoc)
+    // })
+    this.$bus.$on('doc-selected', selectedDoc => {
+      console.log(selectedDoc)
+      let doc
+      if(selectedDoc.length === 1)
+        doc = selectedDoc[0]
+      else{
+        if(selectedDoc[1])
+          doc = selectedDoc[1]
+        else
+          doc = selectedDoc[0]
+      }
       this.selectedTopicKeywords = this.topicData
-        .find(d => d.index === topicIdx)
+        .find(d => d.index === doc.Dominant_Topic)
         .keywords.map(d => ({
           keyword: d.keyword,
           cost: d.weight
         }))
+      this.docSelectedHandler(doc)
+      // this.$axios
+      //   .get('topics/getCode', { filepath: selectedDoc.filename})
+      //   .then(({ data }) => {
+      //     this.codeText = `<pre><code>${data}</code></pre>`
+      //   })
     })
-    this.$bus.$on('file-selected', selectedDoc => {
-      this.docSelectedHandler(selectedDoc)
-    })
+
   }
 }
 </script>
@@ -163,22 +206,29 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  .file-bar-chart {
-    flex: 2;
-  }
+  // .file-bar-chart {
+  //   flex: 2;
+  // }
   .selected-file-wrapper {
-    flex: none;
+    .title{
+      display: flex;
+      .el-icon-document{
+        margin-left: 120px;
+      }
+    }
+    flex: 0.6;
     .content {
+      // font-size: 15px;
       word-break: break-all;
     }
   }
   .comment-wrapper,
   .identifier-wrapper {
-    flex: 2;
+    border-top: 1px solid rgb(156, 151, 151);
   }
   .selected-file-wrapper,
   .comment-wrapper,
-  .identifier-wrapper {
+  .identifier-wrapper,{
     display: flex;
     flex-direction: column;
     padding: 10px;
@@ -189,13 +239,15 @@ export default {
     }
     .content {
       flex: 1;
-      overflow: scroll;
+      overflow: auto;
     }
   }
   .comment-wrapper {
+    flex: 1.2;
     .content {
       .comment {
-        border-bottom: 1px solid black;
+        word-break: break-all;
+        border-bottom: 1px dashed black;
         .token {
           display: inline-block;
           margin: 0 5px;
@@ -205,6 +257,7 @@ export default {
     }
   }
   .identifier-wrapper {
+    flex: 1.2;
     .content {
       .variable {
         display: inline-block;

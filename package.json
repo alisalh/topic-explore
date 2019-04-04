@@ -12,12 +12,16 @@
     "csv": "^4.0.0",
     "d3": "^5.7.0",
     "d3-cloud": "^1.2.5",
+    "d3-tip": "^0.9.1",
     "element-ui": "^2.4.10",
+    "git-diff": "^2.0.6",
+    "highlight.js": "^9.15.6",
     "less": "^3.8.1",
     "less-loader": "^4.1.0",
     "lodash": "^4.17.11",
     "qs": "^6.5.2",
-    "vue": "^2.5.17"
+    "vue": "^2.5.17",
+    "vue-code-diff": "0.0.4"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.1.1",
