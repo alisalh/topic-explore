@@ -1,73 +1,83 @@
 <template>
-  <div class='args-wrapper'
-       ref='root'>
-  <div class='select-wrapper'>
-    <div class='title'>current version</div>
-      <el-select v-model="curVersion" size="mini"
-        placeholder="please select"
-        @change="selectCurTrigger(curVersion)"> 
-        <el-option
-          v-for="item in curOptions"
-          :key="item.value"
-          :value="item.label"
-          :label="item.label">
-        </el-option>
-      </el-select>
-  </div>
-  <div class='select-wrapper'>
-    <div class='title'>previous version</div>
-      <el-select v-model="preVersion" size="mini"
-        placeholder="please select"
-        @change="selectPreTrigger(preVersion)">
-        <el-option
-          v-for="item in preOptions"
-          :key="item.value"
-          :value="item.label"
-          :label="item.label">
-        </el-option>
-      </el-select>
-  </div>
-  <div class='input-wrapper th'>
-    <div class='title'>threshold</div>
-    <div class='slider-input'>
-      <el-slider v-model="threshold_val" 
-        :format-tooltip="formatTooltip"
-        @change="sendThreshold"></el-slider>
-      <el-input v-model="threshold" size="mini"></el-input>
+  <div class='args-wrapper' ref='root'>
+    <div class='select'>
+      <div class='select-wrapper'>
+        <div class='title'>library</div>
+          <el-select v-model="libraryName" size="mini"
+            placeholder="please select"
+            @change="selectLibraryTrigger(libraryName)"> 
+            <el-option
+              v-for="item in libraries"
+              :key="item.value"
+              :value="item.label"
+              :label="item.label">
+            </el-option>
+          </el-select>
+      </div>
+      <div class='select-wrapper'>
+        <div class='title'>cur-version</div>
+          <el-select v-model="curVersion" size="mini"
+            placeholder="please select"
+            @change="selectCurTrigger(curVersion)"> 
+            <el-option
+              v-for="item in curOptions"
+              :key="item.value"
+              :value="item.label"
+              :label="item.label">
+            </el-option>
+          </el-select>
+      </div>
+      <div class='select-wrapper'>
+        <div class='title'>pre-version</div>
+          <el-select v-model="preVersion" size="mini"
+            placeholder="please select"
+            @change="selectPreTrigger(preVersion)">
+            <el-option
+              v-for="item in preOptions"
+              :key="item.value"
+              :value="item.label"
+              :label="item.label">
+            </el-option>
+          </el-select>
+      </div>
     </div>
-  </div>
-  <div class='input-wrapper'>
-    <div class='title'>min_samples</div>
-    <div class='slider-input'>
-      <el-slider v-model="min_samples"
-        :step="1"
-        :min='2'
-        :max="10"
-        @change="sendMinSamples"></el-slider>
-      <el-input v-model="min_samples" size="mini"></el-input>
+    <div class='button'>
+      <!-- <el-button size="mini">extract</el-button> -->
+      <el-button size="mini"
+        :disabled="disabled"
+        @click="compareTrigger">compare</el-button>
     </div>
-  </div>
-  <div class='input-wrapper'>
-    <div class='title'>eps</div>
-    <div class='slider-input'>
-      <el-slider v-model="eps_val"
-        :format-tooltip="formatTooltip"
-        @change="sendEps"></el-slider>
-      <el-input v-model="eps" size="mini"></el-input>
+    <div class='input'>
+      <div class='input-wrapper'>
+        <div class='title'>threshold</div>
+        <div class='slider-input'>
+          <el-slider v-model="threshold_val" 
+            :format-tooltip="formatTooltip"
+            @change="sendThreshold"></el-slider>
+          <el-input v-model="threshold" size="mini"></el-input>
+        </div>
+      </div>
+      <div class='input-wrapper'>
+        <div class='title'>min_samples</div>
+        <div class='slider-input'>
+          <el-slider v-model="min_samples"
+            :step="1"
+            :min='2'
+            :max="10"
+            @change="sendMinSamples"></el-slider>
+          <el-input v-model="min_samples" size="mini"></el-input>
+        </div>
+      </div>
+      <div class='input-wrapper'>
+        <div class='title'>eps</div>
+        <div class='slider-input'>
+          <el-slider v-model="eps_val"
+            :format-tooltip="formatTooltip"
+            @change="sendEps"></el-slider>
+          <el-input v-model="eps" size="mini"></el-input>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class='button'>
-    <el-button size="mini"
-      :disabled="disabled"
-      @click="compareTrigger">compare</el-button>
-  </div>
-  <!-- <div class="radio-wrapper">
-    <div class='title'>code</div>
-    <div class='radios'>
-      <el-radio v-model="radio" label="1" size="mini">show</el-radio>
-      <el-radio v-model="radio" label="2" size="mini">hidden</el-radio>
-    </div>
-  </div> -->
   </div>
 </template>
 
@@ -83,9 +93,10 @@ export default {
       eps: 0.05,
       curVersion: '',
       preVersion: '',
-      // radio: '2'
+      libraryName: 'Vue',
       curOptions: [],
       preOptions: [],
+      libraries: [{value: 0, label: 'Vue'}, {value: 1, label: 'D3'}],
       disabled: true
     }
   },
@@ -124,7 +135,10 @@ export default {
         this.preOptions.sort(function(a, b){
           return b.value - a.value
         })
-        // this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion})
+      },
+      selectLibraryTrigger(val){
+        this.libraryName = val
+        this.$bus.$emit('library-selected', this.libraryName)
       },
       compareTrigger(){
         if(this.preVersion&&this.curVersion)
@@ -135,15 +149,9 @@ export default {
     threshold_val(){
       this.threshold = this.threshold_val/100
     },
-    // min_samples(){
-    //   this.$bus.$emit('min-samples-selected', this.min_samples)
-    // },
     eps_val(){
       this.eps = this.eps_val/100
-    },
-    // radio(){
-    //   this.$bus.$emit('code-radio-selected', this.radio)
-    // }
+    }
   },
   created () {
     const requiredData = ['versions']
@@ -187,69 +195,72 @@ export default {
     font-size: 14px;
     display: flex;
     flex-direction: column;
-    .select-wrapper{
-      margin-top: 15px;
-      .title{
-        margin-left: 10px;
-      }
-      .el-input{
-        margin: 5px 10px 0 10px;
-        width: 93%;
-      }
-    }
-    .input-wrapper{
-      margin-top: 5px;
-      .title{
-        margin-left: 10px;
-      }
-      .slider-input{
-        display: flex;
-        .el-slider{
-          flex: 1;
-          margin: 0 10px 0 10px;
-          .el-slider__button {
-            width: 8px;
-            height: 8px;
-          }
-          .el-slider__runway{
-            margin-top: 5px;
-            margin-bottom: 5px;
-          }
+    .select{
+      flex: 4;
+      display: flex;
+      flex-direction: column;
+      .select-wrapper{
+        margin-top: 10px;
+        .title{
+          margin-left: 13px;
         }
         .el-input{
-          flex: 0.3;
-          .el-input__inner {
-            width: 80%;
-            height: 20px;
-            padding: 0 2px;
-          }
+          margin: 5px 13px 0 10px;
+          width: 93%;
         }
       }
     }
     .button{
-      // border-top: 1px solid rgb(206, 206, 206);
+      flex: 1;
       margin-top: 10px;
+      border-bottom: 5px solid rgba(66, 66, 66, 0.1);
       .el-button--mini, .el-button--small{
         margin-top: 3px;
         margin-left: 10px;
         font-size: 14px;
-        width: 90%;
+        width: 87%;
       }
     }
-    .th{
+    .input{
       margin-top: 10px;
+      margin-bottom: 10px;
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      .input-wrapper{
+        .title{
+          margin-left: 11px;
+        }
+        .slider-input{
+          display: flex;
+          .el-slider{
+            flex: 1;
+            margin: 0 10px 0 10px;
+            .el-slider__button {
+              width: 6.5px;
+              height: 6.5px;
+              border: 1.5px solid rgb(194, 194, 194);
+            }
+            .el-slider__runway{
+              margin-top: 5px;
+              margin-bottom: 5px;
+              height: 5px;
+            }
+            .el-slider__bar {
+              background-color: rgb(194, 194, 194); 
+              height: 5px;
+            }
+          }
+          .el-input{
+            flex: 0.3;
+            .el-input__inner {
+              width: 80%;
+              height: 20px;
+              padding: 0 2px;
+            }
+          }
+        }
+      }
     }
-    // .radio-wrapper{
-    //   display: flex;
-    //   flex-direction: column;
-    //   .title{
-    //     margin-left: 10px;
-    //     margin-top: 10px;
-    //   }
-    //   .radios{
-    //     margin-top: 10px;
-    //     margin-left: 20px;
-    //   }
-    // }
 }
 </style>

@@ -200,7 +200,7 @@ export default {
   methods: {
     getCluster(){
       this.$axios
-        .post('http://localhost:5000/topic/getClusterDrInfo', {
+        .post('http://localhost:8000/topic/getClusterDrInfo', {
           docs: this.diffDocs, threshold: this.threshold, 
           min_samples: this.min_samples, eps: this.eps
         })

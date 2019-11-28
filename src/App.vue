@@ -4,9 +4,9 @@
       <args-wrapper class="bl-card-shadow"
         :versions='versions'>
       </args-wrapper>
-      <radar-control-panel class="bl-card-shadow"
+      <topic-bar class="bl-card-shadow"
         :topicsGroup="topicsGroup"
-        :versions="versions"></radar-control-panel>
+        :versions="versions"></topic-bar>
     </div>
     <div class="center-panel">
       <div class="first-row">
@@ -27,15 +27,11 @@
           :docData="docVerData&&docVerData.files"
           :topicData="topicData"
           class="bl-card-shadow"></scatter-plot>
-        <comment-charts-wrapper :docData="docVerData&&docVerData.files"
-        :topicData="topicData" class="bl-card-shadow"></comment-charts-wrapper>
+        <!-- <comment-charts-wrapper :docData="docVerData&&docVerData.files"
+        :topicData="topicData" class="bl-card-shadow"></comment-charts-wrapper> -->
       </div>
     </div>
     <code-wrapper class="bl-card-shadow"></code-wrapper>
-    <!-- <aspect-bar-chart 
-      :topicColormap="topicColormap"
-      :docData="docVerData&&docVerData.files"
-      class="bl-card-shadow"></aspect-bar-chart> -->
     <aspect-tip :topicColormap="topicColormap"
       :topicData="topicData"
       :docData="docVerData&&docVerData.files"
@@ -49,8 +45,8 @@ import _ from 'lodash'
 import LineChart from './components/LineChart.vue'
 import Sunburst from './components/SunBurst.vue'
 import WordCloud from './components/WordCloud.vue'
-import RadarControlPanel from './components/RadarControlPanel.vue'
-import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
+import TopicBar from './components/TopicBar.vue'
+// import CommentChartsWrapper from './components/CommentChartsWrapper.vue'
 import ScatterPlot from './components/ScatterPlot.vue'
 import CodeWrapper from './components/CodeWrapper.vue'
 import ArgsWrapper from './components/ArgsWrapper.vue'
@@ -68,15 +64,17 @@ export default {
       prevVer: null,
       prevDocs: null,
       normData: null,
-      editFileIds: null
+      editFileIds: null,
+      libraryName: 'vue',
+      flag: false // true向后台请求数据
     }
   },
   components: {
     LineChart,
     Sunburst,
     WordCloud,
-    RadarControlPanel,
-    CommentChartsWrapper,
+    TopicBar,
+    // CommentChartsWrapper,
     ScatterPlot,
     CodeWrapper,
     ArgsWrapper,
@@ -98,6 +96,25 @@ export default {
       return null
     }
   },
+  watch:{
+    flag(){
+      if(this.flag){
+        this.$axios.get('topics/getTopicData', {}).then(({ data }) => {
+          this.topicData = data
+        })
+        this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
+          this.docVerData = data
+          this.topicsGroup = this.getTopicsGroup(this.docVerData.files)
+        })
+        this.$axios.get('topics/getNormOfDiffVecs', {}).then(({data}) => {
+          this.normData = data
+        })
+        // this.$axios.get('topics/getEditFileIds', {}).then(({data}) => {
+        //   this.editFileIds = data
+        // })
+      }
+    }
+  },
   methods: {
     /**
      * 根据选中的版本获取将文件分为：修改的、新增的、删除的
@@ -110,14 +127,14 @@ export default {
       this.prevDocs = docs.filter(d => getVersion(d.filename) === prevVer)
       this.prevVer = prevVer
       let addDocs = _.differenceBy(curDocs, this.prevDocs, d =>
-        getRelPath(d['filename'])
+        getRelPath(d['filename'], this.libraryName)
       )
       let delDocs = _.differenceBy(this.prevDocs, curDocs, d =>
-        getRelPath(d['filename'])
+        getRelPath(d['filename'], this.libraryName)
       )
       // 同名文件视为编辑状态
       const editDocsObj = _.groupBy(this.prevDocs.concat(curDocs), d =>
-        getRelPath(d['filename'])
+        getRelPath(d['filename'], this.libraryName)
       )
       return {
         addDocs,
@@ -129,6 +146,7 @@ export default {
       const idx = versions.indexOf(curVer)
       return versions[idx + step]
     },
+    // 版本排序
     verCompare({ key: a }, { key: b }) {
       let arr = a.split('.').map(d => parseInt(d))
       let brr = b.split('.').map(d => parseInt(d))
@@ -140,12 +158,13 @@ export default {
         }
       }
     },
+    // 按照主题对文件进行分组
     getTopicsGroup(rawData) {
       rawData.forEach(
-        d => (d['Dominant_Topic'] = parseInt(d['Dominant_Topic']))
+        d => (d['main_topic'] = parseInt(d['main_topic']))
       )
-      let topicsGroup = groupBy(rawData, 'Dominant_Topic')
-      let verReg = /d3-(\d*\.\d*\.\d*)/
+      let topicsGroup = groupBy(rawData, 'main_topic')
+      let verReg = new RegExp(this.libraryName+"-(\\d*\\.\\d*\\.\\d*)")
       topicsGroup.forEach(d => {
         d.val = groupBy(d.val, d => d.filename.match(verReg)[1]).sort(
           this.verCompare
@@ -155,21 +174,18 @@ export default {
     }
   },
   created() {
-    this.$bus.$on('version-selected', selectedVer => {
-      this.fileGroup = this.groupFileByStatus(selectedVer)
+    // this.$bus.$on('version-selected', selectedVer => {
+    //   this.fileGroup = this.groupFileByStatus(selectedVer)
+    // })
+    this.$bus.$on('library-selected', lib =>{
+      this.libraryName = lib
+      this.flag = false
+      this.$axios.get('topics/getLibName', {libName: this.libraryName}).then(({data})=>{
+        if(data.flag) this.flag = true
+      })
     })
-    this.$axios.get('topics/getTopicData', {}).then(({ data }) => {
-      this.topicData = data
-    })
-    this.$axios.get('topics/getAllDocs', {}).then(({ data }) => {
-      this.docVerData = data
-      this.topicsGroup = this.getTopicsGroup(this.docVerData.files)
-    })
-    this.$axios.get('topics/getNormOfDiffVecs', {}).then(({data}) => {
-      this.normData = data
-    })
-    this.$axios.get('topics/getEditFileIds', {}).then(({data}) => {
-      this.editFileIds = data
+    this.$axios.get('topics/getLibName', {libName: this.libraryName}).then(({data})=>{
+      if(data.flag) this.flag = true
     })
   }
 }
@@ -179,7 +195,7 @@ export default {
 html {
   height: 100%;
   body {
-    height: 90%;
+    height: 95%;
   }
 }
 #app {
@@ -194,16 +210,16 @@ html {
   color: #2c3e50;
   display: flex;
   .left-panel{
-    flex: 1;
+    flex: 1.05;
     margin-right:5px;
     display: flex;
     flex-direction: column;
-    .radar-control-panel{
-      flex: 5.5;
-    }
     .args-wrapper{
-      flex: 3;
+      flex: 3.1;
       margin-bottom: 5px;
+    }
+    .topic-bar{
+      flex: 5;
     }
   }
   .center-panel {
@@ -234,19 +250,7 @@ html {
         flex: 1.3;
         margin-right: 5px;
       }
-      .comment-charts-wrapper
-      {
-        flex: 0.8;
-      }
     }
   }
-  // .code-panel{
-  //   flex: 1.9;
-  //   margin-left: 5px;
-  //   overflow-x: auto;
-  //   overflow-y: auto;
-  //   // overflow: scroll;
-  //   display: flex;
-  // }
 }
 </style>

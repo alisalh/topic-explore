@@ -13,7 +13,6 @@ export default {
   name: 'component_name',
   data () {
     return {
-      // width: 600,
       height: 0,
       arcSvg: null,
       diffDocs: null,
@@ -26,7 +25,6 @@ export default {
       linkG: null,
       preDoc: null,
       curDoc: null
-      // doc: null,
     }
   },
   computed: {
@@ -162,7 +160,7 @@ export default {
       var x = d3.scaleLinear().range([0, 2 * Math.PI])
       var y = d3
         .scaleLinear()
-        .range([200, this.height / 2])
+        .range([100, this.height / 2])
         .domain([1, 0])
         
       var partition = d3.partition()
@@ -269,7 +267,6 @@ export default {
               }
             }
             else{
-              // this.selectedTopic === null
               if(this.diffDocs){
                 this.selectedDoc = d.data.id
                 this.arcSvg.filter(arc => arc.data.id === d.data.id)
@@ -490,7 +487,7 @@ export default {
             sourceAngle = (arc.startAngle()(d.source)+arc.endAngle()(d.source))/2,
             targetOuterR = arc.outerRadius()(d.target),
             targetAngle = (arc.startAngle()(d.target)+arc.endAngle()(d.target))/2
-          let start = [Math.sin(sourceAngle)*sourceOuterR, -Math.cos(sourceAngle)*sourceOuterR],
+          let start = [Math.sin(sourceAngle)*sourceOuterR, Math.abs(Math.cos(sourceAngle)*sourceOuterR)],
             end = [Math.sin(targetAngle)*targetOuterR, -Math.cos(targetAngle)*targetOuterR]
           let linearGradient = svg.append('defs')
             .append('linearGradient')
@@ -678,7 +675,7 @@ export default {
       })
     })
     this.$bus.$on('threshold-selected', d => this.threshold=d)
-    this.$bus.$on('line-restored', () => this.resetStatus())
+    // this.$bus.$on('line-restored', () => this.resetStatus())
   }
 }
 </script>

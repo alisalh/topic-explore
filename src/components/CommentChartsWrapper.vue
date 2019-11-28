@@ -76,7 +76,7 @@ export default {
   // },
   methods: {
     docSelectedHandler (doc) {
-      console.log(doc['id'], doc['Topic_Contribution'].map(topic => topic['percent']))
+      console.log(doc['id'], doc['main_topic'].map(topic => topic['percent']))
       this.selectedDoc = doc
       this.getIdCnt(doc.identifiers).then(data => {
         this.uniqueIdentifiers = data

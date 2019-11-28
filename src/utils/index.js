@@ -1,13 +1,13 @@
-export function getVersion (fileName) {
-  let verReg = /d3-(\d*\.\d*\.\d*)/
+export function getVersion (fileName, lib) {
+  let verReg = new RegExp(lib+'-(\\d*\\.\\d*\\.\\d*)')
   return fileName.match(verReg)[1]
 }
-export function getRelPath (fileName) {
-  let verReg = /d3-(\d*\.\d*\.\d*)(.*)/
+export function getRelPath (fileName, lib) {
+  let verReg = new RegExp(lib+'-(\\d*\\.\\d*\\.\\d*)(.*)')
   return fileName.match(verReg)[2]
 }
-export function getRelPathWithVersion (fileName) {
-  let verReg = /d3-(\d*\.\d*\.\d*)(.*)/
+export function getRelPathWithVersion (fileName, lib) {
+  let verReg = new RegExp(lib+'-(\\d*\\.\\d*\\.\\d*)(.*)')
   return fileName.match(verReg)[0]
 }
 export function groupBy (arr, prop) {
