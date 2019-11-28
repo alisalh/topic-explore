@@ -1,14 +1,15 @@
 <template>
   <div class='topic-bar'
-    @click='globalClickHandler'>
+    @click='globalClickHandler()'>
     <div v-for="item in barData" :key="item.id" class='topic-bar-wrapper'>
       <div class="idx" :style="{opacity:item.opacity}">{{item.topicId+1}}</div>
-      <div class="bar"
-          :style="{background: 'white', opacity: item.opacity, width:item.value+'px'}"
-          @click='barClickHandler(item)'
-          :class='{selected:item.isSelected}'>
+      <div class="bar">
+        <div :style="{background: item.color, opacity: item.opacity, width:item.value+'px', height: '100%'}"
+          @click='barClickHandler(item)'></div>
       </div>
-      <div class="text" :style="{opacity:item.opacity}">{{topics[item.topicId]}}</div>
+      <div class="text" :style="{opacity:item.opacity}">
+        <input type='text' v-model='topics[item.topicId]' style="width: 70px; height: 12px; border: none; padding-left: 2px;">
+        </div>
     </div>
   </div>
 </template>
@@ -123,8 +124,9 @@ export default {
             .scaleLinear()
             .domain([0, this.versions.length])
             .range([0, 120])
+          
+          // bar长度与主题对应的版本数相关
           this.topicsGroup.forEach(topic => {
-            // 过滤特殊值, 与linechat对应
             let w = topic.val.length
             this.barData[topic.key].value=widthScale(w)
           })
@@ -132,42 +134,42 @@ export default {
       })
     })
 
-    this.$bus.$on('version-selected', obj => {
-      this.selectTrigger(obj.version)
-      this.barData.forEach(d =>{
-        if(d.topicId === obj.topic && d.value > 0){
-          d.opacity = 1
-          d.isSelected = true
-        }
-        else{
-          d.opacity = 0.2
-          d.isSelected = false
-        }
-      })
-    })
-    this.$bus.$on('version-restored', d => {this.selectTrigger(d)})
-    this.$bus.$on('version-range-selected', d=> {this.selectTrigger('all')})
-    this.$bus.$on('line-selected', topicId =>{
-      this.barData
-        .forEach(d => {
-          d.isSelected = false
-          d.opacity = 0.2
-        })
-      this.barData
-        .filter(d => d.topicId === topicId)
-        .forEach(d => {
-          d.isSelected = true
-          d.opacity = 1
-        })
-    })
-    this.$bus.$on('line-restored', () =>{
-      this.barData
-        .forEach(d => {
-          d.isSelected = false
-          if(d.value === 0) d.opacity = 0.2
-          else d.opacity = 1
-        })
-    })
+    // this.$bus.$on('version-selected', obj => {
+    //   this.selectTrigger(obj.version)
+    //   this.barData.forEach(d =>{
+    //     if(d.topicId === obj.topic && d.value > 0){
+    //       d.opacity = 1
+    //       d.isSelected = true
+    //     }
+    //     else{
+    //       d.opacity = 0.2
+    //       d.isSelected = false
+    //     }
+    //   })
+    // })
+    // this.$bus.$on('version-restored', d => {this.selectTrigger(d)})
+    // this.$bus.$on('version-range-selected', d=> {this.selectTrigger('all')})
+    // this.$bus.$on('line-selected', topicId =>{
+    //   this.barData
+    //     .forEach(d => {
+    //       d.isSelected = false
+    //       d.opacity = 0.2
+    //     })
+    //   this.barData
+    //     .filter(d => d.topicId === topicId)
+    //     .forEach(d => {
+    //       d.isSelected = true
+    //       d.opacity = 1
+    //     })
+    // })
+    // this.$bus.$on('line-restored', () =>{
+    //   this.barData
+    //     .forEach(d => {
+    //       d.isSelected = false
+    //       if(d.value === 0) d.opacity = 0.2
+    //       else d.opacity = 1
+    //     })
+    // })
   }
 }
 </script>
@@ -177,31 +179,27 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 0 5px;
+  padding: 10px 5px;
   cursor: default;
   font-size: 14px;
   .topic-bar-wrapper{
-    margin-top:10px;
+    margin-top:15px;
     overflow: auto;
     display: flex;
     align-items: center;
     .idx {
-      flex: 0.2;
+      flex: 0.7;
       text-align: right;
       margin-right: 5px;
     }
     .bar {
-      flex: 1.7;
-      height: 10px;
-      margin-right: 2px;
-        &.selected {
-          border: 1px solid black;
-        }
+      flex: 5;
+      height: 12px;
+      margin-right: 5px;
     }
     .text{
-      flex: 1;
+      flex: 3;
       text-align: left;
-      margin-right: 5px;
     }
   }
 }

@@ -215,11 +215,11 @@ html {
     display: flex;
     flex-direction: column;
     .args-wrapper{
-      flex: 3.1;
+      flex: 3;
       margin-bottom: 5px;
     }
     .topic-bar{
-      flex: 5;
+      flex: 4.5;
     }
   }
   .center-panel {
