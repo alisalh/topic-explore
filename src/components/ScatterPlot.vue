@@ -98,14 +98,14 @@ export default {
     this.dom_args = this.$refs.root.getBoundingClientRect()
     this.height = Math.floor(this.$refs.root.clientHeight)
     this.width = Math.floor(this.$refs.root.clientWidth)
-    this.$bus.$on('version-range-selected', d => {
-      this.$refs.root.innerHTML = ''
-      this.$bus.$emit('tip-close', {})
-      this.$axios.get('topics/getDiffDocs', d)
-        .then(({ data }) => {
-         this.diffDocs = data
-        })
-    })
+    // this.$bus.$on('version-range-selected', d => {
+    //   this.$refs.root.innerHTML = ''
+    //   this.$bus.$emit('tip-close', {})
+    //   this.$axios.get('topics/getDiffDocs', d)
+    //     .then(({ data }) => {
+    //      this.diffDocs = data
+    //     })
+    // })
     this.$bus.$on('version-restored', d => {
       this.$refs.root.innerHTML = ''
       this.$bus.$emit('tip-close', {})

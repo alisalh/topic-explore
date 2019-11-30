@@ -180,7 +180,7 @@ export default {
               .attr('opacity', 0.7)
             this.selectedVersion = d
             // if(this.selectedTopic || this.selectedTopic === 0) this.selectFlag = true
-            // this.$bus.$emit('version-selected', {version: d, topic: this.selectedTopic})
+            this.$bus.$emit('version-selected', {version: d})
           }
         })
       

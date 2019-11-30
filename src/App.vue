@@ -205,7 +205,7 @@ html {
   -moz-user-select: none; 
   -khtml-user-select: none; 
   user-select: none;
-  height: 98%;
+  height: 92%;
   width: 80%;
   color: #2c3e50;
   display: flex;
@@ -215,11 +215,11 @@ html {
     display: flex;
     flex-direction: column;
     .args-wrapper{
-      flex: 3;
+      flex: 1;
       margin-bottom: 5px;
     }
     .topic-bar{
-      flex: 4.5;
+      flex: 1.4;
     }
   }
   .center-panel {

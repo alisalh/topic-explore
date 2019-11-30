@@ -1,6 +1,5 @@
 <template>
-  <div class='topic-bar'
-    @click='globalClickHandler()'>
+  <div class='topic-bar' @click='globalClickHandler()'>
     <div v-for="item in barData" :key="item.id" class='topic-bar-wrapper'>
       <div class="idx" :style="{opacity:item.opacity}">{{item.topicId+1}}</div>
       <div class="bar">
@@ -8,7 +7,8 @@
           @click='barClickHandler(item)'></div>
       </div>
       <div class="text" :style="{opacity:item.opacity}">
-        <input type='text' v-model='topics[item.topicId]' style="width: 70px; height: 12px; border: none; padding-left: 2px;">
+        <input type='text' v-model='topics[item.topicId]' 
+          style="width: 72px; height: 12px; border: none; padding-left: 2px; font-family: Avenir, Helvetica, Arial, sans-serif; font-size: 14px;">
         </div>
     </div>
   </div>
@@ -179,7 +179,7 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 10px 5px;
+  padding: 0px 5px;
   cursor: default;
   font-size: 14px;
   .topic-bar-wrapper{

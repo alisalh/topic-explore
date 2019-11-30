@@ -141,8 +141,15 @@ export default {
         this.$bus.$emit('library-selected', this.libraryName)
       },
       compareTrigger(){
-        if(this.preVersion&&this.curVersion)
-          this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion})
+        if(this.preVersion&&this.curVersion){
+          this.$axios
+          .get('topics/getDiffDocs', {curv: this.curVersion, prev: this.preVersion})
+          .then(({ data }) => {
+            this.$bus.$emit('version-range-selected', {curv: this.curVersion, prev: this.preVersion, diffDocs: data})
+          })
+          
+        }
+          
       }
   },
   watch:{
