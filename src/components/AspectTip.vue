@@ -15,7 +15,7 @@ export default {
             aspectData: [],
             x: 0,
             y: 0,
-            width: 100,
+            width: 400,
             height: 50,
             topicNum: 0,
             type: '',
@@ -41,26 +41,30 @@ export default {
                 gap=10, spaceForLabel = 50,
                 spaceForTitle = 20,
                 chartHeight=spaceForTitle
-            data.forEach(d =>{
-                if(d.val.length === 1){
-                    if(d.val[0] >= 0.2)
-                        chartHeight = chartHeight+barHeight+gap
-                }  
-                else{
-                    if(d.val[0] >= 0.2){
-                        if(d.val[1] >= 0.2)
-                            chartHeight = chartHeight+barHeight*2+gap
-                        else
-                            chartHeight = chartHeight+barHeight+gap
-                    }
-                    else{
-                        if(d.val[1] >= 0.2)
-                            chartHeight = chartHeight+barHeight+gap
-                    }
+            // data.forEach(d =>{
+            //     if(d.val.length === 1){
+            //         if(d.val[0] >= 0.2)
+            //             chartHeight = chartHeight+barHeight+gap
+            //     }  
+            //     else{
+            //         if(d.val[0] >= 0.2){
+            //             if(d.val[1] >= 0.2)
+            //                 chartHeight = chartHeight+barHeight*2+gap
+            //             else
+            //                 chartHeight = chartHeight+barHeight+gap
+            //         }
+            //         else{
+            //             if(d.val[1] >= 0.2)
+            //                 chartHeight = chartHeight+barHeight+gap
+            //         }
                         
-                }
-            })
+            //     }
+            // })
             this.height = chartHeight+20 - gap
+            var influencedStr;
+            for(let i = 0; i < data.influenced.length; i++){
+                influencedStr = influencedStr + str(data.influenced[i])
+            }
             var x = d3.scaleLinear()
                 .domain([0, this.maxVal])
                 .range([0, chartWidth-spaceForLabel])
@@ -72,84 +76,85 @@ export default {
             svg.append('g')
                 .attr('transform', 'translate(25,15)')
                 .append('text')
-                .text(this.type)
-                .style('font-size', 15+'px')
+                // .text(this.type)
+                .text("topic:"+data.topic+" influenced topics:")
+                .style('font-size', 10+'px')
             var i1 = 0, i2 = 0
-            data.forEach((d, i) => {
-                if(d.val.length === 1){
-                    if(d.val[0] >= 0.2) {
-                        let g = svg.append('g')
-                            .attr('transform', `translate(${spaceForLabel},${i1*barHeight+i2*gap+10+spaceForTitle})`)
-                        g.append('rect')
-                            .attr('fill', this.topicColormap(d.topic))
-                            .attr('class', 'bar')
-                            .attr('width', x(d.val[0]))
-                            .attr('height', barHeight)
-                            .style('stroke', 'black')
-                        g.append('text')
-                            .attr('x', 10-spaceForLabel)
-                            .attr('dy', '.7em')
-                            .text(d.topic+1)
-                        if(d.type === 'del')
-                            g.selectAll('rect').attr('stroke-dasharray', '3,3')
-                        i1++
-                        i2++
-                    }
-                }
-                if(d.val.length === 2){
-                    if(d.val[0] >= 0.2){
-                        let g = svg.append('g')
-                                .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10+spaceForTitle})`)
-                            g.append('rect')
-                                .attr('fill', this.topicColormap(d.topic))
-                                .attr('class', 'bar')
-                                .attr('width', x(d.val[0]))
-                                .attr('height', barHeight-1)
-                                .style('stroke', 'black')
-                                .attr('stroke-dasharray', '3,3')
-                        if(d.val[1] >= 0.2){
-                            g.append('rect')
-                                .attr('transform', 'translate(0,'+(barHeight+2)+')')
-                                .attr('fill', this.topicColormap(d.topic))
-                                .attr('class', 'bar')
-                                .attr('width', x(d.val[0]))
-                                .attr('height', barHeight-1)
-                                .style('stroke', 'black')  
-                            g.append('text')
-                                .attr('x', 10-spaceForLabel)
-                                .attr('dy', '1em')
-                                .text(d.topic+1)
-                            i1 = i1+2
-                        }  
-                        else{
-                            g.append('text')
-                                .attr('x', 10-spaceForLabel)
-                                .attr('dy', '.7em')
-                                .text(d.topic+1)
-                            i1++
-                        }
-                        i2++   
-                    }
-                    else{
-                        if(d.val[1] >= 0.2){
-                            let g = svg.append('g')
-                                .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10+spaceForTitle})`)
-                            g.append('rect')
-                                .attr('fill', this.topicColormap(d.topic))
-                                .attr('class', 'bar')
-                                .attr('width', x(d.val[1]))
-                                .attr('height', barHeight)
-                                .style('stroke', 'black')
-                            g.append('text')
-                                .attr('x', 10-spaceForLabel)
-                                .attr('dy', '.7em')
-                                .text(d.topic+1)
-                            i1++
-                            i2++
-                        }
-                    }
-                }
-            })
+            // data.forEach((d, i) => {
+            //     if(d.val.length === 1){
+            //         if(d.val[0] >= 0.2) {
+            //             let g = svg.append('g')
+            //                 .attr('transform', `translate(${spaceForLabel},${i1*barHeight+i2*gap+10+spaceForTitle})`)
+            //             g.append('rect')
+            //                 .attr('fill', this.topicColormap(d.topic))
+            //                 .attr('class', 'bar')
+            //                 .attr('width', x(d.val[0]))
+            //                 .attr('height', barHeight)
+            //                 .style('stroke', 'black')
+            //             g.append('text')
+            //                 .attr('x', 10-spaceForLabel)
+            //                 .attr('dy', '.7em')
+            //                 .text(d.topic+1)
+            //             if(d.type === 'del')
+            //                 g.selectAll('rect').attr('stroke-dasharray', '3,3')
+            //             i1++
+            //             i2++
+            //         }
+            //     }
+            //     if(d.val.length === 2){
+            //         if(d.val[0] >= 0.2){
+            //             let g = svg.append('g')
+            //                     .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10+spaceForTitle})`)
+            //                 g.append('rect')
+            //                     .attr('fill', this.topicColormap(d.topic))
+            //                     .attr('class', 'bar')
+            //                     .attr('width', x(d.val[0]))
+            //                     .attr('height', barHeight-1)
+            //                     .style('stroke', 'black')
+            //                     .attr('stroke-dasharray', '3,3')
+            //             if(d.val[1] >= 0.2){
+            //                 g.append('rect')
+            //                     .attr('transform', 'translate(0,'+(barHeight+2)+')')
+            //                     .attr('fill', this.topicColormap(d.topic))
+            //                     .attr('class', 'bar')
+            //                     .attr('width', x(d.val[0]))
+            //                     .attr('height', barHeight-1)
+            //                     .style('stroke', 'black')  
+            //                 g.append('text')
+            //                     .attr('x', 10-spaceForLabel)
+            //                     .attr('dy', '1em')
+            //                     .text(d.topic+1)
+            //                 i1 = i1+2
+            //             }  
+            //             else{
+            //                 g.append('text')
+            //                     .attr('x', 10-spaceForLabel)
+            //                     .attr('dy', '.7em')
+            //                     .text(d.topic+1)
+            //                 i1++
+            //             }
+            //             i2++   
+            //         }
+            //         else{
+            //             if(d.val[1] >= 0.2){
+            //                 let g = svg.append('g')
+            //                     .attr('transform', `translate(${spaceForLabel},${i1*barHeight+ i2*gap+10+spaceForTitle})`)
+            //                 g.append('rect')
+            //                     .attr('fill', this.topicColormap(d.topic))
+            //                     .attr('class', 'bar')
+            //                     .attr('width', x(d.val[1]))
+            //                     .attr('height', barHeight)
+            //                     .style('stroke', 'black')
+            //                 g.append('text')
+            //                     .attr('x', 10-spaceForLabel)
+            //                     .attr('dy', '.7em')
+            //                     .text(d.topic+1)
+            //                 i1++
+            //                 i2++
+            //             }
+            //         }
+            //     }
+            // })
             
         },
         // filterVal(data){
@@ -185,10 +190,13 @@ export default {
     },
     mounted(){
         this.$bus.$on('tip-show', d =>{
-            this.type = d.docs[0].type + ' files'
-            this.maxVal = d.max
+            console.log(d)
+            // this.type = d.docs[0].type + ' files'
+            // this.maxVal = d.max
             // this.draw(this.getChartData(d.docs))
-            this.draw(d.docs[0].vec)
+            //this.draw(d.docs[0].vec)
+            this.draw(d.docs)
+            
             this.x = d.x+10
             this.y = d.y+10
             if(this.x <= d.args.left)
