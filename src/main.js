@@ -6,6 +6,7 @@ import axios from './utils/http'
 import vueCodeDiff from 'vue-code-diff'
 import Highlight from './directives/highlight.js'
 import './assets/common.less'
+import 'font-awesome/scss/font-awesome.scss'
 
 Vue.config.productionTip = false
 Vue.prototype.$axios = axios

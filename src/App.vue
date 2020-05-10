@@ -1,13 +1,21 @@
 <template>
   <div id="app">
     <div class="left-panel">
-      <args-wrapper class="bl-card-shadow" :versions="versions" style="flex-shrink: 0"></args-wrapper>
+      <args-wrapper 
+        class="bl-card-shadow" 
+        :versions="versions" 
+        style="flex-shrink: 0"
+      ></args-wrapper>
       <topic-bar
         class="bl-card-shadow"
         :topicsGroup="topicsGroup"
         :versions="versions"
+        :topicNum="topicNum"
         style="flex-shrink: 0"
       ></topic-bar>
+      <word-cloud 
+        class="bl-card-shadow"
+      ></word-cloud>
     </div>
     <div class="center-panel">
       <div class="first-row">
@@ -58,7 +66,7 @@ import * as d3 from "d3";
 import _ from "lodash";
 import LineChart from "./components/LineChart.vue";
 import Sunburst from "./components/SunBurst.vue";
-// import WordCloud from './components/WordCloud.vue'
+import WordCloud from './components/WordCloud.vue'
 import TopicBar from "./components/TopicBar.vue";
 import ScatterPlot from "./components/ScatterPlot.vue";
 import CodeWrapper from "./components/CodeWrapper.vue";
@@ -71,6 +79,7 @@ export default {
   name: "app",
   data() {
     return {
+      topicNum: 0,
       topicData: null,
       docVerData: null,
       topicsGroup: null,
@@ -87,7 +96,7 @@ export default {
   components: {
     LineChart,
     Sunburst,
-    // WordCloud,
+    WordCloud,
     TopicBar,
     ScatterPlot,
     CodeWrapper,
@@ -116,6 +125,8 @@ export default {
       if (this.flag) {
         this.$axios.get("topics/getTopicData", {}).then(({ data }) => {
           this.topicData = data;
+          this.topicNum = data.length
+          console.log('topicNum:', this.topicNum)
           console.log('topicData:', this.topicData)
         });
         this.$axios.get("topics/getAllDocs", {}).then(({ data }) => {
@@ -260,11 +271,15 @@ html {
     display: flex;
     flex-direction: column;
     .args-wrapper {
-      flex: 1.3;
+      flex: 1;
     }
     .topic-bar {
       margin-top:3px;
       flex: 2;
+    }
+    .word-cloud{
+      margin-top: 3px;
+      flex: 1;
     }
   }
   .center-panel {

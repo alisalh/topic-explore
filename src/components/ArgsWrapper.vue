@@ -18,7 +18,7 @@
         </el-select>
       </div>
       <div class="select-wrapper">
-        <div class="title">cur-version</div>
+        <div class="title">cur-version <i class="fa fa-undo" @click="resetCurVersion"></i> </div>
         <el-select
           v-model="curVersion"
           size="mini"
@@ -34,7 +34,7 @@
         </el-select>
       </div>
       <div class="select-wrapper">
-        <div class="title">pre-version</div>
+        <div class="title">pre-version <i class="fa fa-undo" @click="resetPreVersion"></i> </div>
         <el-select
           v-model="preVersion"
           size="mini"
@@ -53,37 +53,6 @@
     <div class="button">
       <el-button size="mini" :disabled="disabled" @click="compareTrigger">compare</el-button>
     </div>
-    <div class='input'>
-      <div class='input-wrapper'>
-        <div class='title'>threshold</div>
-        <div class='slider-input'>
-          <el-slider v-model="threshold_val" 
-            :format-tooltip="formatTooltip"
-            @change="sendThreshold"></el-slider>
-          <el-input v-model="threshold" size="mini"></el-input>
-        </div>
-      </div>
-      <div class='input-wrapper'>
-        <div class='title'>min_samples</div>
-        <div class='slider-input'>
-          <el-slider v-model="min_samples"
-            :step="1"
-            :min='2'
-            :max="10"
-            @change="sendMinSamples"></el-slider>
-          <el-input v-model="min_samples" size="mini"></el-input>
-        </div>
-      </div>
-      <div class='input-wrapper'>
-        <div class='title'>eps</div>
-        <div class='slider-input'>
-          <el-slider v-model="eps_val"
-            :format-tooltip="formatTooltip"
-            @change="sendEps"></el-slider>
-          <el-input v-model="eps" size="mini"></el-input>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -92,11 +61,6 @@ export default {
   name: "component_name",
   data() {
     return {
-      threshold_val: 10,
-      threshold: 0.1,
-      min_samples: 2,
-      eps_val: 5,
-      eps: 0.05,
       curVersion: "",
       preVersion: "",
       libraryName: "vue",
@@ -111,86 +75,52 @@ export default {
   },
   props: ["versions"],
   methods: {
-    formatTooltip(val) {
-      return val / 100;
-    },
-    sendThreshold() {
-      this.threshold = this.threshold_val / 100;
-      this.$bus.$emit("threshold-selected", this.threshold);
-    },
-    sendMinSamples() {
-      this.$bus.$emit("min-samples-selected", this.min_samples);
-    },
-    sendEps() {
-      this.$bus.$emit("eps-selected", this.eps);
-    },
-    selectPreTrigger(val) {
-      this.curOptions = [];
-      let id = this.versions.indexOf(val) + 1;
-      this.versions.slice(id, -1).forEach((d, i) => {
-        this.curOptions.push({ value: i, label: d });
-      });
-    },
     selectCurTrigger(val) {
       this.preOptions = [];
       let id = this.versions.indexOf(val);
-      this.versions.slice(0, id).forEach((d, i) => {
-        this.preOptions.push({ value: i, label: d });
-      });
-      this.preOptions.sort(function(a, b) {
-        return b.value - a.value;
-      });
+
+      // 设置preVersion的options
+      if(id != 0){
+        this.versions.slice(0, id).forEach((d, i) => {
+          this.preOptions.push({ value: i, label: d });
+        });
+        this.preOptions.sort(function(a, b) {
+          return b.value - a.value;
+        });
+        // 当前显示的preVersion
+        this.preVersion = this.versions[id-1];
+        this.disabled = false;
+      }
+      else{
+        this.preVersion = ''
+        this.disabled = true
+      }
+
+      this.$bus.$emit('curVersion-selected', val)
     },
     selectLibraryTrigger(val) {
       this.libraryName = val;
       this.$bus.$emit("library-selected", this.libraryName);
     },
     compareTrigger() {
-      if (this.preVersion && this.curVersion) {
-        this.$axios.get("topics/getDocTopics", {}).then(({ data }) => {
-          this.docTopics = data;
-          console.log('docTopics:', this.docTopics)
-        });
+      console.log('preVersion:', this.preVersion, 'curVersion:', this.curVersion)
+    },
+    resetCurVersion(){
+      this.curVersion = ''
+      this.preVersion = ''
+      this.disabled = true
 
-        this.$axios.get("topics/getAllDocs", {}).then(({ data }) => {
-          this.fileData = data.files;
-          console.log('fileData:', this.fileData)
-        });
+      this.$bus.$emit('curVersion-reseted', null)
+    },
+    resetPreVersion(){
+      this.preVersion = ''
+      this.disabled = true
 
-        this.$axios.get("topics/getNormData", {}).then(({ data }) => {
-          this.curNormData = data;
-          console.log('curNormData:', this.curNormData)
-        });
-
-        this.$axios
-          .get("topics/getDiffDocs", {
-            curv: this.curVersion,
-            prev: this.preVersion
-          })
-          .then(({ data }) => {
-            console.log('diffDocs:', data)
-            this.$bus.$emit("version-range-selected", {
-              curv: this.curVersion,
-              prev: this.preVersion,
-              diffDocs: data
-            });
-          });
-
-        this.$bus.$emit("get-doc-topic", {
-          docTopics: this.docTopics,
-          fileData: this.fileData,
-          curNormData: this.curNormData
-        });
-      }
+      this.$bus.$emit('preVersion-reseted', null)
     }
   },
   watch: {
-    threshold_val() {
-      this.threshold = this.threshold_val / 100;
-    },
-    eps_val() {
-      this.eps = this.eps_val / 100;
-    }
+    
   },
   created() {
     const requiredData = ["versions"];
@@ -205,23 +135,24 @@ export default {
           });
       });
     });
-    this.$bus.$on("version-selected", d => {
-      this.curVersion = d.version;
-      this.selectCurTrigger(d.version);
-      let i = this.versions.indexOf(d.version);
-      if (i === 0) {
-        this.preVersion = "";
-        this.disabled = true;
-      } else {
-        this.preVersion = this.versions[i - 1];
-        this.disabled = false;
-      }
-    });
-    this.$bus.$on("version-restored", d => {
-      this.preVersion = "";
-      this.curVersion = "";
-      this.disabled = true;
-    });
+    // this.$bus.$on("version-selected", d => {
+    //   this.curVersion = d.version;
+    //   this.selectCurTrigger(d.version);
+    //   let i = this.versions.indexOf(d.version);
+    //   // 第一个版本没有前一个版本
+    //   if (i === 0) {
+    //     this.preVersion = "";
+    //     this.disabled = true;
+    //   } else {
+    //     this.preVersion = this.versions[i - 1];
+    //     this.disabled = false;
+    //   }
+    // });
+    // this.$bus.$on("version-restored", d => {
+    //   this.preVersion = "";
+    //   this.curVersion = "";
+    //   this.disabled = true;
+    // });
   }
 };
 </script>
@@ -232,6 +163,11 @@ export default {
   font-size: 14px;
   display: flex;
   flex-direction: column;
+  .fa-undo{
+    margin-left: 130px;
+    font-size: 12px;
+    color: gray;
+  }
   .select {
     flex: 3.5;
     display: flex;
@@ -250,55 +186,12 @@ export default {
   .button {
     flex: 1;
     margin-top: 15px;
-    border-bottom: 4px solid rgba(66, 66, 66, 0.1);
     .el-button--mini,
     .el-button--small {
       margin-top: 3px;
       margin-left: 10px;
       font-size: 14px;
       width: 87%;
-    }
-  }
-  .input{
-    margin-top: 10px;
-    margin-bottom: 10px;
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    .input-wrapper{
-      .title{
-        margin-left: 11px;
-      }
-      .slider-input{
-        display: flex;
-        .el-slider{
-          flex: 1;
-          margin: 0 10px 0 10px;
-          .el-slider__button {
-            width: 6.5px;
-            height: 6.5px;
-            border: 1.5px solid rgb(194, 194, 194);
-          }
-          .el-slider__runway{
-            margin-top: 5px;
-            margin-bottom: 5px;
-            height: 5px;
-          }
-          .el-slider__bar {
-            background-color: rgb(194, 194, 194);
-            height: 5px;
-          }
-        }
-        .el-input{
-          flex: 0.3;
-          .el-input__inner {
-            width: 80%;
-            height: 20px;
-            padding: 0 2px;
-            text-align: center;
-          }
-        }
-      }
     }
   }
 }
