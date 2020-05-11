@@ -16,7 +16,7 @@ export default {
       svgHeight: 0
     }
   },
-  props: ['topicData'],
+  props: ['topicData', "topicColormap"],
   methods: {
     draw(data){
       // 单独保存word weight, d3Cloud布局中也有weight
@@ -56,7 +56,7 @@ export default {
         .append('text')
         .style('font-size', d => d.size + 'px')
         .style('font-family', d => d.font)
-        .style('fill', 'black')
+        .style('fill', d => d.color)
         .attr('text-anchor', 'middle')
         .attr('transform', d => 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')')
         .text(d => d.text)
@@ -72,9 +72,14 @@ export default {
     this.svgHeight = this.height - margin.top - margin.bottom;
 
     this.$bus.$on('topic-selected', d =>{
-      console.log('selected topic:', d, this.topicData[d].words)
-
-      let topicWords = this.topicData[d].words
+      let topicWords = [], fontColor = this.topicColormap(d)
+      topicWords = this.topicData[d].words.map(d => ({
+        'keyword': d.keyword, 
+        'weight': d.weight, 
+        'color': fontColor
+      }))
+      console.log('selected topic:', d, topicWords)
+      
       this.draw(topicWords)
     })
    

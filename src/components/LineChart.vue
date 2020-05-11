@@ -4,7 +4,7 @@
 
 <script>
 import * as d3 from "d3";
-import { version } from "punycode";
+// import { version } from "punycode";
 export default {
   name: "component_name",
   data() {

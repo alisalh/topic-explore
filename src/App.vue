@@ -16,6 +16,7 @@
       <word-cloud 
         class="bl-card-shadow"
         :topicData="topicData"
+        :topicColormap="topicColormap"
       ></word-cloud>
     </div>
     <div class="center-panel">

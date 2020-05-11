@@ -118,7 +118,10 @@ export default {
     requiredData.forEach(d => {
       this.$watch(d, val => {
         if (val) cnt++;
-        if (cnt === requiredData.length) this.curVersionReseted();
+        if (cnt === requiredData.length) {
+          this.barData = this.barData.slice(0, this.topicNum)
+          this.curVersionReseted();
+        }
       });
     });
 
