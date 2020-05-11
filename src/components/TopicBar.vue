@@ -5,7 +5,7 @@
       <div class="bar">
         <div 
           :style="{background: item.color, opacity: item.opacity, width:item.value+'px', height: '100%'}"
-          @click="barClickHandler(item)"
+          @click="topicBarClicked(item)"
         ></div>
       </div>
       <div class="text" :style="{opacity:item.opacity}">
@@ -41,8 +41,9 @@ export default {
   props: ["topicsGroup", "versions", "topicNum"],
   methods: {
     // topic bar的点击事件
-    barClickHandler(selectedBar) {
-     
+    topicBarClicked(item) {
+      this.selectedTopic = item.topicId
+      this.$bus.$emit('topic-selected', item.topicId)
     },
 
     // curVersion选中的响应事件

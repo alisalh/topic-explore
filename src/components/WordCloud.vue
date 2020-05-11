@@ -12,11 +12,72 @@ export default {
     return {
       width: 0,
       height: 0,
-      svg: null
+      svgWidth: 0,
+      svgHeight: 0
     }
   },
   props: ['topicData'],
   methods: {
+    draw(data){
+      // 单独保存word weight, d3Cloud布局中也有weight
+      var weights = data.map(d => d.weight),
+        minWeight = d3.min(weights),
+        maxWeight = d3.max(weights);
+
+      var fontSizeScale = d3.scaleLinear().domain([minWeight, maxWeight]).range([10, 30])
+
+      // 词云布局
+      var layout = d3Cloud()
+        .timeInterval(10)
+        .size([this.svgWidth, this.svgHeight])
+        .words(data)
+        .font('Georgia, serif')
+        .fontSize((d, i) => fontSizeScale(weights[i]))
+        .text(d => d.keyword)
+        .spiral('archimedean') // "archimedean" or "rectangular"
+        .padding(4)
+        .rotate(0)
+        .on('end', this.showWords)
+        .start()
+    },
+    showWords(words){
+      d3.select('.word-cloud>*').remove()
+
+      var svg = d3.select('.word-cloud')
+        .append('svg')
+        .attr('width', this.width)
+        .attr('height', this.height)
+        .append('g')
+        .attr('transform', 'translate('+this.width/2+','+this.height/2+')');
+      
+      svg.selectAll('text')
+        .data(words)
+        .enter()
+        .append('text')
+        .style('font-size', d => d.size + 'px')
+        .style('font-family', d => d.font)
+        .style('fill', 'black')
+        .attr('text-anchor', 'middle')
+        .attr('transform', d => 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')')
+        .text(d => d.text)
+    }
+
+  },
+  mounted(){
+    this.height = Math.floor(this.$refs.root.clientHeight);
+    this.width = Math.floor(this.$refs.root.clientWidth);
+
+    var margin = {top: 10, bottom: 10, left: 10, right: 10};
+    this.svgWidth = this.width - margin.left - margin.right;
+    this.svgHeight = this.height - margin.top - margin.bottom;
+
+    this.$bus.$on('topic-selected', d =>{
+      console.log('selected topic:', d, this.topicData[d].words)
+
+      let topicWords = this.topicData[d].words
+      this.draw(topicWords)
+    })
+   
   }
 }
 </script>

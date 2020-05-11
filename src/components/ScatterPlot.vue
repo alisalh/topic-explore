@@ -49,24 +49,24 @@ export default {
       });
     });
 
-    this.$bus.$on("version-range-selected", d => {
-      this.diffDocs = d.diffDocs;
-    });
+    // this.$bus.$on("version-range-selected", d => {
+    //   this.diffDocs = d.diffDocs;
+    // });
 
-    this.$bus.$on("get-doc-topic", d => {
-      this.docTopics = d.docTopics;
-      this.fileData = d.fileData;
-      this.curNormData = d.curNormData;
-    });
+    // this.$bus.$on("get-doc-topic", d => {
+    //   this.docTopics = d.docTopics;
+    //   this.fileData = d.fileData;
+    //   this.curNormData = d.curNormData;
+    // });
 
-    this.$bus.$on("topic-selected", d => {
-      console.log(this.chartData);
-      if (d == -1) {
-        this.resetStatus();
-      } else {
-        this.highlightMarker(d);
-      }
-    });
+    // this.$bus.$on("topic-selected", d => {
+    //   console.log(this.chartData);
+    //   if (d == -1) {
+    //     this.resetStatus();
+    //   } else {
+    //     this.highlightMarker(d);
+    //   }
+    // });
   },
   watch: {
     diffDocs() {

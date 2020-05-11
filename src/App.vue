@@ -15,6 +15,7 @@
       ></topic-bar>
       <word-cloud 
         class="bl-card-shadow"
+        :topicData="topicData"
       ></word-cloud>
     </div>
     <div class="center-panel">

@@ -22,6 +22,7 @@
         <el-select
           v-model="curVersion"
           size="mini"
+          filterable
           placeholder="please select"
           @change="selectCurTrigger(curVersion)"
         >
@@ -38,6 +39,7 @@
         <el-select
           v-model="preVersion"
           size="mini"
+          filterable
           placeholder="please select"
           @change="selectPreTrigger(preVersion)"
         >
