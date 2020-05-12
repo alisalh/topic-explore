@@ -31,21 +31,20 @@
       </div>
       <div class="second-row">
         <sunburst
+          class="bl-card-shadow"
           :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           :versions="versions"
-          class="bl-card-shadow"
         ></sunburst>
         <scatter-plot
+          class="bl-card-shadow"
           :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           :topicData="topicData"
-          class="bl-card-shadow"
         ></scatter-plot>
       </div>
     </div>
     <div class="right-panel">
-      <!-- <word-cloud :topicData="topicData" class="bl-card-shadow"></word-cloud> -->
       <code-wrapper class="bl-card-shadow"></code-wrapper>
       <parallel-coordinates
         :topicColormap="topicColormap"
@@ -67,6 +66,7 @@
 import * as d3 from "d3";
 import _ from "lodash";
 import LineChart from "./components/LineChart.vue";
+// import ThemeRiver from "./components/ThemeRiver.vue";
 import Sunburst from "./components/SunBurst.vue";
 import WordCloud from './components/WordCloud.vue'
 import TopicBar from "./components/TopicBar.vue";
@@ -90,13 +90,14 @@ export default {
       prevDocs: null,
       normData: null,
       editFileIds: null,
-      libraryName: "vue",
+      libraryName: "d3",
       flag: false, // true向后台请求数据
       docTopics: null
     };
   },
   components: {
     LineChart,
+    // ThemeRiver,
     Sunburst,
     WordCloud,
     TopicBar,

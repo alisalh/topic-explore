@@ -125,13 +125,21 @@ export default {
       });
     });
 
+    // control panel响应事件
     this.$bus.$on('curVersion-selected', d =>{
       this.curVersionSelected(d)
     })
-
     this.$bus.$on('curVersion-reseted', () =>{
       this.curVersionReseted()
     })
+
+    // lineChart响应事件
+    this.$bus.$on("lineVersion-selected", d => {
+      this.curVersionSelected(d);
+    });
+    this.$bus.$on("lineVersion-reseted", d => {
+      this.curVersionReseted();
+    });
   }
 
 };

@@ -4,7 +4,6 @@
 
 <script>
 import * as d3 from "d3";
-// import { version } from "punycode";
 export default {
   name: "component_name",
   data() {
@@ -24,62 +23,48 @@ export default {
   },
   props: ["topicColormap", "topicsGroup", "versions", "normData"],
   methods: {
+    // linchart的纵坐标为每个主题下每个版本对应的文件数
     draw(data) {
-      const margin = { top: 10, right: 25, bottom: 50, left: 40 };
-      const brushHeight = 30,
+      const margin = { top: 10, right: 25, bottom: 50, left: 40 }, 
+        brushHeight = 30,
         gap = 40; //gap表示brush和linechart之间的间隔
 
       // 整体的svg
-      const svg = d3
-        .select(this.$refs.root)
+      const svg = d3.select(this.$refs.root)
         .append("svg")
         .attr("width", this.width)
         .attr("height", this.height);
 
-      // linchart的纵坐标为每个主题下每个版本对应的文件数
       // 纵坐标的最大值
       var maxY = d3.max(data, topic =>
         d3.max(topic.val, version => version.val.length)
       );
+
       // x和y的比例尺
-      var y = d3
-        .scaleLinear()
+      var y = d3.scaleLinear()
         .domain([0, maxY])
         .nice()
         .range([this.height - margin.bottom, margin.top + brushHeight + gap]);
-      var x = d3
-        .scalePoint()
+      var x = d3.scalePoint()
         .domain(this.versions)
         .range([margin.left, this.width - margin.right]);
 
       // 设置linechart刻度
       this.getTickValuesOfLine(this.versions);
+      
       // x轴
       var xAxis = g =>
         g
           .attr("transform", `translate(0,${this.height - margin.bottom})`)
           .call(d3.axisBottom(x).tickValues(this.tickValues))
-          .call(g =>
-            g
-              .select(".tick:last-of-type text") // 设置x轴文字
-              .clone()
-              .attr("text-anchor", "end")
-              .attr("font-weight", "bold")
-              .attr("class", "x-label")
-              .attr("y", -10)
-              .text("versions")
-          )
-          .call((
-            g // 设置tick
-          ) =>
+          .call( g =>                           // 设置tick
             g
               .style("cursor", "default")
               .selectAll("text:not(.x-label)")
               .style("text-anchor", "end")
               .attr("dx", "-.8em")
               .attr("dy", ".15em")
-              .attr("transform", "rotate(-65)")
-          );
+              .attr("transform", "rotate(-65)"));
       // y轴
       var yAxis = g =>
         g
@@ -93,8 +78,7 @@ export default {
               .attr("x", 3)
               .attr("text-anchor", "start")
               .attr("font-weight", "bold")
-              .text("number of files")
-          );
+              .text("number of files"));
       svg
         .append("g")
         .attr("class", "axis lineaxis--x")
@@ -103,19 +87,26 @@ export default {
         .append("g")
         .attr("class", "axis lineaxis--y")
         .call(yAxis);
+      svg
+        .append("g")
+        .attr("class", "x-label")
+        .attr("transform", "translate("+(this.width-60)+","+this.height+")")
+        .append("text")
+        .text("versions")
+        .attr("text-anchor", "start")
+        .attr("font-weight", "bold")
+        .attr("font-size", "12px")
+        .attr('color', "#2c3e50")
+
 
       // 画线
       const line = d3
         .line()
-        .curve(d3.curveBasis)
+        .curve(d3.curveMonotoneX)
         .x(d => x(d.key))
-        .y(d => {
-            return y(d.val.length);  
-        })
-        // .interpolate("linear");
+        .y(d => y(d.val.length))
 
-      this.lineSvg = svg
-        .append("g")
+      this.lineSvg = svg.append("g")
         .attr("class", "line-chart")
         .attr("fill", "none")
         .attr("stroke-linejoin", "round")
@@ -126,25 +117,22 @@ export default {
         .append("path")
         .attr("class", "topic-line")
         .attr("stroke-width", 1.5)
-        .attr("d", d => {
-            return line(d.val);
-        })
-        .attr("stroke", d => {
-          return this.topicColormap(parseInt(d.key));
-        })
-        .on("click", d => {
-          // d3.event.stopPropagation()
-          // this.selectedTopic = d.key
-          // this.resetLineStatus()
-          // this.highlightLine(d.key)
-          // this.$bus.$emit('line-selected', d.key)
-        });
+        .attr("d", d => line(d.val))
+        .attr("stroke", d => this.topicColormap(parseInt(d.key)))
+        // .on("click", d => {
+        //   d3.event.stopPropagation()
+        //   this.selectedTopic = d.key
+        //   this.resetLineStatus()
+        //   this.highlightLine(d.key)
+        //   this.$bus.$emit('line-selected', d.key)
+        // });
+
       // 画版本定位辅助线
       let xOffset = 0;
       this.gridLineG = svg.append("g").attr("class", "grid-line");
       var gridLine = this.gridLineG
         .attr("fill", "none")
-        .attr("stroke-width", 3)
+        .attr("stroke-width", 2)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round")
         .attr("stroke", "black")
@@ -165,8 +153,7 @@ export default {
         });
 
       // 点击tick显示辅助线
-      svg
-        .select(".axis")
+      svg.select(".axis")
         .selectAll(".tick")
         .on("mouseenter", d => {
           gridLine.filter(ver => ver === d).attr("opacity", 0.7);
@@ -182,36 +169,35 @@ export default {
           // 点击当前选中版本表示取消选择
           if (d === this.selectedVersion) {
             this.selectedVersion = null;
-            this.$bus.$emit("version-restored", "all");
+             this.$bus.$emit('lineVersion-reseted', null);      // 取消选择当前版本
           } else {
             gridLine.filter(ver => ver === d).attr("opacity", 0.7);
             this.selectedVersion = d;
             // if(this.selectedTopic || this.selectedTopic === 0) this.selectFlag = true
-            this.$bus.$emit("version-selected", { version: d });
+            this.$bus.$emit('lineVersion-selected', d);        // 选中当前版本
           }
         });
 
-      // 点击空白处还原
-      svg.on("click", () => {
-        if (!this.selectFlag) {
-          this.resetLineStatus();
-          this.selectedTopic = null;
-          this.$bus.$emit("line-restored", {});
-        } else {
-          this.flag = false;
-        }
-      });
+      // // 点击空白处还原
+      // svg.on("click", () => {
+      //   if (!this.selectFlag) {
+      //     this.resetLineStatus();
+      //     this.selectedTopic = null;
+      //     this.$bus.$emit("line-restored", {});
+      //   } else {
+      //     this.flag = false;
+      //   }
+      // });
 
       // 添加brush的折线图
       // 设置norm显示的刻度
       this.getTickValuesOfNorm(this.normData, this.versions);
+
       const maxBrushY = d3.max(this.normData.map(d => d.val));
-      const brushY = d3
-        .scaleLinear()
+      const brushY = d3.scaleLinear()
         .domain([0, maxBrushY])
         .range([margin.top + brushHeight, margin.top]);
-      const brushX = d3
-        .scalePoint()
+      const brushX = d3.scalePoint()
         .domain(this.versions)
         .range([margin.left, this.width - margin.right]);
       var brushXAxis = g =>
@@ -223,22 +209,19 @@ export default {
             g
               .selectAll("text:not(.x-label)")
               .style("text-anchor", "middle")
-              .attr("dy", "1em")
-          );
-      svg
-        .append("g")
+              .attr("dy", "1em"));
+      svg.append("g")
         .attr("class", "axis normaxis--x")
         .call(brushXAxis);
+
       const brushLine = d3
         .line()
         .curve(d3.curveMonotoneX)
         .x(d => brushX(d.ver))
         .y(d => brushY(d.val));
-      svg
-        .append("g")
+      svg.append("g")
         .attr("class", "norm-line")
         .attr("fill", "none")
-        .attr("stroke-width", this.stokeWidth)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round")
         .append("path")
@@ -255,8 +238,7 @@ export default {
         .on("start", brushstarted.bind(this))
         .on("brush", brushed.bind(this))
         .on("end", brushended.bind(this));
-      svg
-        .append("g")
+      svg.append("g")
         .attr("class", "brush")
         .attr("transform", `translate(0,${brushY(maxBrushY)})`)
         .call(brush);
@@ -265,7 +247,7 @@ export default {
       function brushstarted() {
         gridLine.attr("opacity", 0.0);
         this.selectedVersion = null;
-        this.$bus.$emit("version-restored", "all");
+        this.$bus.$emit("lineVersion-reseted", null);
       }
 
       // 画刷结束时更新linechart
@@ -281,36 +263,21 @@ export default {
           xAxis = g =>
             g
               .call(d3.axisBottom(x).tickValues(this.tickValues))
-              .call(g =>
-                g
-                  .select(".tick:last-of-type text") // 设置x轴文字
-                  .clone()
-                  .attr("text-anchor", "end")
-                  .attr("font-weight", "bold")
-                  .attr("class", "x-label")
-                  .attr("y", -10)
-                  .text("versions")
-              )
-              .call((
-                g // 设置tick
-              ) =>
+              .call(g =>                              // 设置tick
                 g
                   .style("cursor", "default")
                   .selectAll("text:not(.x-label)")
                   .style("text-anchor", "end")
                   .attr("dx", "-.8em")
                   .attr("dy", ".15em")
-                  .attr("transform", "rotate(-65)")
-              );
+                  .attr("transform", "rotate(-65)"));
           svg.select(".lineaxis--x").call(xAxis);
 
           // 还原
           this.lineSvg = svg
             .selectAll(".topic-line")
             .data(data)
-            .attr("d", d => {
-              return line(d.val);
-            });
+            .attr("d", d => line(d.val));
 
           // 还原辅助线
           gridLine.attr("opacity", 0.0).attr("transform", d => {
@@ -341,9 +308,7 @@ export default {
             .attr("opacity", 0.0)
             .attr("transform", d => {
               let reg = /M(.*)L/;
-              let curLine = this.gridLineG.select(
-                "#grid-line-" + d.replace(/\./g, "")
-              );
+              let curLine = this.gridLineG.select("#grid-line-" + d.replace(/\./g, ""));
               let pos = reg.exec(curLine.attr("d"))[1];
               xOffset = 0 - pos.split(",")[0];
               return `translate(${xOffset},0)`;
@@ -352,9 +317,7 @@ export default {
             .filter(d => this.showVersions.indexOf(d) != -1)
             .attr("transform", d => {
               let reg = /M(.*)L/;
-              let curLine = this.gridLineG.select(
-                "#grid-line-" + d.replace(/\./g, "")
-              );
+              let curLine = this.gridLineG.select("#grid-line-" + d.replace(/\./g, ""));
               let pos = reg.exec(curLine.attr("d"))[1];
               xOffset = x(d) - pos.split(",")[0];
               return `translate(${xOffset},0)`;
@@ -362,31 +325,26 @@ export default {
         }
 
         // 重新绑定tick事件
-        svg
-          .select(".axis")
+        svg.select(".axis")
           .selectAll(".tick")
           .on("mouseenter", d => {
             gridLine.filter(ver => ver === d).attr("opacity", 0.7);
           })
           .on("mouseleave", () => {
             gridLine.attr("opacity", 0.0);
-            gridLine
-              .filter(ver => ver === this.selectedVersion)
+            gridLine.filter(ver => ver === this.selectedVersion)
               .attr("opacity", 0.7);
           })
           .on("click", d => {
             gridLine.attr("opacity", 0.0);
             if (d === this.selectedVersion) {
               this.selectedVersion = null;
-              this.$bus.$emit("version-restored", "all");
+              this.$bus.$emit("lineVersion-reseted", null);
             } else {
               gridLine.filter(ver => ver === d).attr("opacity", 0.7);
               this.selectedVersion = d;
               // if(this.selectedTopic || this.selectedTopic === 0) this.selectFlag = true
-              this.$bus.$emit("version-selected", {
-                version: d,
-                topic: this.selectedTopic
-              });
+              this.$bus.$emit("lineVersion-selected", d);
             }
           });
       }
@@ -406,32 +364,26 @@ export default {
           // 更新刻度
           this.getTickValuesOfLine(this.showVersions);
           xAxis = g =>
-            g.call(d3.axisBottom(x).tickValues(this.tickValues)).call((
-              g // 设置tick
-            ) =>
-              g
-                .style("cursor", "default")
-                .selectAll("text:not(.x-label)")
-                .style("text-anchor", "end")
-                .attr("dx", "-.8em")
-                .attr("dy", ".15em")
-                .attr("transform", "rotate(-65)")
-            );
+            g.call(d3.axisBottom(x).tickValues(this.tickValues))
+              .call(g =>                         // 设置tick
+                g
+                  .style("cursor", "default")
+                  .selectAll("text:not(.x-label)")
+                  .style("text-anchor", "end")
+                  .attr("dx", "-.8em")
+                  .attr("dy", ".15em")
+                  .attr("transform", "rotate(-65)"));
           svg.select(".lineaxis--x").call(xAxis);
           // 更新折线
           this.curData = [];
           data.forEach(topic => {
-            let item = topic.val.filter(
-              d => this.showVersions.indexOf(d.key) != -1
-            );
+            let item = topic.val.filter(d => this.showVersions.indexOf(d.key) != -1);
             this.curData.push({ key: topic.key, val: item });
           });
           this.lineSvg = svg
             .selectAll(".topic-line")
             .data(this.curData)
-            .attr("d", d => {
-              return line(d.val);
-            });
+            .attr("d", d => line(d.val));
         }
       }
     },
@@ -468,8 +420,8 @@ export default {
       // 与前后版本的差值大于均值则显示
       for (let i = 1; i < this.normData.length - 1; i++) {
         if (
-          this.normData[i].val - this.normData[i - 1].val > mean &&
-          this.normData[i].val - this.normData[i + 1].val > mean
+          this.normData[i].val - this.normData[i - 1].val > (mean+1.5) &&
+          this.normData[i].val - this.normData[i + 1].val > (mean+1.5)
         ) {
           this.showVersions.push(this.versions[i]);
         }
@@ -478,38 +430,41 @@ export default {
       this.showVersions.push(this.versions[this.normData.length - 1]);
     }
   },
-  watch: {},
   created() {
     // 当所有异步数据都获取完以后才开始渲染(类Promise.all实现)
-    const requiredData = [
-      "topicColormap",
-      "topicsGroup",
-      "versions",
-      "normData"
-    ];
+    const requiredData = ["topicColormap", "topicsGroup", "versions", "normData"];
     let cnt = 0;
     requiredData.forEach(d => {
       this.$watch(d, val => {
         if (val) cnt++;
-        if (cnt === requiredData.length) {
-          this.draw(this.topicsGroup);
-        }
+        if (cnt === requiredData.length) this.draw(this.topicsGroup);
       });
     });
   },
   mounted() {
     this.height = Math.floor(this.$refs.root.clientHeight);
     this.width = Math.floor(this.$refs.root.clientWidth);
-    this.$bus.$on("topic-selected", topicId => {
-      this.resetLineStatus();
-      this.selectedTopic = topicId;
-      if (topicId != -1) this.highlightLine(topicId);
-      else this.selectedTopic = null;
-    });
-    this.$bus.$on("version-range-selected", d => {
+    // this.$bus.$on("topic-selected", topicId => {
+    //   this.resetLineStatus();
+    //   this.selectedTopic = topicId;
+    //   if (topicId != -1) this.highlightLine(topicId);
+    //   else this.selectedTopic = null;
+    // });
+    // this.$bus.$on("version-range-selected", d => {
+    //   this.selectedVersion = null;
+    //   this.gridLineG.selectAll(".x-grid-line").attr("opacity", 0);
+    // });
+
+    // control panel响应事件
+    this.$bus.$on("curVersion-selected", d =>{
+      this.selectedVersion = d;
+      this.gridLineG.selectAll(".x-grid-line").attr("opacity", 0);
+      this.gridLineG.select("#grid-line-" + d.replace(/\./g, "")).attr("opacity", 0.7);
+    })
+    this.$bus.$on("curVersion-reseted", () =>{
       this.selectedVersion = null;
       this.gridLineG.selectAll(".x-grid-line").attr("opacity", 0);
-    });
+    })
   }
 };
 </script>

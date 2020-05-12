@@ -7,7 +7,7 @@
           v-model="libraryName"
           size="mini"
           placeholder="please select"
-          @change="selectLibraryTrigger(libraryName)"
+          @change="selectLibTrigger(libraryName)"
         >
           <el-option
             v-for="item in libraries"
@@ -18,7 +18,7 @@
         </el-select>
       </div>
       <div class="select-wrapper">
-        <div class="title">cur-version <i class="fa fa-undo" @click="resetCurVersion"></i> </div>
+        <div class="title">cur-version <i class="fa fa-undo" @click="resetCurTrigger"></i> </div>
         <el-select
           v-model="curVersion"
           size="mini"
@@ -35,7 +35,7 @@
         </el-select>
       </div>
       <div class="select-wrapper">
-        <div class="title">pre-version <i class="fa fa-undo" @click="resetPreVersion"></i> </div>
+        <div class="title">pre-version <i class="fa fa-undo" @click="resetPreTrigger"></i> </div>
         <el-select
           v-model="preVersion"
           size="mini"
@@ -77,8 +77,14 @@ export default {
   },
   props: ["versions"],
   methods: {
+    // version选中事件
     selectCurTrigger(val) {
+      this.curVersionSelected(val)
+      this.$bus.$emit('curVersion-selected', val)
+    },
+    curVersionSelected(val){
       this.preOptions = [];
+      this.curVersion = val;
       let id = this.versions.indexOf(val);
 
       // 设置preVersion的options
@@ -97,27 +103,32 @@ export default {
         this.preVersion = ''
         this.disabled = true
       }
+    },
 
-      this.$bus.$emit('curVersion-selected', val)
-    },
-    selectLibraryTrigger(val) {
+    // lib选中事件
+    selectLibTrigger(val) {
       this.libraryName = val;
-      this.$bus.$emit("library-selected", this.libraryName);
+      // this.$bus.$emit("library-selected", this.libraryName);
     },
+
+    // 版本比较事件
     compareTrigger() {
       console.log('preVersion:', this.preVersion, 'curVersion:', this.curVersion)
     },
-    resetCurVersion(){
+    
+    // version重置事件
+    resetCurTrigger(){
+      this.curVersionReseted()
+      this.$bus.$emit('curVersion-reseted', null)
+    },
+    curVersionReseted(){
       this.curVersion = ''
       this.preVersion = ''
       this.disabled = true
-
-      this.$bus.$emit('curVersion-reseted', null)
     },
-    resetPreVersion(){
+    resetPreTrigger(){
       this.preVersion = ''
       this.disabled = true
-
       this.$bus.$emit('preVersion-reseted', null)
     }
   },
@@ -137,24 +148,14 @@ export default {
           });
       });
     });
-    // this.$bus.$on("version-selected", d => {
-    //   this.curVersion = d.version;
-    //   this.selectCurTrigger(d.version);
-    //   let i = this.versions.indexOf(d.version);
-    //   // 第一个版本没有前一个版本
-    //   if (i === 0) {
-    //     this.preVersion = "";
-    //     this.disabled = true;
-    //   } else {
-    //     this.preVersion = this.versions[i - 1];
-    //     this.disabled = false;
-    //   }
-    // });
-    // this.$bus.$on("version-restored", d => {
-    //   this.preVersion = "";
-    //   this.curVersion = "";
-    //   this.disabled = true;
-    // });
+
+    // lineChart响应事件
+    this.$bus.$on("lineVersion-selected", d => {
+      this.curVersionSelected(d);
+    });
+    this.$bus.$on("lineVersion-reseted", d => {
+      this.curVersionReseted();
+    });
   }
 };
 </script>
