@@ -42,8 +42,31 @@ export default {
   methods: {
     // topic bar的点击事件
     topicBarClicked(item) {
-      this.selectedTopic = item.topicId
-      this.$bus.$emit('topic-selected', item.topicId)
+      if(item.isSelected){                   // 已选中再次点击取消
+        this.selectedTopic = null;
+        this.barData.forEach(d => {
+          if (d.value > 0){
+            d.opacity = 1; 
+            d.isSelected = false;
+          }
+        });
+        this.$bus.$emit('topic-reseted', null);
+      }else{                                 // 未选中点击选中
+        // 隐藏所有的topic bar
+        this.barData.forEach(d => {
+            d.opacity = 0.1; 
+            d.isSelected = false;
+        }) 
+        // 显示当前选中的topic bar
+        this.barData
+          .filter(d => d.topicId === item.topicId)
+          .map(d =>{
+            d.opacity = 1; 
+            d.isSelected = true
+          });
+        this.selectedTopic = item.topicId;
+        this.$bus.$emit('topic-selected', item.topicId)
+      }
     },
 
     // curVersion选中的响应事件
@@ -77,7 +100,7 @@ export default {
       });
 
       // 当前版本不存在的主题变暗 
-      this.barData.filter(d => d.value === 0).map(d => d.opacity = 0.2);
+      this.barData.filter(d => d.value === 0).map(d => d.opacity = 0.1);
       
       var widthScale = d3.scaleLinear()
         .domain([0, d3.max(this.barData, d => d.value)])
@@ -137,9 +160,18 @@ export default {
     this.$bus.$on("lineVersion-selected", d => {
       this.curVersionSelected(d);
     });
-    this.$bus.$on("lineVersion-reseted", d => {
+    this.$bus.$on("lineVersion-reseted", () => {
       this.curVersionReseted();
     });
+    this.$bus.$on("lineTopic-reseted", () => {
+      this.selectedTopic = null;
+      this.barData.forEach(d => {
+        if(d.value > 0){
+          d.opacity = 1;
+          d.isSelected = false;
+        }
+      });
+    })
   }
 
 };

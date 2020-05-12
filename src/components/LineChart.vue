@@ -119,13 +119,6 @@ export default {
         .attr("stroke-width", 1.5)
         .attr("d", d => line(d.val))
         .attr("stroke", d => this.topicColormap(parseInt(d.key)))
-        // .on("click", d => {
-        //   d3.event.stopPropagation()
-        //   this.selectedTopic = d.key
-        //   this.resetLineStatus()
-        //   this.highlightLine(d.key)
-        //   this.$bus.$emit('line-selected', d.key)
-        // });
 
       // 画版本定位辅助线
       let xOffset = 0;
@@ -178,20 +171,16 @@ export default {
           }
         });
 
-      // // 点击空白处还原
-      // svg.on("click", () => {
-      //   if (!this.selectFlag) {
-      //     this.resetLineStatus();
-      //     this.selectedTopic = null;
-      //     this.$bus.$emit("line-restored", {});
-      //   } else {
-      //     this.flag = false;
-      //   }
-      // });
+      // 点击空白处还原
+      svg.on("click", () => {
+        this.selectedTopic = null;
+        this.resetLineStatus();
+        this.$bus.$emit("lineTopic-reseted", null);
+      });
 
       // 添加brush的折线图
       // 设置norm显示的刻度
-      this.getTickValuesOfNorm(this.normData, this.versions);
+      this.getTickValuesOfNorm();
 
       const maxBrushY = d3.max(this.normData.map(d => d.val));
       const brushY = d3.scaleLinear()
@@ -229,8 +218,7 @@ export default {
         .attr("d", brushLine(this.normData));
 
       // 添加brush
-      var brush = d3
-        .brushX()
+      var brush = d3.brushX()
         .extent([
           [margin.left, 0],
           [this.width - margin.right, brushHeight]
@@ -245,9 +233,10 @@ export default {
 
       // 画刷开始时还原选择的版本
       function brushstarted() {
-        gridLine.attr("opacity", 0.0);
+        gridLine.attr("opacity", 0);
         this.selectedVersion = null;
         this.$bus.$emit("lineVersion-reseted", null);
+        this.resetLineStatus();
       }
 
       // 画刷结束时更新linechart
@@ -409,10 +398,9 @@ export default {
         this.tickValues = versions;
       }
     },
-    getTickValuesOfNorm(normData, versions) {
+    getTickValuesOfNorm() {
       // 计算norm的均值
-      let sum = 0,
-        mean = 0;
+      let sum = 0, mean = 0;
       this.normData.forEach(d => (sum += d.val));
       mean = sum / this.normData.length;
       // 默认添加第一个版本
@@ -444,16 +432,6 @@ export default {
   mounted() {
     this.height = Math.floor(this.$refs.root.clientHeight);
     this.width = Math.floor(this.$refs.root.clientWidth);
-    // this.$bus.$on("topic-selected", topicId => {
-    //   this.resetLineStatus();
-    //   this.selectedTopic = topicId;
-    //   if (topicId != -1) this.highlightLine(topicId);
-    //   else this.selectedTopic = null;
-    // });
-    // this.$bus.$on("version-range-selected", d => {
-    //   this.selectedVersion = null;
-    //   this.gridLineG.selectAll(".x-grid-line").attr("opacity", 0);
-    // });
 
     // control panel响应事件
     this.$bus.$on("curVersion-selected", d =>{
@@ -464,7 +442,19 @@ export default {
     this.$bus.$on("curVersion-reseted", () =>{
       this.selectedVersion = null;
       this.gridLineG.selectAll(".x-grid-line").attr("opacity", 0);
+      this.resetLineStatus();
     })
+
+    // topic bar响应事件
+    this.$bus.$on("topic-selected", d => {
+      this.resetLineStatus();
+      this.selectedTopic = d;
+      this.highlightLine(d);
+    });
+    this.$bus.$on('topic-reseted', () =>{
+      this.resetLineStatus();
+      this.selectedTopic = null;
+    });
   }
 };
 </script>
