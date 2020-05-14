@@ -78,8 +78,6 @@ export default {
         'weight': d.weight, 
         'color': fontColor
       }))
-      console.log('selected topic:', d, topicWords)
-      
       this.draw(topicWords)
     })
    

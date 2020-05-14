@@ -17,8 +17,7 @@ export default {
       showVersions: [],
       selectedVersion: null,
       selectedTopic: null,
-      tickValues: [],
-      selectFlag: false
+      tickValues: []
     };
   },
   props: ["topicColormap", "topicsGroup", "versions", "normData"],
@@ -166,7 +165,6 @@ export default {
           } else {
             gridLine.filter(ver => ver === d).attr("opacity", 0.7);
             this.selectedVersion = d;
-            // if(this.selectedTopic || this.selectedTopic === 0) this.selectFlag = true
             this.$bus.$emit('lineVersion-selected', d);        // 选中当前版本
           }
         });
@@ -332,7 +330,6 @@ export default {
             } else {
               gridLine.filter(ver => ver === d).attr("opacity", 0.7);
               this.selectedVersion = d;
-              // if(this.selectedTopic || this.selectedTopic === 0) this.selectFlag = true
               this.$bus.$emit("lineVersion-selected", d);
             }
           });
@@ -428,12 +425,8 @@ export default {
         if (cnt === requiredData.length) this.draw(this.topicsGroup);
       });
     });
-  },
-  mounted() {
-    this.height = Math.floor(this.$refs.root.clientHeight);
-    this.width = Math.floor(this.$refs.root.clientWidth);
 
-    // control panel响应事件
+     // control panel响应事件
     this.$bus.$on("curVersion-selected", d =>{
       this.selectedVersion = d;
       this.gridLineG.selectAll(".x-grid-line").attr("opacity", 0);
@@ -455,6 +448,10 @@ export default {
       this.resetLineStatus();
       this.selectedTopic = null;
     });
+  },
+  mounted() {
+    this.height = Math.floor(this.$refs.root.clientHeight);
+    this.width = Math.floor(this.$refs.root.clientWidth);
   }
 };
 </script>

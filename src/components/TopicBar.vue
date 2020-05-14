@@ -182,11 +182,11 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 10px 5px;
+  padding: 5px 5px;
   cursor: default;
   font-size: 14px;
   .topic-bar-wrapper {
-    margin-top: 10px;
+    margin-top: 11px;
     overflow: auto;
     display: flex;
     align-items: center;

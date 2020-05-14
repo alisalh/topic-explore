@@ -20,45 +20,32 @@
       ></word-cloud>
     </div>
     <div class="center-panel">
-      <div class="first-row">
+      <div class="first-row bl-card-shadow">
         <line-chart
           :topicColormap="topicColormap"
           :topicsGroup="topicsGroup"
           :versions="versions"
           :normData="normData"
-          class="bl-card-shadow"
         ></line-chart>
       </div>
       <div class="second-row">
-        <sunburst
+        <file-tree
           class="bl-card-shadow"
           :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           :versions="versions"
-        ></sunburst>
+        ></file-tree>
         <scatter-plot
-          class="bl-card-shadow"
+         class="bl-card-shadow"
           :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           :topicData="topicData"
         ></scatter-plot>
       </div>
     </div>
-    <div class="right-panel">
-      <code-wrapper class="bl-card-shadow"></code-wrapper>
-      <parallel-coordinates
-        :topicColormap="topicColormap"
-        :docData="docVerData&&docVerData.files"
-        :topicData="topicData"
-        class="bl-card-shadow"
-      ></parallel-coordinates>
+    <div class="right-panel bl-card-shadow">
+      <code-wrapper></code-wrapper>
     </div>
-    <aspect-tip
-      :topicColormap="topicColormap"
-      :topicData="topicData"
-      :docData="docVerData&&docVerData.files"
-      class="bl-card-shadow"
-    ></aspect-tip>
   </div>
 </template>
 
@@ -67,13 +54,13 @@ import * as d3 from "d3";
 import _ from "lodash";
 import LineChart from "./components/LineChart.vue";
 // import ThemeRiver from "./components/ThemeRiver.vue";
-import Sunburst from "./components/SunBurst.vue";
+import FileTree from "./components/FileTree.vue";
 import WordCloud from './components/WordCloud.vue'
 import TopicBar from "./components/TopicBar.vue";
 import ScatterPlot from "./components/ScatterPlot.vue";
 import CodeWrapper from "./components/CodeWrapper.vue";
 import ArgsWrapper from "./components/ArgsWrapper.vue";
-import AspectTip from "./components/AspectTip.vue";
+// import AspectTip from "./components/AspectTip.vue";
 import ParallelCoordinates from "./components/ParallelCoordinates.vue";
 import { TOPIC_COLOR } from "./utils/constant.js";
 import { groupBy, getVersion, getRelPath } from "./utils/index.js";
@@ -98,13 +85,13 @@ export default {
   components: {
     LineChart,
     // ThemeRiver,
-    Sunburst,
+    FileTree,
     WordCloud,
     TopicBar,
     ScatterPlot,
     CodeWrapper,
     ArgsWrapper,
-    AspectTip,
+    // AspectTip,
     ParallelCoordinates
   },
   computed: {
@@ -296,9 +283,10 @@ html {
     .second-row {
       flex: 1.3;
       display: flex;
-      margin-top: 5px;
+      margin-top: 3px;
       overflow: auto;
-      .sunburst {
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
+      .file-tree {
         flex: 1.5;
         margin-right: 3px;
       }

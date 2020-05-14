@@ -114,6 +114,7 @@ export default {
     // 版本比较事件
     compareTrigger() {
       console.log('preVersion:', this.preVersion, 'curVersion:', this.curVersion)
+      this.$bus.$emit("version-compared", {preVer: this.preVersion, curVer: this.curVersion})
     },
     
     // version重置事件

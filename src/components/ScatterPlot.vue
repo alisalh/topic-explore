@@ -882,4 +882,7 @@ export default {
 </script>
 
 <style lang="less">
+.scatter-plot{
+  height: 100%;
+}
 </style>
