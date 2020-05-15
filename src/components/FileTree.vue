@@ -45,6 +45,13 @@ export default {
       var root = d3.hierarchy(data, d => d.children);
       root.x0 = width / 2, root.y0 = 0;
 
+      // topic节点下最大的文件数
+      var maxFileNum = d3.max(root.descendants().filter(d => d.data.type == 'topic'), 
+        topic => topic.children.length);
+      var rScale = d3.scaleLinear()
+        .domain([1, maxFileNum])
+        .range([25, 169])
+
       // 为文件夹节点添加collapse事件
       root.children.forEach(collapse);
       update(root);
@@ -74,47 +81,66 @@ export default {
           .append('g')
           .attr('class', 'node')
           .attr('transform', 'translate('+source.x0+','+source.y0+')')
-          .on('click', click);
+          .on('click', d => {
+            click(d)
+            nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
+            nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+          });
         
         // 插入新增node
-        nodeEnter.append('text')
-          .attr('class', 'node-logo')
-          .attr('font-family', 'FontAwesome')
-          .attr('font-size', '20px')
-          .attr('dx', '-0.5em')
-          .attr('dy', '0.5em')
+        nodeEnter.each(d =>{
+          if(d.data.type == 'topic'){
+            nodeEnter.filter(node => node == d)
+              .append('circle')
+              .attr('class', 'node-circle')
+          }
+          else{
+            nodeEnter.filter(node => node == d)
+              .append('text')
+              .attr('class', 'node-logo')
+          }
+        }) 
+
+        // 插入节点的label
+        nodeEnter.filter(d => d.data.type == 'dir')
+          .append('text')
+          .attr('class', 'node-text')
+          .attr('font-size', '10px')
+          .attr('dy', '-0.7em')
+          .text(d => d.data.name.slice(d.data.name.lastIndexOf('/')+1))
+          .style("text-anchor", "middle")
+          .attr('opacity', 0)
 
         // 更新进入的node
         var nodeUpdate = nodeEnter.merge(node);
         nodeUpdate.transition()
           .duration(750)
           .attr('transform', d => 'translate('+d.x+','+d.y+')')
-          .on('end', function(d) {
-              if(d.data.type == 'dir'){
-                nodeEnter.filter(node => node == d).append('text')
-                  .attr('class', 'node-text')
-                  .attr('font-size', '10px')
-                  .attr('dy', '-0.5em')
-                  .text(d.data.name.slice(d.data.name.lastIndexOf('/')+1))
-                  .style("text-anchor", "middle")
-              }
+          .on('end', function() {
+            nodeEnter.filter(d => d.children)
+              .select('.node-text')
+              .attr('opacity', 1) 
           });
         nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
-          .attr('font-size', '20px')
+          .attr('font-size', d =>{
+            if(d.data.type == 'topic') return fontScale(d.data.children.length)+'px'
+            else return '20px'
+          })
           .attr('dx', '-0.5em')
           .attr('dy', '0.5em')
           .style('fill', d => {
             if(d.data.type == 'dir') return '#F5C175'
             if(d.data.type == 'file') return vm.topicColormap(d.data.topic)
-            if(d.data.type == 'topic') return vm.topicColormap(d.data.topicId)
           })
           .text(d => { 
             if(d.data.type == 'dir') return "\uf07b" 
             if(d.data.type == 'file') return "\uf1c9"
-            if(d.data.type == 'topic') return "\uf111"
           })
-        
+        nodeUpdate.select('.node-circle')
+          .attr('r', d => Math.sqrt(rScale(d.data.children.length)))
+          .style('fill', d => vm.topicColormap(d.data.topicId))
+
         // 删除退出的node
         var nodeExit = node.exit().transition()
           .duration(750)
@@ -122,11 +148,12 @@ export default {
           .remove()
         nodeExit.select('.node-logo') 
           .attr('font-size', '0px')
-        nodeExit.select('.node-text') 
-          .attr('font-size', '0px')
-          .attr('fill-opacity', 0)
-        
-
+        // nodeExit.select('.node-text') 
+        //   .attr('font-size', '0px')
+        //   .attr('opacity', 0)
+        nodeExit.select('.node-circle') 
+          .attr('r', 0)
+      
         // link数据
         var link = svg.selectAll('path.link')
           .data(links, d => d.id)
@@ -184,7 +211,7 @@ export default {
       d3.select('.pre-tree>*').remove();
       let vm = this
 
-      var margin = {top: 20, right: 10, bottom: 15, left: 10},
+      var margin = {top: 20, right: 10, bottom: 20, left: 10},
         width = this.preWidth - margin.left - margin.right,
         height = this.preHeight - margin.top - margin.bottom;
       
@@ -198,6 +225,13 @@ export default {
       var treemap = d3.tree().size([width, height]);
       var root = d3.hierarchy(data, d => d.children);
       root.x0 = width / 2, root.y0 = 0;
+
+      // topic节点下最大的文件数
+      var maxFileNum = d3.max(root.descendants().filter(d => d.data.type == 'topic'), 
+        topic => topic.children.length);
+      var rScale = d3.scaleLinear()
+        .domain([1, maxFileNum])
+        .range([25, 169])
 
       // 为文件夹节点添加collapse事件
       root.children.forEach(collapse);
@@ -228,44 +262,79 @@ export default {
           .append('g')
           .attr('class', 'node')
           .attr('transform', 'translate('+source.x0+','+(height-source.y0)+')')
-          .on('click', click);
+          .on('click', d => {
+            click(d)
+            nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
+            nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+          });
         
         // 插入新增node
-        nodeEnter.append('text')
-          .attr('font-family', 'FontAwesome')
-          .attr('font-size', '20px')
-          .attr('dx', '-0.3em')
-          .attr('dy', '0.2em')
+        nodeEnter.each(d =>{
+          if(d.data.type == 'topic'){
+            nodeEnter.filter(node => node == d)
+              .append('circle')
+              .attr('class', 'node-circle')
+          }
+          else{
+            nodeEnter.filter(node => node == d)
+              .append('text')
+              .attr('class', 'node-logo')
+          }
+        }) 
+
+        // 插入节点的label
+        nodeEnter.filter(d => d.data.type == 'dir')
+          .append('text')
+          .attr('class', 'node-text')
+          .attr('font-size', '10px')
+          .attr('dy', '1.8em')
+          .text(d => d.data.name.slice(d.data.name.lastIndexOf('/')+1))
+          .style("text-anchor", "middle")
+          .attr('opacity', 0)
 
         // 更新进入的node
         var nodeUpdate = nodeEnter.merge(node);
         nodeUpdate.transition()
           .duration(750)
-          .attr('transform', d => 'translate('+d.x+','+(height-d.y)+')');
-        nodeUpdate.select('text')
+          .attr('transform', d => 'translate('+d.x+','+(height-d.y)+')')
+          .on('end', function() {
+            nodeEnter.filter(d => d.children)
+              .select('.node-text')
+              .attr('opacity', 1) 
+          });
+        nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
-          .attr('font-size', '20px')
-          .attr('dx', '-0.3em')
-          .attr('dy', '0.2em')
+          .attr('font-size', d =>{
+            if(d.data.type == 'topic') return fontScale(d.data.children.length)+'px'
+            else return '20px'
+          })
+          .attr('dx', '-0.5em')
+          .attr('dy', '0.5em')
           .style('fill', d => {
             if(d.data.type == 'dir') return '#F5C175'
             if(d.data.type == 'file') return vm.topicColormap(d.data.topic)
-            if(d.data.type == 'topic') return vm.topicColormap(d.data.topicId)
           })
           .text(d => { 
             if(d.data.type == 'dir') return "\uf07b" 
             if(d.data.type == 'file') return "\uf1c9"
-            if(d.data.type == 'topic') return "\uf111"
           })
-        
+        nodeUpdate.select('.node-circle')
+          .attr('r', d => Math.sqrt(rScale(d.data.children.length)))
+          .style('fill', d => vm.topicColormap(d.data.topicId))
+
         // 删除退出的node
         var nodeExit = node.exit().transition()
           .duration(750)
           .attr('transform', 'translate('+source.x+','+(height-source.y)+')')
           .remove()
-        nodeExit.select('text') 
+        nodeExit.select('.node-logo') 
           .attr('font-size', '0px')
-
+        // nodeExit.select('.node-text') 
+        //   .attr('font-size', '0px')
+        //   .attr('opacity', 0)
+        nodeExit.select('.node-circle') 
+          .attr('r', 0)
+        
         // link数据
         var link = svg.selectAll('path.link')
           .data(links, d => d.id)
