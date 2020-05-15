@@ -1,18 +1,18 @@
 <template>
   <div class="topic-bar">
     <div v-for="item in barData" :key="item.id" class="topic-bar-wrapper">
-      <div class="idx" :style="{opacity:item.opacity}">{{item.topicId+1}}</div>
-      <div class="bar">
-        <div 
-          :style="{background: item.color, opacity: item.opacity, width:item.value+'px', height: '100%'}"
-          @click="topicBarClicked(item)"
-        ></div>
-      </div>
+      <!-- <div class="idx" :style="{opacity:item.opacity}">{{item.topicId+1}}</div> -->
       <div class="text" :style="{opacity:item.opacity}">
         <input
           type="text"
           v-model="topics[item.topicId]"
           style="width: 72px; height: 15px; color: #4B4949; border: none; padding-left: 2px; font-family: Avenir, Helvetica, Arial, sans-serif; font-size: 14px;"/>
+      </div>
+      <div class="bar">
+        <div 
+          :style="{background: item.color, opacity: item.opacity, width:item.value+'px', height: '100%'}"
+          @click="topicBarClicked(item)"
+        ></div>
       </div>
     </div>
   </div>
@@ -190,20 +190,21 @@ export default {
     overflow: auto;
     display: flex;
     align-items: center;
-    .idx {
-      flex: 0.7;
-      text-align: right;
-      margin-right: 5px;
-    }
+    // .idx {
+    //   flex: 0.7;
+    //   text-align: right;
+    //   margin-right: 5px;
+    // }
     .bar {
-      flex: 5;
+      flex: 2;
       height: 8px;
       margin-left: 3px;
       margin-right: 5px;
     }
     .text {
-      flex: 3;
+      flex: 1;
       text-align: left;
+      margin-left: 10px;
     }
   }
 }

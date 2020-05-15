@@ -1,6 +1,7 @@
 <template>
   <div class="file-tree" ref="root">
     <div class="cur-tree" ref="root1"></div>
+    <div class="move-line" ref="root3"></div>
     <div class="pre-tree" ref="root2"></div>
   </div>
 </template>
@@ -29,10 +30,10 @@ export default {
       d3.select('.cur-tree>*').remove();
       let vm = this
 
-      var margin = {top: 20, right: 15, bottom: 20, left: 15},
+      var margin = {top: 20, right: 10, bottom: 15, left: 10},
         width = this.curWidth - margin.left - margin.right,
         height = this.curHeight - margin.top - margin.bottom;
-      
+
       var svg = d3.select(".cur-tree").append("svg")
         .attr("width", this.curWidth)
         .attr("height", this.curHeight)
@@ -43,7 +44,6 @@ export default {
       var treemap = d3.tree().size([width, height]);
       var root = d3.hierarchy(data, d => d.children);
       root.x0 = width / 2, root.y0 = 0;
-      var maxDepth = d3.max(root.leaves(), d => d.depth);
 
       // 为文件夹节点添加collapse事件
       root.children.forEach(collapse);
@@ -65,8 +65,6 @@ export default {
           nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
 
-        nodes.forEach(d => d.y = d.depth * (height/maxDepth) - 10);
-
         // node数据
         var node = svg.selectAll('g.node')
           .data(nodes, d => { return d.id || (d.id = ++nodeId)});
@@ -80,6 +78,7 @@ export default {
         
         // 插入新增node
         nodeEnter.append('text')
+          .attr('class', 'node-logo')
           .attr('font-family', 'FontAwesome')
           .attr('font-size', '20px')
           .attr('dx', '-0.5em')
@@ -89,14 +88,24 @@ export default {
         var nodeUpdate = nodeEnter.merge(node);
         nodeUpdate.transition()
           .duration(750)
-          .attr('transform', d => 'translate('+d.x+','+d.y+')');
-        nodeUpdate.select('text')
+          .attr('transform', d => 'translate('+d.x+','+d.y+')')
+          .on('end', function(d) {
+              if(d.data.type == 'dir'){
+                nodeEnter.filter(node => node == d).append('text')
+                  .attr('class', 'node-text')
+                  .attr('font-size', '10px')
+                  .attr('dy', '-0.5em')
+                  .text(d.data.name.slice(d.data.name.lastIndexOf('/')+1))
+                  .style("text-anchor", "middle")
+              }
+          });
+        nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
           .attr('font-size', '20px')
           .attr('dx', '-0.5em')
           .attr('dy', '0.5em')
           .style('fill', d => {
-            if(d.data.type == 'dir') return '#f19309'
+            if(d.data.type == 'dir') return '#F5C175'
             if(d.data.type == 'file') return vm.topicColormap(d.data.topic)
             if(d.data.type == 'topic') return vm.topicColormap(d.data.topicId)
           })
@@ -111,8 +120,12 @@ export default {
           .duration(750)
           .attr('transform', 'translate('+source.x+','+source.y+')')
           .remove()
-        nodeExit.select('text') 
+        nodeExit.select('.node-logo') 
           .attr('font-size', '0px')
+        nodeExit.select('.node-text') 
+          .attr('font-size', '0px')
+          .attr('fill-opacity', 0)
+        
 
         // link数据
         var link = svg.selectAll('path.link')
@@ -171,7 +184,7 @@ export default {
       d3.select('.pre-tree>*').remove();
       let vm = this
 
-      var margin = {top: 5, right: 15, bottom: 30, left: 15},
+      var margin = {top: 20, right: 10, bottom: 15, left: 10},
         width = this.preWidth - margin.left - margin.right,
         height = this.preHeight - margin.top - margin.bottom;
       
@@ -185,7 +198,6 @@ export default {
       var treemap = d3.tree().size([width, height]);
       var root = d3.hierarchy(data, d => d.children);
       root.x0 = width / 2, root.y0 = 0;
-      var maxDepth = d3.max(root.leaves(), d => d.depth);
 
       // 为文件夹节点添加collapse事件
       root.children.forEach(collapse);
@@ -207,8 +219,6 @@ export default {
           nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
 
-        nodes.forEach(d => d.y = height - d.depth * (height/maxDepth) + 10);
-
         // node数据
         var node = svg.selectAll('g.node')
           .data(nodes, d => { return d.id || (d.id = ++nodeId)});
@@ -217,7 +227,7 @@ export default {
         var nodeEnter = node.enter()
           .append('g')
           .attr('class', 'node')
-          .attr('transform', 'translate('+source.x0+','+source.y0+')')
+          .attr('transform', 'translate('+source.x0+','+(height-source.y0)+')')
           .on('click', click);
         
         // 插入新增node
@@ -231,14 +241,14 @@ export default {
         var nodeUpdate = nodeEnter.merge(node);
         nodeUpdate.transition()
           .duration(750)
-          .attr('transform', d => 'translate('+d.x+','+d.y+')');
+          .attr('transform', d => 'translate('+d.x+','+(height-d.y)+')');
         nodeUpdate.select('text')
           .attr('font-family', 'FontAwesome')
           .attr('font-size', '20px')
           .attr('dx', '-0.3em')
           .attr('dy', '0.2em')
           .style('fill', d => {
-            if(d.data.type == 'dir') return '#f19309'
+            if(d.data.type == 'dir') return '#F5C175'
             if(d.data.type == 'file') return vm.topicColormap(d.data.topic)
             if(d.data.type == 'topic') return vm.topicColormap(d.data.topicId)
           })
@@ -251,7 +261,7 @@ export default {
         // 删除退出的node
         var nodeExit = node.exit().transition()
           .duration(750)
-          .attr('transform', 'translate('+source.x+','+source.y+')')
+          .attr('transform', 'translate('+source.x+','+(height-source.y)+')')
           .remove()
         nodeExit.select('text') 
           .attr('font-size', '0px')
@@ -291,10 +301,10 @@ export default {
       }
 
       function diagonal(s, d){
-        var path = `M ${d.x} ${d.y}
-                    C ${d.x + 15} ${d.y - 30},
-                      ${s.x - 15} ${s.y + 30},
-                      ${s.x} ${s.y}`
+        var path = `M ${d.x} ${height-d.y}
+                    C ${d.x + 15} ${(height-d.y) - 30},
+                      ${s.x - 15} ${(height-s.y) + 30},
+                      ${s.x} ${height-s.y}`
         return path
       }
 
@@ -311,13 +321,14 @@ export default {
     }
   },
   created() {
+    // control panel响应事件
     this.$bus.$on('curVersion-selected', d =>{
       this.curVersion = d
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: d})
         .then(({data}) => {
-          console.log('curVersion file hierarchy:', data)
           this.drawCurTree(data)
+          d3.select('.pre-tree>*').remove();
         })
     })
     this.$bus.$on('version-compared', d =>{
@@ -325,11 +336,32 @@ export default {
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: this.preVersion})
         .then(({data}) => {
-          console.log('preVersion file hierarchy:', data)
           this.drawPreTree(data)
         })
     })
-   
+    this.$bus.$on("curVersion-reseted", () =>{
+      this.curVersion = null
+      this.preVersion = null
+      d3.select('.cur-tree>*').remove();
+      d3.select('.pre-tree>*').remove();
+    })
+
+    // lineChart响应事件
+    this.$bus.$on("lineVersion-selected", d => {
+      this.curVersion = d
+      this.$axios
+        .get("topics/getFileHierarchyByVersion", {version: d})
+        .then(({data}) => {
+          this.drawCurTree(data)
+          d3.select('.pre-tree>*').remove();
+        })
+    });
+    this.$bus.$on("lineVersion-reseted", d => {
+      this.curVersion = null
+      this.preVersion = null
+      d3.select('.cur-tree>*').remove();
+      d3.select('.pre-tree>*').remove();
+    });
   },
   mounted() {
     this.curHeight = Math.floor(this.$refs.root1.clientHeight);
@@ -346,7 +378,7 @@ export default {
   display: flex;
   flex-direction: column;
   .cur-tree{
-    flex: 1;
+    flex: 3;
     .link{
       fill: none;
       stroke: #ccc;
@@ -354,12 +386,15 @@ export default {
     }
   }
   .pre-tree{
-    flex: 1;
+    flex: 3;
     .link{
       fill: none;
       stroke: #ccc;
       stroke-width: 2px;
     }
+  }
+  .move-line{
+    flex: 1;
   }
 }
 </style>
