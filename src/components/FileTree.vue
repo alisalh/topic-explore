@@ -21,6 +21,7 @@ export default {
      preWidth: 0,
      preHeight: 0,
      preVersion: null,
+     selectedTopic: -1,
     };
   },
   computed: {},
@@ -106,7 +107,7 @@ export default {
           .append('text')
           .attr('class', 'node-text')
           .attr('font-size', '10px')
-          .attr('dy', '-0.7em')
+          .attr('dy', '-0.8em')
           .text(d => d.data.name.slice(d.data.name.lastIndexOf('/')+1))
           .style("text-anchor", "middle")
           .attr('opacity', 0)
@@ -136,6 +137,20 @@ export default {
           .text(d => { 
             if(d.data.type == 'dir') return "\uf07b" 
             if(d.data.type == 'file') return "\uf1c9"
+          })
+         .attr('stroke', d =>{
+            if(vm.selectedTopic != -1){
+              if(d.data.type == 'dir' && 
+                d.data.topics.indexOf(vm.selectedTopic) != -1) 
+                return vm.topicColormap(vm.selectedTopic)
+            }
+          })
+          .attr('stroke-width', d =>{
+            if(vm.selectedTopic != -1){
+              if(d.data.type == 'dir' && 
+                d.data.topics.indexOf(vm.selectedTopic) != -1) 
+                return 3
+            }
           })
         nodeUpdate.select('.node-circle')
           .attr('r', d => Math.sqrt(rScale(d.data.children.length)))
@@ -287,7 +302,7 @@ export default {
           .append('text')
           .attr('class', 'node-text')
           .attr('font-size', '10px')
-          .attr('dy', '1.8em')
+          .attr('dy', '1.3em')
           .text(d => d.data.name.slice(d.data.name.lastIndexOf('/')+1))
           .style("text-anchor", "middle")
           .attr('opacity', 0)
@@ -309,7 +324,7 @@ export default {
             else return '20px'
           })
           .attr('dx', '-0.5em')
-          .attr('dy', '0.5em')
+          .attr('dy', '0.2em')
           .style('fill', d => {
             if(d.data.type == 'dir') return '#F5C175'
             if(d.data.type == 'file') return vm.topicColormap(d.data.topic)
@@ -387,7 +402,7 @@ export default {
         }
         update(d); 
       }
-    }
+    },
   },
   created() {
     // control panel响应事件
@@ -421,6 +436,7 @@ export default {
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: d})
         .then(({data}) => {
+          console.log('fileHierarchyData:', data)
           this.drawCurTree(data)
           d3.select('.pre-tree>*').remove();
         })
@@ -430,6 +446,30 @@ export default {
       this.preVersion = null
       d3.select('.cur-tree>*').remove();
       d3.select('.pre-tree>*').remove();
+    });
+
+    // topic bar响应事件
+    this.$bus.$on("topic-selected", d => {
+      this.selectedTopic = d
+      d3.selectAll(".node-logo").attr('stroke', node =>{
+        if(this.selectedTopic != -1){
+          if(node.data.type == 'dir' && 
+             node.data.topics.indexOf(this.selectedTopic) != -1) 
+            return this.topicColormap(this.selectedTopic)
+        }
+      })
+      .attr('stroke-width', node =>{
+        if(this.selectedTopic != -1){
+          if(node.data.type == 'dir' && 
+             node.data.topics.indexOf(this.selectedTopic) != -1) 
+            return 3
+        }
+      })
+    });
+    this.$bus.$on('topic-reseted', () =>{
+      this.selectedTopic = -1
+      d3.selectAll(".node-logo").attr('stroke', 'none')
+      .attr('stroke-width', 0)
     });
   },
   mounted() {
@@ -463,7 +503,7 @@ export default {
     }
   }
   .move-line{
-    flex: 1;
+    flex: 1.2;
   }
 }
 </style>
