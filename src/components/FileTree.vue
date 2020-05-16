@@ -163,12 +163,11 @@ export default {
           .remove()
         nodeExit.select('.node-logo') 
           .attr('font-size', '0px')
-        // nodeExit.select('.node-text') 
-        //   .attr('font-size', '0px')
-        //   .attr('opacity', 0)
         nodeExit.select('.node-circle') 
           .attr('r', 0)
-      
+        nodeExit.select('.node-text') 
+          .attr('font-size', '0px')
+          .attr('opacity', 0)
         // link数据
         var link = svg.selectAll('path.link')
           .data(links, d => d.id)
@@ -333,6 +332,20 @@ export default {
             if(d.data.type == 'dir') return "\uf07b" 
             if(d.data.type == 'file') return "\uf1c9"
           })
+          .attr('stroke', d =>{
+            if(vm.selectedTopic != -1){
+              if(d.data.type == 'dir' && 
+                d.data.topics.indexOf(vm.selectedTopic) != -1) 
+                return vm.topicColormap(vm.selectedTopic)
+            }
+          })
+          .attr('stroke-width', d =>{
+            if(vm.selectedTopic != -1){
+              if(d.data.type == 'dir' && 
+                d.data.topics.indexOf(vm.selectedTopic) != -1) 
+                return 3
+            }
+          })
         nodeUpdate.select('.node-circle')
           .attr('r', d => Math.sqrt(rScale(d.data.children.length)))
           .style('fill', d => vm.topicColormap(d.data.topicId))
@@ -344,11 +357,11 @@ export default {
           .remove()
         nodeExit.select('.node-logo') 
           .attr('font-size', '0px')
-        // nodeExit.select('.node-text') 
-        //   .attr('font-size', '0px')
-        //   .attr('opacity', 0)
         nodeExit.select('.node-circle') 
           .attr('r', 0)
+        nodeExit.select('.node-text') 
+          .attr('font-size', '0px')
+          .attr('opacity', 0)
         
         // link数据
         var link = svg.selectAll('path.link')
@@ -408,6 +421,7 @@ export default {
     // control panel响应事件
     this.$bus.$on('curVersion-selected', d =>{
       this.curVersion = d
+      this.selectedTopic = -1
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: d})
         .then(({data}) => {
@@ -426,6 +440,7 @@ export default {
     this.$bus.$on("curVersion-reseted", () =>{
       this.curVersion = null
       this.preVersion = null
+      this.selectedTopic = -1
       d3.select('.cur-tree>*').remove();
       d3.select('.pre-tree>*').remove();
     })
@@ -433,6 +448,7 @@ export default {
     // lineChart响应事件
     this.$bus.$on("lineVersion-selected", d => {
       this.curVersion = d
+      this.selectedTopic = -1
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: d})
         .then(({data}) => {
