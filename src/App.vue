@@ -32,6 +32,7 @@
         <file-tree
           class="bl-card-shadow"
           :topicColormap="topicColormap"
+          :docData="docVerData&&docVerData.files"
         ></file-tree>
         <scatter-plot
          class="bl-card-shadow"
@@ -75,7 +76,7 @@ export default {
       prevDocs: null,
       normData: null,
       editFileIds: null,
-      libraryName: "vue",
+      libraryName: "d3",
       flag: false, // true向后台请求数据
       docTopics: null
     };
@@ -118,7 +119,7 @@ export default {
           console.log('topicData:', this.topicData)
         });
         this.$axios.get("topics/getAllDocs", {}).then(({ data }) => {
-          this.docVerData = data;
+          this.docVerData = data;   //包含file信息和version信息
           this.topicsGroup = this.getTopicsGroup(this.docVerData.files);
           console.log('topicsGroup:', this.topicsGroup)
         });

@@ -82,6 +82,8 @@ export default {
       this.curVersionSelected(val)
       this.$bus.$emit('curVersion-selected', val)
     },
+    selectPreTrigger(val){
+    },
     curVersionSelected(val){
       this.preOptions = [];
       this.curVersion = val;
