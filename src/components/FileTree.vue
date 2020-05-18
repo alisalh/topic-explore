@@ -18,16 +18,24 @@ export default {
      curHeight: 0,
      curVersion: null,
      curTreeData:null,
+     curLeaves: null,
+     curDepth: -1,
      preWidth: 0,
      preHeight: 0,
      preVersion: null,
      preTreeData: null,
+     preLeaves: null,
+     preDepth: -1,
+     mWidth: 0,
+     mHeight: 0,
+     mSvg: null,
      diffData: null,
      selectedTopic: -1,
+     allEditIds: null
     };
   },
   computed: {},
-  props: ["topicColormap", "docData"],
+  props: ["topicColormap"],
   methods: {
     drawCurTree(data){
       d3.select('.cur-tree>*').remove();
@@ -468,6 +476,9 @@ export default {
         var treeData = treemap(root),
           nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
+        
+        vm.curDepth = d3.max(nodes, d => d.depth)
+        vm.curLeaves = nodes
 
         // node数据
         var node = svg.selectAll('g.node')
@@ -673,6 +684,9 @@ export default {
         var treeData = treemap(root),
           nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
+        
+        vm.preDepth = d3.max(nodes,  d => d.depth)
+        vm.preLeaves = nodes
 
         // node数据
         var node = svg.selectAll('g.node')
@@ -836,10 +850,30 @@ export default {
         update(d); 
       }
     },
+    drawMoveLine(data){
+      // 绘制连线
+      var mSvg = d3.select('.move-line')
+        .append('svg')
+        .attr('width', this.mWidth)
+        .attr('height', this.mHeight)
+        .append('g')
+        .attr('transform', 'translate('+10+',0)')
+      for(let i=0; i<data.length; i++){
+        mSvg.append('line')
+          .attr('x1', data[i][0])
+          .attr('y1', data[i][1])
+          .attr('x2', data[i][2])
+          .attr('y2', data[i][3])
+          .attr('stroke', 'black')
+          .attr('stroke-width', 1.5)
+          .attr('stroke-dasharray', '6, 6')
+      }
+    },
     dataAdapter(){
       let addIds = this.diffData.add,
         delIds = this.diffData.del,
         editIds = this.diffData.edit;
+      this.allEditIds = editIds;
       let vm = this;
 
       insertDiffType(this.curTreeData)
@@ -854,7 +888,7 @@ export default {
             }
           }
           else{
-            let id = vm.docData.find(d => d.filename == root.children[i].name).id
+            let id = root.children[i].id
             let diff = null
             if(addIds.indexOf(id) != -1) diff = 'add'
             if(delIds.indexOf(id) != -1) diff = 'del'
@@ -886,6 +920,90 @@ export default {
           this.drawCurTree(data)
           d3.select('.pre-tree>*').remove();
         })
+    },
+  },
+  watch: {
+    curLeaves(val){
+      d3.select('.move-line >*').remove()
+      var points = [], newPoints = []
+      this.curLeaves.filter(curd => curd.depth == this.curDepth)
+        .forEach(curd =>{
+          for(let i=0; i<curd.data.fileIds.length; i++){
+            let cur = this.allEditIds.find(d => 
+              d[1] == curd.data.fileIds[i] 
+              && d[2] == "move");
+            if(cur){
+              this.preLeaves.filter(pred => pred.depth == this.preDepth)
+                .forEach(pred => {
+                  for(let j=0; j<pred.data.fileIds.length; j++){
+                    let pre = this.allEditIds.find(d => 
+                      d[0] == pred.data.fileIds[j] 
+                      && d[1] == cur[1]
+                      && d[2] == "move");
+                    if(pre){
+                      points.push([pred.x, this.mHeight, curd.x, 0])
+                      newPoints.push([pred.x, this.mHeight, curd.x, 0])
+                    }
+                  }
+                })
+            }
+          }
+        })
+      
+      // 去重
+      for(let i=0; i<points.length; i++){
+        for(let j=i+1; j<points.length; j++){
+          if(points[i][0] == points[j][0] &&
+            points[i][1] == points[j][1] &&
+            points[i][2] == points[j][2] &&
+            points[i][3] == points[j][3]){
+              delete newPoints[j]     // delete后元素变为undefined
+            }
+        }
+      }
+      newPoints = newPoints.filter(d => d)
+      this.drawMoveLine(newPoints)
+    }, 
+    preLeaves(val){
+      d3.select('.move-line >*').remove()
+      var points = [], newPoints = []
+      this.preLeaves.filter(pred => pred.depth == this.preDepth)
+        .forEach(pred =>{
+          for(let i=0; i<pred.data.fileIds.length; i++){
+            let pre = this.allEditIds.find(d => 
+              d[0] == pred.data.fileIds[i] 
+              && d[2] == "move");
+            if(pre){
+              this.curLeaves.filter(curd => curd.depth == this.curDepth)
+                .forEach(curd => {
+                  for(let j=0; j<curd.data.fileIds.length; j++){
+                    let cur = this.allEditIds.find(d => 
+                      d[0] == pre[0]
+                      && d[1] == curd.data.fileIds[j] 
+                      && d[2] == "move");
+                    if(cur){
+                      points.push([pred.x, this.mHeight, curd.x, 0])
+                      newPoints.push([pred.x, this.mHeight, curd.x, 0])
+                    }
+                  }
+                })
+            }
+          }
+        })
+      
+      // 去重
+      for(let i=0; i<points.length; i++){
+        for(let j=i+1; j<points.length; j++){
+          if(points[i][0] == points[j][0] &&
+            points[i][1] == points[j][1] &&
+            points[i][2] == points[j][2] &&
+            points[i][3] == points[j][3]){
+              delete newPoints[j]     // delete后元素变为undefined
+            }
+        }
+      }
+      newPoints = newPoints.filter(d => d)
+      this.drawMoveLine(newPoints)
     }
   },
   created() {
@@ -951,6 +1069,8 @@ export default {
     this.curWidth = Math.floor(this.$refs.root1.clientWidth);
     this.preHeight = Math.floor(this.$refs.root2.clientHeight);
     this.preWidth = Math.floor(this.$refs.root2.clientWidth);
+    this.mWidth = Math.floor(this.$refs.root3.clientWidth);
+    this.mHeight = Math.floor(this.$refs.root3.clientHeight) - 10;
   }
 };
 </script>

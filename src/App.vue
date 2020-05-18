@@ -32,7 +32,6 @@
         <file-tree
           class="bl-card-shadow"
           :topicColormap="topicColormap"
-          :docData="docVerData&&docVerData.files"
         ></file-tree>
         <scatter-plot
          class="bl-card-shadow"

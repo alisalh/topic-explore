@@ -135,9 +135,6 @@ export default {
       this.$bus.$emit('preVersion-reseted', null)
     }
   },
-  watch: {
-    
-  },
   created() {
     const requiredData = ["versions"];
     let cnt = 0;
