@@ -31,14 +31,14 @@ export default {
      mSvg: null,
      diffData: null,
      selectedTopic: -1,
-     allEditIds: null
+     allEditIds: null,
+     linePoints: null
     };
   },
   computed: {},
   props: ["topicColormap"],
   methods: {
     drawCurTree(data){
-      d3.select('.cur-tree>*').remove();
       let vm = this
 
       var margin = {top: 20, right: 10, bottom: 15, left: 10},
@@ -56,9 +56,6 @@ export default {
       var root = d3.hierarchy(data, d => d.children);
       root.x0 = width / 2, root.y0 = 0;
 
-      // // topic节点下最大的文件数
-      // var maxFileNum = d3.max(root.descendants().filter(d => d.data.type == 'topic'), 
-      //   topic => topic.children.length);
       var rScale = d3.scaleLinear()  
         .domain([1, 34])      // d3中topic节点下最大的文件数为34
         .range([16, 169])
@@ -131,10 +128,14 @@ export default {
         nodeUpdate.transition()
           .duration(750)
           .attr('transform', d => 'translate('+d.x+','+d.y+')')
-          .on('end', function() {
-            nodeEnter.filter(d => d.children)
-              .select('.node-text')
-              .attr('opacity', 1) 
+          .on('end', function(d, i) {
+            // 绑定在最后一个transition上
+            if(i == nodes.length - 1){
+              nodeEnter.filter(d => d.children)
+                .select('.node-text')
+                .attr('opacity', 1) 
+            }
+           
           });
         nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
@@ -235,205 +236,6 @@ export default {
         update(d); 
       }
     },
-    drawPreTree(data){
-      d3.select('.pre-tree>*').remove();
-      let vm = this
-
-      var margin = {top: 20, right: 10, bottom: 20, left: 10},
-        width = this.preWidth - margin.left - margin.right,
-        height = this.preHeight - margin.top - margin.bottom;
-      
-      var svg = d3.select(".pre-tree").append("svg")
-        .attr("width", this.preWidth)
-        .attr("height", this.preHeight)
-        .append('g')
-        .attr('class', 'nodes-links')
-        .attr('transform', 'translate('+margin.left+','+margin.top+')');
-
-      var treemap = d3.tree().size([width, height]);
-      var root = d3.hierarchy(data, d => d.children);
-      root.x0 = width / 2, root.y0 = 0;
-
-      // // topic节点下最大的文件数
-      // var maxFileNum = d3.max(root.descendants().filter(d => d.data.type == 'topic'), 
-      //   topic => topic.children.length);
-      var rScale = d3.scaleLinear()
-        .domain([1, 34])     
-        .range([16, 169])
-
-      // 为文件夹节点添加collapse事件
-      root.children.forEach(collapse);
-      update(root);
-
-      // 节点id
-      var nodeId = 0;
-
-      function collapse(d){
-        if(d.children){
-          d._children = d.children;
-          d._children.forEach(collapse)
-          d.children = null
-        }
-      }
-
-      function update(source){
-        var treeData = treemap(root),
-          nodes = treeData.descendants(),
-          links = treeData.descendants().slice(1);
-
-        // node数据
-        var node = svg.selectAll('g.node')
-          .data(nodes, d => { return d.id || (d.id = ++nodeId)});
-        
-        // 为每一个新增的node添加g
-        var nodeEnter = node.enter()
-          .append('g')
-          .attr('class', 'node')
-          .attr('transform', 'translate('+source.x0+','+(height-source.y0)+')')
-          .on('click', d => {
-            click(d)
-            nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
-            nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
-          });
-        
-        // 插入新增node
-        nodeEnter.each(d =>{
-          if(d.data.type == 'topic'){
-            nodeEnter.filter(node => node == d)
-              .append('circle')
-              .attr('class', 'node-circle')
-          }
-          else{
-            nodeEnter.filter(node => node == d)
-              .append('text')
-              .attr('class', 'node-logo')
-          }
-        }) 
-
-        // 插入节点的label
-        nodeEnter.filter(d => d.data.type == 'dir')
-          .append('text')
-          .attr('class', 'node-text')
-          .attr('font-size', '10px')
-          .attr('dy', '1.3em')
-          .text(d => {
-            let dirName = d.data.name.slice(d.data.name.lastIndexOf('/')+1)
-            if (dirName == 'src') return dirName + ' (' + d.data.version + ')'
-            else return dirName
-          })
-          .style("text-anchor", "middle")
-          .attr('opacity', 0)
-
-        // 更新进入的node
-        var nodeUpdate = nodeEnter.merge(node);
-        nodeUpdate.transition()
-          .duration(750)
-          .attr('transform', d => 'translate('+d.x+','+(height-d.y)+')')
-          .on('end', function() {
-            nodeEnter.filter(d => d.children)
-              .select('.node-text')
-              .attr('opacity', 1) 
-          });
-        nodeUpdate.select('.node-logo')
-          .attr('font-family', 'FontAwesome')
-          .attr('font-size', d =>{
-            if(d.data.type == 'topic') return fontScale(d.data.children.length)+'px'
-            else return '20px'
-          })
-          .attr('dx', '-0.5em')
-          .attr('dy', '0.2em')
-          .style('fill', d => {
-            if(d.data.type == 'dir') return '#F5C175'
-            if(d.data.type == 'file') return vm.topicColormap(d.data.topic)
-          })
-          .text(d => { 
-            if(d.data.type == 'dir') return "\uf07b" 
-            if(d.data.type == 'file') return "\uf1c9"
-          })
-          .attr('stroke', d =>{
-            if(vm.selectedTopic != -1){
-              if(d.data.type == 'dir' && 
-                d.data.topics.indexOf(vm.selectedTopic) != -1) 
-                return vm.topicColormap(vm.selectedTopic)
-            }
-          })
-          .attr('stroke-width', d =>{
-            if(vm.selectedTopic != -1){
-              if(d.data.type == 'dir' && 
-                d.data.topics.indexOf(vm.selectedTopic) != -1) 
-                return 3
-            }
-          })
-        nodeUpdate.select('.node-circle')
-          .attr('r', d => Math.sqrt(rScale(d.data.children.length)))
-          .style('fill', d => vm.topicColormap(d.data.topicId))
-
-        // 删除退出的node
-        var nodeExit = node.exit().transition()
-          .duration(750)
-          .attr('transform', 'translate('+source.x+','+(height-source.y)+')')
-          .remove()
-        nodeExit.select('.node-logo') 
-          .attr('font-size', '0px')
-        nodeExit.select('.node-circle') 
-          .attr('r', 0)
-        nodeExit.select('.node-text') 
-          .attr('font-size', '0px')
-          .attr('opacity', 0)
-        
-        // link数据
-        var link = svg.selectAll('path.link')
-          .data(links, d => d.id)
-        
-        // 为每一条新增的link添加g
-        var linkEnter = link.enter().insert('path', 'g')
-          .attr('class', 'link')
-          .attr('d', d => {
-            let p = {x: source.x0, y: source.y0}
-            return diagonal(p, p)    // link的平滑transition
-          })
-        
-        // 更新新增的link
-        var linkUpdate = linkEnter.merge(link);
-        linkUpdate.transition()
-          .duration(750)
-          .attr('d', d => diagonal(d, d.parent))
-
-        // 删除退出的link
-        var linkExit = link.exit().transition()
-          .duration(750)
-          .attr('d', d => {
-            let p = {x: source.x, y: source.y}
-            return diagonal(p, p)
-          })
-          .remove()
-        
-        // 保存node的位置
-        nodes.forEach(d => {
-          d.x0 = d.x;
-          d.y0 = d.y;
-        }) 
-      }
-
-      function diagonal(s, d){
-        var path = `M ${d.x} ${height-d.y}
-                    C ${d.x + 15} ${(height-d.y) - 30},
-                      ${s.x - 15} ${(height-s.y) + 30},
-                      ${s.x} ${height-s.y}`
-        return path
-      }
-
-      function click(d) {
-        if (d.children) {
-          d._children = d.children;
-          d.children = null;
-        } else {
-          d.children = d._children;
-          d._children = null;
-        }
-        update(d); 
-      }
-    },
     drawCurTreeCompared(data){
       d3.select('.cur-tree>*').remove();
       let vm = this
@@ -490,6 +292,7 @@ export default {
           .attr('class', 'node')
           .attr('transform', 'translate('+source.x0+','+source.y0+')')
           .on('click', d => {
+            d3.selectAll('.move-lines path').attr('opacity', 0)
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
@@ -533,10 +336,13 @@ export default {
         nodeUpdate.transition()
           .duration(750)
           .attr('transform', d => 'translate('+d.x+','+d.y+')')
-          .on('end', function() {
-            nodeEnter.filter(d => d.children)
-              .select('.node-text')
-              .attr('opacity', 1) 
+          .on('end', function(d, i) {
+            if(i == nodes.length - 1){
+              nodeEnter.filter(d => d.children)
+                .select('.node-text')
+                .attr('opacity', 1) 
+              vm.updateMoveLine(vm.linePoints)
+            }
           });
         nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
@@ -566,10 +372,8 @@ export default {
           })
           .text(d => {
             let showText = ""
-            for(let i=0; i<d.data.diffs.length; i++){
-              if(d.data.diffs[i] == 'add') showText += "\uf067"
-              if(d.data.diffs[i] == 'move') showText += "\uf062"
-            }
+            if(d.data.diffs.indexOf('add') != -1) showText += "\uf067"
+            if(d.data.diffs.indexOf('move') != -1) showText += "\uf062"
             return showText
           })
           .style("text-anchor", "middle")
@@ -698,6 +502,7 @@ export default {
           .attr('class', 'node')
           .attr('transform', 'translate('+source.x0+','+(height-source.y0)+')')
           .on('click', d => {
+            d3.selectAll('.move-lines path').attr('opacity', 0)
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
@@ -741,10 +546,13 @@ export default {
         nodeUpdate.transition()
           .duration(750)
           .attr('transform', d => 'translate('+d.x+','+(height-d.y)+')')
-          .on('end', function() {
-            nodeEnter.filter(d => d.children)
-              .select('.node-text')
-              .attr('opacity', 1) 
+          .on('end', function(d, i) {
+            if(i == nodes.length - 1){
+              nodeEnter.filter(d => d.children)
+                .select('.node-text')
+                .attr('opacity', 1) 
+              vm.updateMoveLine(vm.linePoints)
+            }
           });
         nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
@@ -774,10 +582,8 @@ export default {
           })
           .text(d => {
             let showText = ""
-            for(let i=0; i<d.data.diffs.length; i++){
-              if(d.data.diffs[i] == 'del') showText += "\uf068"
-              if(d.data.diffs[i] == 'move') showText += "\uf062"
-            }
+            if(d.data.diffs.indexOf('del') != -1) showText += "\uf068"
+            if(d.data.diffs.indexOf('move') != -1) showText += "\uf062"
             return showText
           })
           .style("text-anchor", "middle")
@@ -850,24 +656,25 @@ export default {
         update(d); 
       }
     },
-    drawMoveLine(data){
-      // 绘制连线
-      var mSvg = d3.select('.move-line')
-        .append('svg')
-        .attr('width', this.mWidth)
-        .attr('height', this.mHeight)
-        .append('g')
-        .attr('transform', 'translate('+10+',0)')
-      for(let i=0; i<data.length; i++){
-        mSvg.append('line')
-          .attr('x1', data[i][0])
-          .attr('y1', data[i][1])
-          .attr('x2', data[i][2])
-          .attr('y2', data[i][3])
-          .attr('stroke', 'black')
-          .attr('stroke-width', 1.5)
-          .attr('stroke-dasharray', '6, 6')
-      }
+    updateMoveLine(data){
+      d3.selectAll('.move-lines path').attr('opacity', 1)
+
+      // line数据
+      var line = this.mSvg.selectAll('path.line')
+        .data(data, d => d)
+    
+      var lineEnter = line.enter().insert('path', 'g')
+        .attr('class', 'line')
+        .attr('d', d =>{
+          return `M ${d[0]} ${d[1]}
+                  L ${d[2]} ${d[3]}`
+        })
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1.5)
+        .attr('stroke-dasharray', '6, 6')
+        .attr('opacity', 1)
+
+      var lineExit = line.exit().remove()
     },
     dataAdapter(){
       let addIds = this.diffData.add,
@@ -906,25 +713,27 @@ export default {
       this.preVersion = null
       this.curTreeData = null
       this.preTreeData = null
+      this.curDepth = -1
+      this.preDepth = -1
+      this.linePoints = null
       this.selectedTopic = -1
       d3.select('.cur-tree>*').remove();
       d3.select('.pre-tree>*').remove();
+      d3.select('.move-line g>*').remove();
     },
     curVersionSelected(d){
+      this.clearDataAndView()
       this.curVersion = d
-      this.selectedTopic = -1
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: d})
         .then(({data}) => {
           this.curTreeData = data
           this.drawCurTree(data)
-          d3.select('.pre-tree>*').remove();
         })
     },
   },
   watch: {
     curLeaves(val){
-      d3.select('.move-line >*').remove()
       var points = [], newPoints = []
       this.curLeaves.filter(curd => curd.depth == this.curDepth)
         .forEach(curd =>{
@@ -962,10 +771,9 @@ export default {
         }
       }
       newPoints = newPoints.filter(d => d)
-      this.drawMoveLine(newPoints)
+      this.linePoints = newPoints
     }, 
     preLeaves(val){
-      d3.select('.move-line >*').remove()
       var points = [], newPoints = []
       this.preLeaves.filter(pred => pred.depth == this.preDepth)
         .forEach(pred =>{
@@ -1003,7 +811,7 @@ export default {
         }
       }
       newPoints = newPoints.filter(d => d)
-      this.drawMoveLine(newPoints)
+      this.linePoints = newPoints
     }
   },
   created() {
@@ -1017,6 +825,7 @@ export default {
     this.$bus.$on('version-compared', d =>{
       this.preVersion = d.preVer
       d3.select('.cur-tree>*').remove();
+      d3.select('.move-line g>*').remove();
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: this.preVersion})
         .then(({data}) => {
@@ -1070,7 +879,15 @@ export default {
     this.preHeight = Math.floor(this.$refs.root2.clientHeight);
     this.preWidth = Math.floor(this.$refs.root2.clientWidth);
     this.mWidth = Math.floor(this.$refs.root3.clientWidth);
-    this.mHeight = Math.floor(this.$refs.root3.clientHeight) - 10;
+    this.mHeight = Math.floor(this.$refs.root3.clientHeight) - 20;
+
+     this.mSvg = d3.select('.move-line')
+        .append('svg')
+        .attr('width', this.mWidth)
+        .attr('height', this.mHeight)
+        .append('g')
+        .attr('class', 'move-lines')
+        .attr('transform', 'translate('+10+',0)')
   }
 };
 </script>
