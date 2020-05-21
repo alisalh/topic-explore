@@ -4,6 +4,7 @@
 
 <script>
 import * as d3 from "d3";
+import * as d3Lasso from "d3-lasso"
 import { CLUSTER_COLOR } from "../utils/constant.js";
 import TSNE from 'tsne-js';
 
@@ -19,9 +20,7 @@ export default {
       curVersion: null,
       diffData: null,
       diffVecs: [],
-      startPoint: null,
-      endPoint: null,
-      drawAreaFlag: false
+      selectedDiffs: []
     };
   },
   props: ["docData", "topicColormap"],
@@ -129,54 +128,20 @@ export default {
         .attr('font-size', '10px')
         .style('fill', d => this.topicColormap(d.topic))
 
-      var area = svg.append('g')
-        .attr('class', 'area')
-        .append('circle')
-        .attr('cx', 0)
-        .attr('cy', 0)
-        .attr('r', 0)
-        .attr('fill', '#babdb6')
-        .attr('opacity', '0.6')
-
-      svg
-        .on('mousedown', function() {
-          this.startPoint = d3.mouse(this)
-          this.drawAreaFlag = true
-          area.transition().duration(20)
-            .attr('cx', this.startPoint[0])
-            .attr('cy', this.startPoint[1])
+      var lasso = d3Lasso.lasso()
+        .items(d3.selectAll('.marker')) 
+        .targetArea(d3.select('.scatter-plot'))
+        .on('start', function(){
+          vm.selectedDiffs = []
         })
-        .on('mousemove', function() {
-          if(!this.drawAreaFlag) return
-          this.endPoint = d3.mouse(this)
-          let dx = this.endPoint[0] - this.startPoint[0],
-            dy = this.endPoint[1] - this.startPoint[1],
-            cx = (this.startPoint[0] + this.endPoint[0]) / 2,
-            cy = (this.startPoint[1] + this.endPoint[1]) / 2
-          area.transition().duration(20)
-            .attr('cx', cx)
-            .attr('cy', cy)
-            .attr('r', Math.sqrt(dx*dx + dy*dy) / 2)
-        })
-        .on('mouseup', function(){
-          this.drawAreaFlag = false
-          this.endPoint = d3.mouse(this)
-          let cx = (this.startPoint[0] + this.endPoint[0]) / 2,
-            cy = (this.startPoint[1] + this.endPoint[1]) / 2,
-            dx = this.endPoint[0] - this.startPoint[0],
-            dy = this.endPoint[1] - this.startPoint[1],
-            r = Math.sqrt(dx*dx + dy*dy) / 2
-          
-          let selectedDiffs = []
-          marker.each(d =>{
-            let x = xScale(d.point.x), y = yScale(d.point.y)
-            let dist = Math.sqrt((x-cx)*(x-cx) + (y-cy)*(y-cy)) / 2
-            if(dist <= r) {
-              selectedDiffs.push(d)
-            }
+        .on('end', function(){
+          lasso.selectedItems().each(d => {
+            vm.selectedDiffs.push(d.id ? d.id : d.curId)
           })
-          // vm.$bus.$emit('diffs-selected', selectedDiffs)
+          vm.$bus.$emit('selected-diffs-show', vm.selectedDiffs)
         })
+
+      svg.call(lasso)
     }
   },
   created() {
@@ -213,5 +178,11 @@ export default {
 <style lang="less">
 .scatter-plot{
   height: 100%;
+  .lasso path{
+    fill: #00bbbb;
+    fill-opacity: 0.1;
+    stroke: #00b0bb;
+    stroke-dasharray: 3,3;
+  }
 }
 </style>

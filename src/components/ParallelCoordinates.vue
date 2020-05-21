@@ -74,7 +74,7 @@ export default {
         .data(data)
         .enter()
         .append('path')
-        .attr('class', 'line')
+        .attr('class', 'p-line')
         .attr('d', d => d3.line()(d.vec.map((p,i) => [xScale(i), yScale(p)])))
         .style('fill', 'none')
         .attr('stroke', d => this.topicColormap(d.topic))
@@ -90,6 +90,20 @@ export default {
     this.$bus.$on('diffs-show', d =>{
       this.draw(d)
     })
+
+    this.$bus.$on('selected-diffs-show', d =>{
+      if(d.length == 0)
+        d3.selectAll('.p-line').attr('opacity', 1)
+      else{
+        d3.selectAll('.p-line').attr('opacity', 0)
+        d3.selectAll('.p-line').filter(line => {
+          let id = line.id ? line.id : line.curId
+          return d.indexOf(id) != -1
+        }).attr('opacity', 1)
+      }
+    })
+
+    
   }
 };
 </script>

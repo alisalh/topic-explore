@@ -13,6 +13,7 @@
     "csv": "^4.0.0",
     "d3": "^5.7.0",
     "d3-cloud": "^1.2.5",
+    "d3-lasso": "github:skokenes/d3-lasso",
     "d3-tip": "^0.9.1",
     "element-ui": "^2.4.10",
     "font-awesome": "^4.7.0",

@@ -290,7 +290,7 @@ html {
         display: flex;
         flex-direction: column;
         .scatter-plot{
-          flex: 1.4;
+          flex: 1.5;
         }
         .parallel-coordinates{
           flex: 1;
