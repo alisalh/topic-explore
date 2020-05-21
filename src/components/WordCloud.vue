@@ -56,7 +56,7 @@ export default {
         .append('text')
         .style('font-size', d => d.size + 'px')
         .style('font-family', d => d.font)
-        .style('fill', d => d.color)
+        .style('fill', 'black')
         .attr('text-anchor', 'middle')
         .attr('transform', d => 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')')
         .text(d => d.text)

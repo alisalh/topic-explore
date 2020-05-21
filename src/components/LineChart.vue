@@ -96,8 +96,7 @@ export default {
         .attr("font-weight", "bold")
         .attr("font-size", "12px")
         .attr('color', "#2c3e50")
-
-
+        
       // 画线
       const line = d3
         .line()

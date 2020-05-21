@@ -93,6 +93,10 @@ export default {
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+            // 添加点击文件显示代码事件
+            if(d.data.type == 'file'){
+              console.log(d.data.name)
+            }
           });
         
         // 插入新增node
@@ -122,6 +126,8 @@ export default {
           })
           .style("text-anchor", "middle")
           .attr('opacity', 0)
+        
+        nodeEnter.append('title').text(d => d.data.name.slice(d.data.name.lastIndexOf('/')+1))
 
         // 更新进入的node
         var nodeUpdate = nodeEnter.merge(node);
@@ -296,6 +302,10 @@ export default {
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+            // 添加点击文件显示代码事件
+            if(d.data.type == 'file'){
+              console.log(d.data.id, d.data.moveId, d.data.name)
+            }
           });
         
         // 插入新增node
@@ -330,6 +340,8 @@ export default {
           })
           .style("text-anchor", "middle")
           .attr('opacity', 0)
+        
+        nodeEnter.append('title').text(d => d.data.name.slice(d.data.name.lastIndexOf('/')+1))
 
         // 更新进入的node
         var nodeUpdate = nodeEnter.merge(node);
@@ -506,6 +518,10 @@ export default {
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+            // 添加点击文件显示代码事件
+            if(d.data.type == 'file'){
+              console.log(d.data.id, d.data.moveId, d.data.name)
+            }
           });
         
         // 插入新增node
@@ -540,6 +556,8 @@ export default {
           })
           .style("text-anchor", "middle")
           .attr('opacity', 0)
+        
+         nodeEnter.append('title').text(d => d.data.name.slice(d.data.name.lastIndexOf('/')+1))
 
         // 更新进入的node
         var nodeUpdate = nodeEnter.merge(node);
@@ -669,7 +687,7 @@ export default {
           return `M ${d[0]} ${d[1]}
                   L ${d[2]} ${d[3]}`
         })
-        .attr('stroke', 'black')
+        .attr('stroke', 'gray')
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '6, 6')
         .attr('opacity', 1)
@@ -699,7 +717,14 @@ export default {
             let diff = null
             if(addIds.indexOf(id) != -1) diff = 'add'
             if(delIds.indexOf(id) != -1) diff = 'del'
-            if(editIds.find(d => d.indexOf(id) != -1 && d.indexOf('move')!=-1)) diff = 'move'
+
+            // 判断是否是移动文件并保存对应文件id
+            let item = editIds.find(d => d.indexOf(id) != -1 && d.indexOf('move')!=-1)
+            if(item){
+              diff = 'move'
+              root.children[i]['moveId'] = item[0] == id ? item[1] : item[0]
+            } 
+
             if(diff){
               root.children[i].diffs.push(diff)
               if(root.diffs.indexOf(diff) == -1) root.diffs.push(diff)
@@ -719,7 +744,7 @@ export default {
       this.selectedTopic = -1
       d3.select('.cur-tree>*').remove();
       d3.select('.pre-tree>*').remove();
-      d3.select('.move-line g>*').remove();
+      d3.selectAll('.move-lines path').remove();
     },
     curVersionSelected(d){
       this.clearDataAndView()

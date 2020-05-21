@@ -28,17 +28,21 @@
           :normData="normData"
         ></line-chart>
       </div>
-      <div class="second-row">
+      <div class="second-row bl-card-shadow">
         <file-tree
-          class="bl-card-shadow"
           :topicColormap="topicColormap"
         ></file-tree>
-        <scatter-plot
-         class="bl-card-shadow"
-          :topicColormap="topicColormap"
-          :docData="docVerData&&docVerData.files"
-          :topicData="topicData"
-        ></scatter-plot>
+        <div class="cluster">
+          <scatter-plot
+            :docData="docVerData&&docVerData.files"
+            :topicColormap="topicColormap"
+          ></scatter-plot>
+          <parallel-coordinates
+            :topicNum="topicNum"
+            :topicColormap="topicColormap"
+          >
+          </parallel-coordinates>
+        </div>
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
@@ -51,14 +55,12 @@
 import * as d3 from "d3";
 import _ from "lodash";
 import LineChart from "./components/LineChart.vue";
-// import ThemeRiver from "./components/ThemeRiver.vue";
 import FileTree from "./components/FileTree.vue";
 import WordCloud from './components/WordCloud.vue'
 import TopicBar from "./components/TopicBar.vue";
 import ScatterPlot from "./components/ScatterPlot.vue";
 import CodeWrapper from "./components/CodeWrapper.vue";
 import ArgsWrapper from "./components/ArgsWrapper.vue";
-// import AspectTip from "./components/AspectTip.vue";
 import ParallelCoordinates from "./components/ParallelCoordinates.vue";
 import { TOPIC_COLOR } from "./utils/constant.js";
 import { groupBy, getVersion, getRelPath } from "./utils/index.js";
@@ -77,19 +79,16 @@ export default {
       editFileIds: null,
       libraryName: "d3",
       flag: false, // true向后台请求数据
-      docTopics: null
     };
   },
   components: {
     LineChart,
-    // ThemeRiver,
     FileTree,
     WordCloud,
     TopicBar,
     ScatterPlot,
     CodeWrapper,
     ArgsWrapper,
-    // AspectTip,
     ParallelCoordinates
   },
   computed: {
@@ -119,6 +118,7 @@ export default {
         });
         this.$axios.get("topics/getAllDocs", {}).then(({ data }) => {
           this.docVerData = data;   //包含file信息和version信息
+          console.log("docData:", this.docVerData.files)
           this.topicsGroup = this.getTopicsGroup(this.docVerData.files);
           console.log('topicsGroup:', this.topicsGroup)
         });
@@ -162,7 +162,6 @@ export default {
     },
     // 版本排序
     verCompare({ key: a }, { key: b }) {
-      // console.log(a)
       let arr = a.split(".").map(d => parseInt(d));
       let brr = b.split(".").map(d => parseInt(d));
       for (let i = 0, len = arr.length; i < len; i++) {
@@ -214,9 +213,6 @@ export default {
     }
   },
   created() {
-    // this.$bus.$on('version-selected', selectedVer => {
-    //   this.fileGroup = this.groupFileByStatus(selectedVer)
-    // })
     this.$bus.$on("library-selected", lib => {
       this.libraryName = lib;
       this.$axios
@@ -285,11 +281,20 @@ html {
       overflow: auto;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
       .file-tree {
-        flex: 1.5;
-        margin-right: 3px;
+        flex: 1.2;
+        border-right: 5px solid #ececec;
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, .2);
       }
-      .scatter-plot {
+      .cluster {
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        .scatter-plot{
+          flex: 1.4;
+        }
+        .parallel-coordinates{
+          flex: 1;
+        }
       }
     }
   }
