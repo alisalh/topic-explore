@@ -1,6 +1,9 @@
 <template>
     <div class="code-wrapper" ref="root">
-        <code-diff id="diff-lines" 
+        <div id="curtitle" v-html="curtitle"></div>
+        <div id="pretitle" v-html="pretitle"></div>
+        <div id="cur-code" style="visibility: hidden" v-highlight v-html="curCode"></div>
+        <code-diff id="diff-code" style="visibility: hidden"
             :old-string="oldCode"
             :new-string="newCode"
             :context="10"/>
@@ -9,23 +12,54 @@
 
 <script>
 import * as d3 from 'd3'
-import { getRelPathWithVersion } from '../utils/index.js'
 export default {
     name: 'component_name',
     data() {
         return{
             newCode: '',
             oldCode: '',
-            height: 0,
-            width: 0
+            curCode: '',
+            curtitle: '',
+            pretitle: ''
         }
     },
     created(){
-        this.$bus.$on('doc-selected', filename => {
-            this.$axios.get('topics/getCode', {filename: filename}).then(({ data }) => {
-                this.oldCode = ''
-                this.newCode = data
+        this.$bus.$on('file-selected', d =>{
+            d3.select('#diff-code').style('visibility', 'hidden')
+            d3.select('#cur-code').style('visibility', 'visible')
+            this.newCode = ''
+            this.oldCode = ''
+            this.curCode = ''
+            this.curtitle = ''
+            this.pretitle = ''
+
+            this.$axios.get('topics/getFileContent', {
+                curName: d
+            }).then(({ data }) => {
+                this.curtitle = d.replace('../Data/d3/d3-all-versions/', '')
+                this.curCode = `<pre><code>${data.curCode}</code></pre>`
             })
+        })
+        this.$bus.$on('compared-file-selected', d => {
+            d3.select('#cur-code').style('visibility', 'hidden')
+            d3.select('#diff-code').style('visibility', 'visible')
+            this.newCode = ''
+            this.oldCode = ''
+            this.curCode = ''
+            this.curtitle = ''
+            this.pretitle = ''
+
+            let curName = d.curName, preName = d.preName
+            this.$axios.get('topics/getFileContent', {
+                curName: curName, preName: preName
+            }).then(({ data }) => {
+                if(curName)
+                    this.curtitle = curName.replace('../Data/d3/d3-all-versions/', '')
+                if(preName)
+                    this.pretitle = preName.replace('../Data/d3/d3-all-versions/', '')
+                this.newCode = data.curCode
+                this.oldCode = data.preCode
+            }) 
         })
     }
 }
@@ -35,7 +69,21 @@ export default {
 .code-wrapper{
     height: 100%;
     font-weight: bold;
-    #diff-lines{
+    font-size: 15px;
+    #curtitle{
+        padding-top: 5px;
+        background: #eee;
+        text-align: center;
+    }
+    #pretitle{
+        padding: 5px;
+        background: #eee;
+        text-align: center;
+    }
+    #cur-code{
+        padding: 10px;
+    }
+    #diff-code{
         .d2h-file-wrapper{
             margin-bottom: 0cm;
         }

@@ -31,6 +31,7 @@
       <div class="second-row bl-card-shadow">
         <file-tree
           :topicColormap="topicColormap"
+          :docData="docVerData&&docVerData.files"
         ></file-tree>
         <div class="cluster">
           <scatter-plot
@@ -77,7 +78,7 @@ export default {
       prevDocs: null,
       normData: null,
       editFileIds: null,
-      libraryName: "d3",
+      libraryName: "vue",
       flag: false, // true向后台请求数据
     };
   },
@@ -130,36 +131,6 @@ export default {
     }
   },
   methods: {
-    /**
-     * 根据选中的版本获取将文件分为：修改的、新增的、删除的
-     */
-    groupFileByStatus(curVer) {
-      const docs = this.docVerData.files;
-      const versions = this.docVerData.versions;
-      const prevVer = this.getRelVersion(versions, curVer, -1);
-      const curDocs = docs.filter(d => getVersion(d.filename) === curVer);
-      this.prevDocs = docs.filter(d => getVersion(d.filename) === prevVer);
-      this.prevVer = prevVer;
-      let addDocs = _.differenceBy(curDocs, this.prevDocs, d =>
-        getRelPath(d["filename"], this.libraryName)
-      );
-      let delDocs = _.differenceBy(this.prevDocs, curDocs, d =>
-        getRelPath(d["filename"], this.libraryName)
-      );
-      // 同名文件视为编辑状态
-      const editDocsObj = _.groupBy(this.prevDocs.concat(curDocs), d =>
-        getRelPath(d["filename"], this.libraryName)
-      );
-      return {
-        addDocs,
-        delDocs,
-        editDocsObj
-      };
-    },
-    getRelVersion(versions, curVer, step) {
-      const idx = versions.indexOf(curVer);
-      return versions[idx + step];
-    },
     // 版本排序
     verCompare({ key: a }, { key: b }) {
       let arr = a.split(".").map(d => parseInt(d));
@@ -175,39 +146,28 @@ export default {
     // 按照主题对文件进行分组
     getTopicsGroup(rawData) {
       rawData.forEach(d => (d["main_topic"] = parseInt(d["main_topic"])));
-      let topicsGroup = groupBy(rawData, "main_topic");
+      let topicsGroup = groupBy(rawData, "main_topic");                                  //按主题分类文件
       let verReg = new RegExp(this.libraryName + "-(\\d*\\.\\d*\\.\\d*)");
-      var minTopic = [], maxTopic = [];
-      topicsGroup.forEach(d => {
-        d.val = groupBy(d.val, d => d.filename.match(verReg)[1]).sort(this.verCompare);
-        minTopic.push({key: d.val[0].key});
-        maxTopic.push({key: d.val[d.val.length - 1].key});
-      });
-      for (let ii = 0; ii < this.versions.length; ii++) {
-        var version = {key: this.versions[ii]};
-        var index = 0;
-        topicsGroup.forEach(node => {
-          if (
-            this.verCompare(version, minTopic[index]) == 1 &&
-            this.verCompare(version, maxTopic[index]) == -1
-          ) {
-            var flag = false;
-            for (let i = 0; i < node.val.length; i++) {
-              if (node.val[i].key == version.key) {
-                flag = true;
-                break;
-              }
-            }
-            if (!flag) {
-              var obj = { key: version.key, val: [] };
-              node.val.push(obj);
+
+      topicsGroup.forEach(topic => {
+        topic.val = groupBy(topic.val, d => d.filename.match(verReg)[1]).sort(this.verCompare);  //按版本分类文件   
+        let minVer = topic.val[0].key, 
+          maxVer = topic.val[topic.val.length - 1].key,
+          verNum = this.versions.length
+        
+        // 缺少版本数据
+        if(topic.val.length != verNum){
+          let start = this.versions.indexOf(minVer),
+            end = this.versions.indexOf(maxVer)
+          for(let i=start+1; i<=end-1; i++){
+            let curVer = this.versions[i]
+            if(!topic.val.find(ver => ver.key == curVer)){
+              topic.val.push({key: curVer, val: []});
             }
           }
-          index++;
-        });
-      }
-      topicsGroup.forEach(d => {
-        d.val = d.val.sort(this.verCompare);
+        }
+
+        topic.val = topic.val.sort(this.verCompare);
       });
       return topicsGroup;
     }

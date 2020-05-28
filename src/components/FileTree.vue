@@ -32,11 +32,15 @@ export default {
      diffData: null,
      selectedTopic: -1,
      allEditIds: null,
-     linePoints: null
+     linePoints: null,
+     curSelectedFileId: -1,
+     preSelectedFileId: -1,
+     curSelectedFileTopic: -1,
+     preSelectedFileTopic: -1
     };
   },
   computed: {},
-  props: ["topicColormap"],
+  props: ["topicColormap", "docData"],
   methods: {
     drawCurTree(data){
       let vm = this
@@ -93,9 +97,14 @@ export default {
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+            
             // 添加点击文件显示代码事件
             if(d.data.type == 'file'){
-              console.log(d.data.name)
+              vm.curSelectedFileId = d.data.id
+              vm.$bus.$emit('file-selected', d.data.name)
+              d3.selectAll('.link').style('stroke', '#ccc')
+              d3.selectAll('.link').filter(link => link.data.fileIds.indexOf(d.data.id) != -1)
+                .style('stroke', link => vm.topicColormap(d.data.topic))
             }
           });
         
@@ -178,17 +187,25 @@ export default {
           .style('fill', d => vm.topicColormap(d.data.topicId))
 
         // 删除退出的node
-        var nodeExit = node.exit().transition()
+        var nodeExit = node.exit()
+          .each(d => {
+            if(d.data.type == 'file' && d.data.id == vm.curSelectedFileId){
+              d3.selectAll('.link').style('stroke', '#ccc')
+              vm.curSelectedFileId = -1
+            }
+          })
+          .transition()
           .duration(750)
           .attr('transform', 'translate('+source.x+','+source.y+')')
           .remove()
-        nodeExit.select('.node-logo') 
+        nodeExit.select('.node-logo')
           .attr('font-size', '0px')
         nodeExit.select('.node-circle') 
           .attr('r', 0)
         nodeExit.select('.node-text') 
           .attr('font-size', '0px')
           .attr('opacity', 0)
+        
         // link数据
         var link = svg.selectAll('path.link')
           .data(links, d => d.id)
@@ -298,13 +315,30 @@ export default {
           .attr('class', 'node')
           .attr('transform', 'translate('+source.x0+','+source.y0+')')
           .on('click', d => {
-            d3.selectAll('.move-lines path').attr('opacity', 0)
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+
             // 添加点击文件显示代码事件
             if(d.data.type == 'file'){
-              console.log(d.data.id, d.data.moveId, d.data.name)
+              vm.curSelectedFileId = d.data.id
+              vm.curSelectedFileTopic = d.data.topic
+              d3.selectAll('.link').style('stroke', '#ccc')
+              d3.selectAll('.link').filter(link => link.data.fileIds.indexOf(d.data.id) != -1)
+                .style('stroke', link => vm.topicColormap(d.data.topic))
+              if(d.data.diffs[0] == 'add')
+                vm.$bus.$emit('compared-file-selected', {curName: d.data.name, preName: null})
+              if(d.data.diffs[0] == 'move'){
+                let preFile = vm.docData.find(doc => doc.id == d.data.moveId)
+                vm.preSelectedFileId = preFile.id
+                vm.preSelectedFileTopic = preFile.main_topic
+                vm.$bus.$emit('compared-file-selected', {curName: d.data.name, preName: preFile.filename})
+                d3.selectAll('.link').filter(link => link.data.fileIds.indexOf(preFile.id) != -1)
+                  .style('stroke', link => vm.topicColormap(preFile.main_topic))
+              }
+            }
+            else{
+              d3.selectAll('.move-lines path').attr('opacity', 0)
             }
           });
         
@@ -355,6 +389,8 @@ export default {
                 .attr('opacity', 1) 
               vm.updateMoveLine(vm.linePoints)
             }
+            d3.selectAll('.link').filter(link => link.data.fileIds.indexOf(vm.curSelectedFileId) != -1)
+                .style('stroke', link => vm.topicColormap(vm.curSelectedFileTopic))
           });
         nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
@@ -391,7 +427,17 @@ export default {
           .style("text-anchor", "middle")
 
         // 删除退出的node
-        var nodeExit = node.exit().transition()
+        var nodeExit = node.exit()
+          .each(d => {
+            if(d.data.type == 'file' && d.data.id == vm.curSelectedFileId){
+              d3.selectAll('.link').style('stroke', '#ccc')
+              vm.curSelectedFileId = -1
+              vm.preSelectedFileId = -1
+              vm.curSelectedFileTopic = -1
+              vm.preSelectedFileTopic = -1
+            }
+          })
+          .transition()
           .duration(750)
           .attr('transform', 'translate('+source.x+','+source.y+')')
           .remove()
@@ -514,13 +560,30 @@ export default {
           .attr('class', 'node')
           .attr('transform', 'translate('+source.x0+','+(height-source.y0)+')')
           .on('click', d => {
-            d3.selectAll('.move-lines path').attr('opacity', 0)
             click(d)
             nodeEnter.filter(node => node.children).select('.node-text').attr('opacity', 1)
             nodeEnter.filter(node => node._children).select('.node-text').attr('opacity', 0)
+            
             // 添加点击文件显示代码事件
             if(d.data.type == 'file'){
-              console.log(d.data.id, d.data.moveId, d.data.name)
+              vm.preSelectedFileId = d.data.id
+              vm.preSelectedFileTopic = d.data.topic
+              d3.selectAll('.link').style('stroke', '#ccc')
+              d3.selectAll('.link').filter(link => link.data.fileIds.indexOf(d.data.id) != -1)
+                .style('stroke', link => vm.topicColormap(d.data.topic))
+              if(d.data.diffs[0] == 'del')
+                vm.$bus.$emit('compared-file-selected', {preName: d.data.name, curName: null})
+              if(d.data.diffs[0] == 'move'){
+                let curFile = vm.docData.find(doc => doc.id == d.data.moveId)
+                vm.curSelectedFileId = curFile.id
+                vm.curSelectedFileTopic = curFile.main_topic
+                vm.$bus.$emit('compared-file-selected', {preName: d.data.name, curName: curFile.filename})
+                d3.selectAll('.link').filter(link => link.data.fileIds.indexOf(curFile.id) != -1)
+                  .style('stroke', link => vm.topicColormap(curFile.main_topic))
+              }
+            }
+            else{
+              d3.selectAll('.move-lines path').attr('opacity', 0)
             }
           });
         
@@ -571,6 +634,8 @@ export default {
                 .attr('opacity', 1) 
               vm.updateMoveLine(vm.linePoints)
             }
+            d3.selectAll('.link').filter(link => link.data.fileIds.indexOf(vm.preSelectedFileId) != -1)
+                .style('stroke', link => vm.topicColormap(vm.preSelectedFileTopic))
           });
         nodeUpdate.select('.node-logo')
           .attr('font-family', 'FontAwesome')
@@ -607,7 +672,17 @@ export default {
           .style("text-anchor", "middle")
 
         // 删除退出的node
-        var nodeExit = node.exit().transition()
+        var nodeExit = node.exit()
+          .each(d => {
+            if(d.data.type == 'file' && d.data.id == vm.preSelectedFileId){
+              d3.selectAll('.link').style('stroke', '#ccc')
+              vm.preSelectedFileId = -1
+              vm.curSelectedFileId = -1
+              vm.preSelectedFileTopic = -1
+              vm.curSelectedFileTopic = -1
+            }
+          })
+          .transition()
           .duration(750)
           .attr('transform', 'translate('+source.x+','+(height-source.y)+')')
           .remove()
@@ -687,7 +762,7 @@ export default {
           return `M ${d[0]} ${d[1]}
                   L ${d[2]} ${d[3]}`
         })
-        .attr('stroke', 'gray')
+        .attr('stroke', '#aaa')
         .attr('stroke-width', 1.5)
         .attr('stroke-dasharray', '6, 6')
         .attr('opacity', 1)
@@ -742,6 +817,10 @@ export default {
       this.preDepth = -1
       this.linePoints = null
       this.selectedTopic = -1
+      this.curSelectedFileId = -1
+      this.curSelectedFileTopic = -1
+      this.preSelectedFileId = -1
+      this.preSelectedFileTopic = -1
       d3.select('.cur-tree>*').remove();
       d3.select('.pre-tree>*').remove();
       d3.selectAll('.move-lines path').remove();
@@ -752,6 +831,7 @@ export default {
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: d})
         .then(({data}) => {
+          console.log('hierarchyData:', data)
           this.curTreeData = data
           this.drawCurTree(data)
         })
@@ -851,6 +931,10 @@ export default {
       this.preVersion = d.preVer
       d3.select('.cur-tree>*').remove();
       d3.select('.move-line g>*').remove();
+      this.curSelectedFileId = -1
+      this.curSelectedFileTopic = -1
+      this.preSelectedFileId = -1
+      this.preSelectedFileTopic = -1
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: this.preVersion})
         .then(({data}) => {

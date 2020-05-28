@@ -97,13 +97,15 @@ export default {
       else{
         d3.selectAll('.p-line').attr('opacity', 0)
         d3.selectAll('.p-line').filter(line => {
-          let id = line.id ? line.id : line.curId
-          return d.indexOf(id) != -1
-        }).attr('opacity', 1)
+          
+          return d.indexOf(line.id) != -1
+        }).attr('opacity', line => {console.log(line); return 1})
       }
     })
 
-    
+    this.$bus.$on('diffs-off', () =>{
+      d3.select('.parallel-coordinates>*').remove()
+    })
   }
 };
 </script>

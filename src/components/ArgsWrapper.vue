@@ -65,7 +65,7 @@ export default {
     return {
       curVersion: "",
       preVersion: "",
-      libraryName: "vue",
+      libraryName: "d3",
       curOptions: [],
       preOptions: [],
       libraries: [{ value: 0, label: "vue" }, { value: 1, label: "d3" }],

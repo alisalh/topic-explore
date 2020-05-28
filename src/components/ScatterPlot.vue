@@ -46,7 +46,7 @@ export default {
         let doc = this.preData.find(d => d.id == id);
         let norm = 0;
         if(doc) norm = this.getNorm(doc.topicDistribution);
-        if(norm >= 0.1)
+       
           this.diffVecs.push({
             id: doc.id,
             name: doc.filename,
@@ -61,7 +61,7 @@ export default {
         let doc = this.curData.find(d => d.id == id);
         let norm = 0;
         if(doc) norm = this.getNorm(doc.topicDistribution);
-        if(norm >= 0.1)
+       
           this.diffVecs.push({
             id: doc.id,
             name: doc.filename,
@@ -73,21 +73,22 @@ export default {
 
       // 修改文件前后版本相减
       editIds.forEach(item =>{
+        if(!item[2]) return
         let preDoc = this.preData.find(d => d.id == item[0]);
         let curDoc = this.curData.find(d => d.id == item[1]);
         let norm = 0, vec, main_topic;
         if(preDoc && curDoc){
           vec = curDoc.topicDistribution.map((d, i) => d - preDoc.topicDistribution[i]);
           norm = this.getNorm(vec);
-          // main_topic = vec.indexOf(d3.max(vec, d => Math.abs(d)))
+          main_topic = vec.indexOf(d3.max(vec, d => Math.abs(d)))
         }
-        if(norm >= 0.1)
+        if(norm > 0)
           this.diffVecs.push({
-              preId: preDoc.id,
-              preName: preDoc.filename,
-              curId: curDoc.id,
-              curName: curDoc.filename,
-              topic: curDoc.main_topic,
+              // preId: preDoc.id,
+              // preName: preDoc.filename,
+              id: curDoc.id,
+              name: curDoc.filename,
+              topic: main_topic,
               vec: vec,
               type: 'edit'
             })
@@ -127,24 +128,39 @@ export default {
         })
         .attr('font-size', '10px')
         .style('fill', d => this.topicColormap(d.topic))
-
-      var lasso = d3Lasso.lasso()
-        .items(d3.selectAll('.marker')) 
-        .targetArea(d3.select('.scatter-plot'))
-        .on('start', function(){
-          vm.selectedDiffs = []
-        })
-        .on('end', function(){
-          lasso.selectedItems().each(d => {
-            vm.selectedDiffs.push(d.id ? d.id : d.curId)
-          })
-          vm.$bus.$emit('selected-diffs-show', vm.selectedDiffs)
+        .on('click', d => {
+          this.$bus.$emit('selected-diffs-show', [d.id ? d.id : d.curId])
+          console.log(d.type, d.vec)
         })
 
-      svg.call(lasso)
+      // var lasso = d3Lasso.lasso()
+      //   .items(d3.selectAll('.marker')) 
+      //   .targetArea(d3.select('.scatter-plot'))
+      //   .on('start', function(){
+      //     vm.selectedDiffs = []
+      //   })
+      //   .on('end', function(){
+      //     lasso.selectedItems().each(d => {
+      //       console.log(d.type, d.vec)
+      //       vm.selectedDiffs.push(d.id ? d.id : d.curId)
+      //     })
+      //     vm.$bus.$emit('selected-diffs-show', vm.selectedDiffs)
+      //   })
+
+      // svg.call(lasso)
+    },
+    clearData(){
+      this.preVersion = null
+      this.preData = null
+      this.curData = null
+      this.curVersion = null
+      this.diffData = null
+      this.diffVecs = []
+      this.selectedDiffs = []
     }
   },
   created() {
+    // control panel响应事件
     this.$bus.$on("version-compared", d =>{
       this.preVersion = d.preVer
       this.curVersion = d.curVer
@@ -166,6 +182,28 @@ export default {
               this.$bus.$emit('diffs-show', this.diffVecs)
             })
       });
+    })
+    this.$bus.$on('curVersion-selected', d =>{
+      this.clearData()
+      d3.select('.scatter-plot>*').remove()
+      this.$bus.$emit('diffs-off', null)
+    })
+    this.$bus.$on("curVersion-reseted", () =>{
+      this.clearData()
+      d3.select('.scatter-plot>*').remove()
+      this.$bus.$emit('diffs-off', null)
+    })
+
+    // lineChart响应事件
+    this.$bus.$on("lineVersion-selected", d => {
+      this.clearData()
+      d3.select('.scatter-plot>*').remove()
+      this.$bus.$emit('diffs-off', null)
+    })
+    this.$bus.$on("lineVersion-reseted", d => {
+      this.clearData()
+      d3.select('.scatter-plot>*').remove()
+      this.$bus.$emit('diffs-off', null)
     })
   },
   mounted() {
