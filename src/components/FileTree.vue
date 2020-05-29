@@ -419,8 +419,8 @@ export default {
             else return '2.2em'
           })
           .text(d => {
-            let showText = ""
-            if(d.data.diffs.indexOf('add') != -1) showText += "\uf067"
+           let showText = ""
+            if(d.data.diffs.indexOf('add') != -1 || d.data.diffs.indexOf('modify') != -1) showText += "\uf067"
             if(d.data.diffs.indexOf('move') != -1) showText += "\uf062"
             return showText
           })
@@ -665,7 +665,7 @@ export default {
           })
           .text(d => {
             let showText = ""
-            if(d.data.diffs.indexOf('del') != -1) showText += "\uf068"
+            if(d.data.diffs.indexOf('del') != -1 || d.data.diffs.indexOf('modify') != -1) showText += "\uf068"
             if(d.data.diffs.indexOf('move') != -1) showText += "\uf062"
             return showText
           })
@@ -793,13 +793,15 @@ export default {
             if(addIds.indexOf(id) != -1) diff = 'add'
             if(delIds.indexOf(id) != -1) diff = 'del'
 
-            // 判断是否是移动文件并保存对应文件id
-            let item = editIds.find(d => d.indexOf(id) != -1 && d.indexOf('move')!=-1)
+            let item = editIds.find(d => (d.curid == id || d.preid == id))
             if(item){
-              diff = 'move'
-              root.children[i]['moveId'] = item[0] == id ? item[1] : item[0]
-            } 
-
+              if(item.type == 'modify')
+                diff = 'modify'
+              if(item.type == 'move'){
+                diff = 'move'
+                root.children[i]['moveId'] = item.preid == id ? item.preid : item.curid
+              } 
+            }
             if(diff){
               root.children[i].diffs.push(diff)
               if(root.diffs.indexOf(diff) == -1) root.diffs.push(diff)
@@ -844,16 +846,16 @@ export default {
         .forEach(curd =>{
           for(let i=0; i<curd.data.fileIds.length; i++){
             let cur = this.allEditIds.find(d => 
-              d[1] == curd.data.fileIds[i] 
-              && d[2] == "move");
+              d.curid == curd.data.fileIds[i] 
+              && d.type == "move");
             if(cur){
               this.preLeaves.filter(pred => pred.depth == this.preDepth)
                 .forEach(pred => {
                   for(let j=0; j<pred.data.fileIds.length; j++){
                     let pre = this.allEditIds.find(d => 
-                      d[0] == pred.data.fileIds[j] 
-                      && d[1] == cur[1]
-                      && d[2] == "move");
+                      d.preid == pred.data.fileIds[j] 
+                      && d.curid == cur.curid
+                      && d.type == "move");
                     if(pre){
                       points.push([pred.x, this.mHeight, curd.x, 0])
                       newPoints.push([pred.x, this.mHeight, curd.x, 0])
@@ -884,16 +886,16 @@ export default {
         .forEach(pred =>{
           for(let i=0; i<pred.data.fileIds.length; i++){
             let pre = this.allEditIds.find(d => 
-              d[0] == pred.data.fileIds[i] 
-              && d[2] == "move");
+              d.preid == pred.data.fileIds[i] 
+              && d.type == "move");
             if(pre){
               this.curLeaves.filter(curd => curd.depth == this.curDepth)
                 .forEach(curd => {
                   for(let j=0; j<curd.data.fileIds.length; j++){
                     let cur = this.allEditIds.find(d => 
-                      d[0] == pre[0]
-                      && d[1] == curd.data.fileIds[j] 
-                      && d[2] == "move");
+                      d.preid == pre.preid
+                      && d.curid == curd.data.fileIds[j] 
+                      && d.type == "move");
                     if(cur){
                       points.push([pred.x, this.mHeight, curd.x, 0])
                       newPoints.push([pred.x, this.mHeight, curd.x, 0])

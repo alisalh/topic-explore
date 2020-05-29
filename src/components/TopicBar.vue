@@ -85,6 +85,8 @@ export default {
       
       // 计算当前版本下各主题的文件数
       this.topicsGroup.forEach(topic => {
+        if(topic.key == -1) return       // 不考虑-1主题
+        
         // topic.val.val表示主题.版本.文件
         topic.val.forEach(d => {
           if (this.selectedVersion === d.key) {
@@ -125,7 +127,8 @@ export default {
 
       // bar长度与主题对应的版本数相关
       this.topicsGroup.forEach(topic => {
-        let verNum = topic.val.length;
+        if(topic.key == -1) return     // 不考虑-1主题
+        let verNum = topic.val.filter(ver => ver.val.length != 0).length;    // 版本对应的文件数不为0
         this.barData[topic.key].value = widthScale(verNum);
       });
 

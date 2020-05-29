@@ -421,7 +421,11 @@ export default {
     requiredData.forEach(d => {
       this.$watch(d, val => {
         if (val) cnt++;
-        if (cnt === requiredData.length) this.draw(this.topicsGroup);
+        if (cnt === requiredData.length) {
+          // 不考虑-1主题
+          let data = this.topicsGroup.filter(topic => topic.key != -1)
+          this.draw(data)
+        }
       });
     });
 

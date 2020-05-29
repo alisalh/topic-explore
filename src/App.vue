@@ -78,7 +78,7 @@ export default {
       prevDocs: null,
       normData: null,
       editFileIds: null,
-      libraryName: "vue",
+      libraryName: "d3",
       flag: false, // true向后台请求数据
     };
   },
@@ -95,13 +95,19 @@ export default {
   computed: {
     topicColormap() {
       if (this.topicData === null) return null;
-      const domain = Array(this.topicData.length)
+      var domain = Array(this.topicData.length)
         .fill(null)
         .map((d, i) => i);
+      var color = TOPIC_COLOR.slice(0, this.topicNum)
+
+      // 添加-1主题颜色
+      domain.push(-1)
+      color.push('gray')
+
       return d3
         .scaleOrdinal()
         .domain(domain)
-        .range(TOPIC_COLOR);
+        .range(color);
     },
     versions() {
       if (this.docVerData) return this.docVerData.versions;
@@ -150,6 +156,8 @@ export default {
       let verReg = new RegExp(this.libraryName + "-(\\d*\\.\\d*\\.\\d*)");
 
       topicsGroup.forEach(topic => {
+        if(topic.key == -1) return   //不考虑-1主题
+
         topic.val = groupBy(topic.val, d => d.filename.match(verReg)[1]).sort(this.verCompare);  //按版本分类文件   
         let minVer = topic.val[0].key, 
           maxVer = topic.val[topic.val.length - 1].key,
