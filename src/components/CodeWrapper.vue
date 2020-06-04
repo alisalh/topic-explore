@@ -23,6 +23,7 @@ export default {
             pretitle: ''
         }
     },
+    props: ["libraryName"],
     created(){
         this.$bus.$on('file-selected', d =>{
             d3.select('#diff-code').style('visibility', 'hidden')
@@ -36,7 +37,7 @@ export default {
             this.$axios.get('topics/getFileContent', {
                 curName: d
             }).then(({ data }) => {
-                this.curtitle = d.replace('../Data/d3/d3-all-versions/', '')
+                this.curtitle = d.replace('../Data/'+this.libraryName+'/'+this.libraryName+'-all-versions/', '')
                 this.curCode = `<pre><code>${data.curCode}</code></pre>`
             })
         })
@@ -54,9 +55,9 @@ export default {
                 curName: curName, preName: preName
             }).then(({ data }) => {
                 if(curName)
-                    this.curtitle = curName.replace('../Data/d3/d3-all-versions/', '')
+                    this.curtitle = curName.replace('../Data/'+this.libraryName+'/'+this.libraryName+'-all-versions/', '')
                 if(preName)
-                    this.pretitle = preName.replace('../Data/d3/d3-all-versions/', '')
+                    this.pretitle = preName.replace('../Data/'+this.libraryName+'/'+this.libraryName+'-all-versions/', '')
                 this.newCode = data.curCode
                 this.oldCode = data.preCode
             }) 
@@ -80,9 +81,9 @@ export default {
         background: #eee;
         text-align: center;
     }
-    #cur-code{
-        padding: 10px;
-    }
+    // #cur-code{
+    //     padding: 10px;
+    // }
     #diff-code{
         .d2h-file-wrapper{
             margin-bottom: 0cm;

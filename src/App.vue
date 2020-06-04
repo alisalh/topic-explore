@@ -32,6 +32,7 @@
         <file-tree
           :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
+          :libraryName="libraryName"
         ></file-tree>
         <div class="cluster">
           <scatter-plot
@@ -47,7 +48,8 @@
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
-      <code-wrapper></code-wrapper>
+      <code-wrapper
+        :libraryName="libraryName"></code-wrapper>
     </div>
   </div>
 </template>
@@ -64,7 +66,7 @@ import CodeWrapper from "./components/CodeWrapper.vue";
 import ArgsWrapper from "./components/ArgsWrapper.vue";
 import ParallelCoordinates from "./components/ParallelCoordinates.vue";
 import { TOPIC_COLOR } from "./utils/constant.js";
-import { groupBy, getVersion, getRelPath } from "./utils/index.js";
+import { groupBy} from "./utils/index.js";
 export default {
   name: "app",
   data() {
@@ -78,7 +80,7 @@ export default {
       prevDocs: null,
       normData: null,
       editFileIds: null,
-      libraryName: "d3",
+      libraryName: "vue",
       flag: false, // true向后台请求数据
     };
   },
