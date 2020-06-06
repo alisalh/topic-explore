@@ -6,6 +6,11 @@ export function getRelPath (fileName, lib) {
   let verReg = new RegExp(lib+'-(\\d*\\.\\d*\\.\\d*)(.*)')
   return fileName.match(verReg)[2]
 }
+export function getVerPath (fileName, lib) {
+  let verReg = new RegExp(lib+'-(\\d*\\.\\d*\\.\\d*)(.*)')
+  let arr = fileName.match(verReg)
+  return lib+'-'+arr[1]+arr[2]
+}
 export function getRelPathWithVersion (fileName, lib) {
   let verReg = new RegExp(lib+'-(\\d*\\.\\d*\\.\\d*)(.*)')
   return fileName.match(verReg)[0]

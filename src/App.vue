@@ -248,7 +248,6 @@ html {
       flex: 1.3;
       display: flex;
       margin-top: 3px;
-      overflow: auto;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
       .file-tree {
         flex: 1.2;

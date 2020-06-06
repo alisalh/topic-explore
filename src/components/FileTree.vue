@@ -9,6 +9,7 @@
         </el-tab-pane>
         <el-tab-pane label="structure" name="second">
           <div class='move-tree'></div>
+          <div class='file-detail'></div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -18,7 +19,7 @@
 <script>
 import * as d3 from "d3";
 import d3tip from "d3-tip";
-import {getRelPath} from "../utils/index.js";
+import {getRelPath, getVerPath} from "../utils/index.js";
 import {sankey as Sankey, sankeyLinkHorizontal as SankeyLink} from "d3-sankey"
 
 export default {
@@ -38,7 +39,8 @@ export default {
      curSelectedFileId: -1,
      preSelectedFileId: -1,
      diffRoot: null,
-     drawFlag: true
+     drawFlag: true,
+     clickId: -1
     };
   },
   computed: {},
@@ -721,9 +723,6 @@ export default {
       var curG = svg.append('g')
         .attr('class', 'cur-nodes-links')
         .attr('transform', 'translate('+margin.left+','+margin.top+')');
-      var fileG = svg.append('g')
-        .attr('class', 'file-details')
-        .attr('transform', 'translate('+margin.left+','+svgHeight+')');
 
       var treemap = d3.tree().size([width, height/2]);
       var preRoot = d3.hierarchy(preData, d => d.children),
@@ -818,10 +817,14 @@ export default {
                     .filter(cnode => cnode.data.fileIds.indexOf(id) != -1).data()[0];
                   let link = sankeyData.links.find(link => link.source == pnode.data.name+'_source' 
                     && link.target == curNode.data.name+'_target')
-                  if(link) link.value++
+                  if(link) {
+                    link.value++;
+                    link.fileIds.push(id)
+                  }
                   else{
                     sankeyData.nodes.push({name: curNode.data.name+'_target', x: curNode.x, y: curNode.y})
-                    sankeyData.links.push({source: pnode.data.name+'_source', target: curNode.data.name+'_target', value: 1, id: linkid++})
+                    sankeyData.links.push({source: pnode.data.name+'_source', target: curNode.data.name+'_target', 
+                      value: 1, id: linkid++, fileIds: [id]})
                   }
                   sankeyHeight = curNode.y- pnode.y 
                 })
@@ -849,11 +852,45 @@ export default {
                   d3.select('#slink_'+d.id).style('stroke', 'red')
                 })
                 .on('mouseout', function(d){
-                  d3.select('#slink_'+d.id).style('stroke', '#ccc')
+                  if(d.id != vm.clickId)
+                    d3.select('#slink_'+d.id).style('stroke', '#ccc')
+                  d3.selectAll(".slink").sort(function (a, b) { 
+                    if (a.id != vm.clickId) return -1;               
+                    else return 1;                             
+                  });
                 })
                 .on('click', function(d){
-                  fileG.selectAll('*').remove()
-                  
+                  d3.select('#slink_'+vm.clickId).style('stroke', '#ccc')
+                  vm.clickId = d.id
+                  d3.select('#slink_'+d.id).style('stroke', 'red')
+                  d3.select('.file-detail>svg').remove()
+                  let files = [], topics = []
+                  d.fileIds.forEach(i => {
+                    let preid = vm.diffData.edit.find(item => item.curid == i && item.type == 'move').preid
+                    let prefile = vm.docData.find(f => f.id == preid), curfile = vm.docData.find(f => f.id == i)
+                    files.push([prefile, curfile])
+                  })
+                  files.sort(function(a, b){return a[0].main_topic - b[0].main_topic})
+                  files.forEach(f => {
+                    let topic = topics.find(t => t.topic == f[0].main_topic)
+                    if(topic) topic.value++
+                    else topics.push({topic: f[0].main_topic, value: 1})
+                  })
+                  let fileSvg = d3.select('.file-detail').append('svg').attr('width', vm.diffWidth).attr('height', files.length*20+5)
+                  let fpathG = fileSvg.append('g').attr('class', 'filepath').attr('transform', 'translate(130,0)'),
+                    topicG = fileSvg.append('g').attr('class', 'fileTopic').attr('transform', 'translate(60,0)')
+                  files.forEach((f, i) =>{
+                    fpathG.append('text').attr('x', 0).attr('y', (i+1)*20)
+                      .attr('font-size', '12px').text(getVerPath(f[0].filename, vm.libraryName))
+                    fpathG.append('text').attr('x', vm.diffWidth/2 - 80).attr('y', (i+1)*20)
+                      .attr('font-size', '12px').text(getVerPath(f[1].filename, vm.libraryName))
+                  })
+                  let y = 7
+                  topics.forEach((d, i) =>{
+                    topicG.append('rect').attr('x', 0).attr('y', y)
+                      .attr('width', 30).attr('height', d.value*20).style('fill', vm.topicColormap(d.topic))
+                    y = y + d.value*20
+                  })
                 })
             }
           })
@@ -1215,6 +1252,7 @@ export default {
       this.curSelectedFileId = -1
       this.preSelectedFileId = -1
       this.drawFlag = true
+      this.clickId = -1
       d3.select('.cur-tree').style('visibility','hidden')
       d3.select('.cur-tree').style('padding','0px')
       d3.select('.diff-tree').style('visibility','hidden')
@@ -1239,7 +1277,7 @@ export default {
           this.curTreeData = data
           this.drawCurTree(data)
         })
-    },
+    }
   },
   created() {
     // control panel响应事件
@@ -1331,6 +1369,15 @@ export default {
       fill: none;
       stroke: #ccc;
       stroke-width: 2px;
+    }
+    .del-tree{
+      border-top: #ddd 1px solid;
+    }
+    .file-detail{
+      overflow: auto;
+      height: 200px;
+      border-top: #ddd 1px solid;
+      padding: 2px;
     }
   }
 }
