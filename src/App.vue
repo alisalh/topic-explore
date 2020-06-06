@@ -80,7 +80,7 @@ export default {
       prevDocs: null,
       normData: null,
       editFileIds: null,
-      libraryName: "vue",
+      libraryName: "d3",
       flag: false, // true向后台请求数据
     };
   },

@@ -2,7 +2,7 @@
   <div class="file-tree" ref="root">
     <div class="cur-tree" ref="root1" ></div> 
     <div class="diff-tree" ref="root2">
-      <el-tabs type="card" v-model="activeName" @tab-click="drawDiffTree">
+      <el-tabs type="card" v-model="activeName" @tab-click="drawDiffTree(diffRoot)">
         <el-tab-pane label="content" name="first">
             <div class='add-tree'></div>
             <div class='del-tree'></div>
@@ -19,6 +19,7 @@
 import * as d3 from "d3";
 import d3tip from "d3-tip";
 import {getRelPath} from "../utils/index.js";
+import {sankey as Sankey, sankeyLinkHorizontal as SankeyLink} from "d3-sankey"
 
 export default {
   name: "component_name",
@@ -30,12 +31,14 @@ export default {
      diffWidth: 0,
      diffHeight: 0,
      curVersion: null,
+     preVersion: null,
      curTreeData:null,
      diffData: null,
      selectedTopic: -1,
      curSelectedFileId: -1,
      preSelectedFileId: -1,
-     diffRoot: null
+     diffRoot: null,
+     drawFlag: true
     };
   },
   computed: {},
@@ -44,7 +47,7 @@ export default {
     drawCurTree(data){
       let vm = this
 
-      var svgHeight = this.curHeight / 2, svgWidth = this.curWidth
+      var svgHeight = this.curHeight, svgWidth = this.curWidth
       var margin = {top: 20, right: 5, bottom: 15, left: 5},
         width = svgWidth - margin.left - margin.right,
         height = svgHeight - margin.top - margin.bottom;
@@ -87,6 +90,9 @@ export default {
         // node数据
         var node = svg.selectAll('g.node')
           .data(nodes, d => { return d.id || (d.id = ++nodeId)});
+        
+        // 固定高度
+        nodes.forEach(function(d) { d.y = d.depth * 60 });
         
         // 为每一个新增的node添加g
         var nodeEnter = node.enter()
@@ -252,14 +258,24 @@ export default {
       }
     },
     drawDiffTree(data){
-      if(data.addRoot.children.length > 0) this.drawAddTree(data.addRoot)
-      if(data.delRoot.children.length > 0) this.drawDelTree(data.delRoot)
-      if(data.moveRoot.children.length > 0) this.drawMoveTree(data.moveRoot)
+      if(!this.drawFlag) return
+      this.drawAddTree(data.addRoot)
+      this.drawDelTree(data.delRoot)
+      this.drawMoveTree(data.preRoot, data.curRoot)
+      this.drawFlag = false
     },
     drawAddTree(data){
       d3.select(".add-tree>svg").remove()
-      let vm = this
+      if(data.children.length == 0){
+        d3.select('.add-tree').append('svg') 
+          .attr("width", this.diffWidth).attr("height", this.diffHeight/2)
+          .append('text').text('No Adding Files!').attr('text-anchor', 'middle')
+          .attr('font-size', '20px').style('fill', '#ccc')
+          .attr('x', this.diffWidth/2).attr('y', this.diffHeight/4)
+        return
+      }
 
+      let vm = this
       var svgHeight = this.diffHeight / 2, svgWidth = this.diffWidth
       var margin = {top: 20, right: 5, bottom: 80, left: 5},
         width = svgWidth - margin.left - margin.right,
@@ -303,6 +319,7 @@ export default {
         // node数据
         var node = svg.selectAll('g.node')
           .data(nodes, d => { return d.id || (d.id = ++nodeId)});
+        nodes.forEach(function(d) { d.y = d.depth * 60 });
   
         // 为每一个新增的node添加g
         var nodeEnter = node.enter()
@@ -465,8 +482,15 @@ export default {
     },
     drawDelTree(data){
       d3.select(".del-tree>svg").remove()
+      if(data.children.length == 0){
+        d3.select('.del-tree').append('svg') 
+          .attr("width", this.diffWidth).attr("height", this.diffHeight/2)
+          .append('text').text('No Deleting Files!').attr('text-anchor', 'middle')
+          .attr('font-size', '20px').style('fill', '#ccc')
+          .attr('x', this.diffWidth/2).attr('y', this.diffHeight/4)
+        return
+      }
       let vm = this
-
       var svgHeight = this.diffHeight / 2, svgWidth = this.diffWidth
       var margin = {top: 30, right: 5, bottom: 70, left: 5},
         width = svgWidth - margin.left - margin.right,
@@ -510,6 +534,7 @@ export default {
         // node数据
         var node = svg.selectAll('g.node')
           .data(nodes, d => { return d.id || (d.id = ++nodeId)});
+        nodes.forEach(function(d) { d.y = d.depth * 60 });
   
         // 为每一个新增的node添加g
         var nodeEnter = node.enter()
@@ -670,36 +695,57 @@ export default {
         update(d); 
       }
     },
-    drawMoveTree(data){
+    drawMoveTree(preData, curData){
       d3.select(".move-tree>svg").remove()
-      let vm = this
+      if(preData.children.length == 0){
+        d3.select('.move-tree').append('svg') 
+          .attr("width", this.diffWidth).attr("height", this.diffHeight)
+          .append('text').text('No Moving Files!').attr('text-anchor', 'middle')
+          .attr('font-size', '20px').style('fill', '#ccc')
+          .attr('x', this.diffWidth/2).attr('y', this.diffHeight/2)
+        return
+      }
 
-      var svgHeight = this.diffHeight / 2, svgWidth = this.diffWidth
+      let vm = this
+      var svgHeight = this.diffHeight/2+40, svgWidth = this.diffWidth
       var margin = {top: 30, right: 5, bottom: 30, left: 5},
         width = svgWidth - margin.left - margin.right,
         height = svgHeight - margin.top - margin.bottom;
 
       var svg = d3.select(".move-tree").append("svg")
         .attr("width", svgWidth)
-        .attr("height", svgHeight)
-        .append('g')
-        .attr('class', 'nodes-links')
+        .attr("height", svgHeight);
+      var preG = svg.append('g')
+        .attr('class', 'pre-nodes-links')
         .attr('transform', 'translate('+margin.left+','+margin.top+')');
+      var curG = svg.append('g')
+        .attr('class', 'cur-nodes-links')
+        .attr('transform', 'translate('+margin.left+','+margin.top+')');
+      var fileG = svg.append('g')
+        .attr('class', 'file-details')
+        .attr('transform', 'translate('+margin.left+','+svgHeight+')');
 
-      var treemap = d3.tree().size([width, height]);
-      var root = d3.hierarchy(data, d => d.children);
-      root.x0 = width / 2, root.y0 = 0;
+      var treemap = d3.tree().size([width, height/2]);
+      var preRoot = d3.hierarchy(preData, d => d.children),
+        curRoot = d3.hierarchy(curData, d => d.children);
+      preRoot.x0 = width / 2, preRoot.y0 = 0;
+      curRoot.x0 = width / 2, curRoot.y0 = 0;
 
       var rScale = d3.scaleLinear()  
         .domain([1, 34])      // d3中topic节点下最大的文件数为34
         .range([16, 169])
+      var wScale = d3.scaleLinear()
+        .domain([1, 25])
+        .range([2, 10])
 
       // 为文件夹节点添加collapse事件
-      root.children.forEach(collapse);
-      update(root);
+      preRoot.children.forEach(collapse);
+      curRoot.children.forEach(collapse);
+      update(preRoot, preG, 'pre');
+      update(curRoot, curG, 'cur');
 
       // 节点id
-      var nodeId = 0;
+      var preNodeId = 0, curNodeId = 0;
 
       function collapse(d){
         if(d.children){
@@ -708,77 +754,145 @@ export default {
           d.children = null
         }
       }
+      
+      function preDiagonal(s, d){
+        var path = `M ${s.x} ${s.y}
+                    C ${s.x + 15} ${s.y - 30},
+                      ${d.x - 15} ${d.y + 30},
+                      ${d.x} ${d.y}`
+        return path
+      }
 
-      function update(source){
-        var treeData = treemap(root),
+      function curDiagonal(s, d){
+        var path = `M ${d.x} ${d.y}
+                    C ${d.x + 15} ${d.y-30},
+                      ${s.x - 15} ${s.y+30},
+                      ${s.x} ${s.y}`
+        return path
+      }
+
+      function update(source, svg, type){
+        var treeData = type=='pre' ? treemap(preRoot) : treemap(curRoot),
           nodes = treeData.descendants(),
           links = treeData.descendants().slice(1);
         // node数据
         var node = svg.selectAll('g.node')
-          .data(nodes, d => { return d.id || (d.id = ++nodeId)});
-  
+          .data(nodes, d => { return d.id || (d.id = (type=='pre'? ++preNodeId : ++curNodeId))});
+        nodes.forEach(function(d) { d.y = type=='pre' ? d.depth*60 : (height - d.depth*60)});
+
         // 为每一个新增的node添加g
         var nodeEnter = node.enter()
           .append('g')
           .attr('class', 'node')
-          .attr('transform', 'translate('+source.x0+','+source.y0+')')
-          .on('click', d => {
-            click(d)
-          });
+          .attr('transform', () =>{
+            if(type == 'pre') return 'translate('+source.x0+','+source.y0+')'
+            if(type == 'cur') return 'translate('+source.x0+','+source.y0+')'
+          })
+        
         // 插入新增node
-        nodeEnter.each(d =>{
-          if(d.data.type == 'root'){
-            nodeEnter.filter(node => node == d)
-              .append('circle')
-              .attr('class', 'node-root')
-              .attr('r', 12)
-              .style('fill', 'white')
-              .attr('stroke', 'black')
-            nodeEnter.filter(node => node == d)
-              .append('text')
-              .text('M')
-              .attr('font-size', '14px')
-              .attr('dx', '-0.5em')
-              .attr('dy', '0.3em')
-          }
-          else if(d.data.type == 'topic'){
-            nodeEnter.filter(node => node == d)
-              .append('circle')
-              .attr('class', 'node-circle')
-          }
-          else{
-            nodeEnter.filter(node => node == d)
-              .append('text')
-              .attr('class', 'node-logo')
-          }
-        })
+        nodeEnter.filter(d =>d.data.type == 'dir')
+          .append('text')
+          .attr('class', 'node-dir')
+        nodeEnter.filter(d =>d.data.type == 'dir')
+          .append('text')
+          .attr('class', 'node-label')
 
         // 更新进入的node
         var nodeUpdate = nodeEnter.merge(node);
         nodeUpdate.transition()
           .duration(750)
-          .attr('transform', d => 'translate('+d.x+','+d.y+')')
-        nodeUpdate.select('.node-logo')
+          .attr('transform', d => {
+            if(type == 'pre') return 'translate('+d.x+','+d.y+')'
+            if(type == 'cur') return 'translate('+d.x+','+d.y+')'
+          })
+          .on('end', function(d, i){
+            if(type == 'cur' && i == nodes.length - 1){
+              var sankeyG = d3.select(".move-tree").select("svg")
+                .append('g').attr('class', 'sankey').attr('transform', 'translate('+margin.left+','+height/2+')');
+              let sankeyData = {nodes: [], links: []}, sankeyHeight = 0, linkid = 0
+              d3.select('.pre-nodes-links').selectAll('.node').each(pnode => {
+                let fileIds = pnode.data.fileIds
+                if(fileIds.length > 0) sankeyData.nodes.push({name: pnode.data.name+'_source', x: pnode.x, y: pnode.y})
+                fileIds.forEach(id => {
+                  let curNode = d3.select('.cur-nodes-links').selectAll('.node')
+                    .filter(cnode => cnode.data.fileIds.indexOf(id) != -1).data()[0];
+                  let link = sankeyData.links.find(link => link.source == pnode.data.name+'_source' 
+                    && link.target == curNode.data.name+'_target')
+                  if(link) link.value++
+                  else{
+                    sankeyData.nodes.push({name: curNode.data.name+'_target', x: curNode.x, y: curNode.y})
+                    sankeyData.links.push({source: pnode.data.name+'_source', target: curNode.data.name+'_target', value: 1, id: linkid++})
+                  }
+                  sankeyHeight = curNode.y- pnode.y 
+                })
+              })
+              var sankey = Sankey().nodeId(d => d.name)
+                .nodes(sankeyData.nodes).links(sankeyData.links)
+                .size([sankeyHeight, width]);
+              var graph = sankey(sankeyData)
+              sankeyG.append("g").selectAll(".slink")
+                .data(graph.links)
+                .enter().append("path")
+                .attr("class", "slink")
+                .attr("id", d => "slink_"+d.id)
+                .attr("d", SankeyLink())
+                .style("stroke-width", function(d) {return wScale(d.value)})
+                .style("stroke", '#ccc')
+                .style('fill', 'none')
+                .attr('opacity', 0.7)
+                .on('mouseover', function(d){
+                  // 避免path遮挡
+                  d3.selectAll(".slink").sort(function (a, b) { 
+                      if (a.id != d.id) return -1;               
+                      else return 1;                             
+                  });
+                  d3.select('#slink_'+d.id).style('stroke', 'red')
+                })
+                .on('mouseout', function(d){
+                  d3.select('#slink_'+d.id).style('stroke', '#ccc')
+                })
+                .on('click', function(d){
+                  fileG.selectAll('*').remove()
+                  
+                })
+            }
+          })
+        nodeUpdate.select('.node-dir')
           .attr('font-family', 'FontAwesome')
           .attr('font-size', '20px')
           .attr('dx', '-0.5em')
-          .attr('dy', '0.5em')
-          .style('fill', d => vm.topicColormap(d.data.main_topic))
-          .text("\uf1c9")
-        nodeUpdate.select('.node-circle')
-          .attr('r', d => Math.sqrt(rScale(d.data.children.length)))
-          .style('fill', d => vm.topicColormap(d.data.topic))
+          .attr('dy', () =>{
+            if(type == 'pre') return '0.5em'
+            if(type == 'cur') return '0.2em'
+          })
+          .style('fill', '#F5C175')
+          .text("\uf07b")
+        nodeUpdate.select('.node-label')
+          .attr('font-size', '10px')
+          .style('text-anchor', 'middle')
+          .attr('dy', () => {
+            if(type == 'pre') return '-0.8em'
+            if(type == 'cur') return '1.4em'
+          })
+          .text(d => {
+            if(d.data.name == 'src' && type == 'pre') return d.data.name+' ('+vm.preVersion+')'
+            if(d.data.name == 'src' && type == 'cur') return d.data.name+' ('+vm.curVersion+')'
+            return d.data.name
+          })
 
         // 删除退出的node
         var nodeExit = node.exit()
           .transition()
           .duration(750)
-          .attr('transform', 'translate('+source.x+','+source.y+')')
+          .attr('transform', () => {
+            if(type == 'pre') return 'translate('+source.x+','+source.y+')'
+            if(type == 'cur') return 'translate('+source.x+','+source.y+')'
+          })
           .remove()
-        nodeExit.select('.node-logo')
+        nodeExit.select('.node-dir')
           .attr('font-size', '0px')
-        nodeExit.select('.node-circle') 
-          .attr('r', 0)
+        nodeExit.select('.node-label')
+          .attr('font-size', '0px')
         
         // link数据
         var link = svg.selectAll('path.link')
@@ -788,22 +902,37 @@ export default {
         var linkEnter = link.enter().insert('path', 'g')
           .attr('class', 'link')
           .attr('d', () => {
-            let p = {x: source.x0, y: source.y0}
-            return diagonal(p, p)    // link的平滑transition
+            if(type == 'pre'){
+              let p = {x: source.x0, y: source.y0}
+              return preDiagonal(p, p) // link的平滑transition
+            }
+            if(type == 'cur'){
+              let p = {x: source.x0, y: source.y0}
+              return curDiagonal(p, p) 
+            }  
           })
         
         // 更新新增的link
         var linkUpdate = linkEnter.merge(link);
         linkUpdate.transition()
           .duration(750)
-          .attr('d', d => diagonal(d, d.parent))
+          .attr('d', d => {
+            if(type == 'pre') return preDiagonal(d, d.parent)
+            if(type == 'cur') return curDiagonal(d, d.parent)
+          })
 
         // 删除退出的link
         var linkExit = link.exit().transition()
           .duration(750)
           .attr('d', () => {
-            let p = {x: source.x, y: source.y}
-            return diagonal(p, p)
+            if(type == 'pre'){
+              let p = {x: source.x0, y: source.y0}
+              return preDiagonal(p, p) // link的平滑transition
+            }
+            if(type == 'cur'){
+              let p = {x: source.x0, y: source.y0}
+              return curDiagonal(p, p) 
+            } 
           })
           .remove()
         
@@ -812,25 +941,6 @@ export default {
           d.x0 = d.x;
           d.y0 = d.y;
         }) 
-      }
-
-      function diagonal(s, d){
-        var path = `M ${s.x} ${s.y}
-                    C ${s.x + 15} ${s.y - 30},
-                      ${d.x - 15} ${d.y + 30},
-                      ${d.x} ${d.y}`
-        return path
-      }
-
-      function click(d) {
-        if (d.children) {
-          d._children = d.children;
-          d.children = null;
-        } else {
-          d.children = d._children;
-          d._children = null;
-        }
-        update(d); 
       }
     },
     drawDiffDir(leafs, svg, type){
@@ -915,7 +1025,7 @@ export default {
     dataAdapter(data){
       let addFile = data.add, delFile = data.del, editFile = data.edit
 
-      let addRoot = { type: 'root', children:[], topics: [], fileIds: []}
+      let addRoot = {type: 'root', children:[], topics: [], fileIds: []}
       addFile.forEach(d =>{
         let file = this.docData.find(doc => doc.id == d),
           filePath = getRelPath(file.filename, this.libraryName),
@@ -940,7 +1050,7 @@ export default {
         }
       })
 
-      let delRoot = { type: 'root', children:[], topics: [], fileIds: []}
+      let delRoot = {type: 'root', children:[], topics: [], fileIds: []}
       delFile.forEach(d =>{
         let file = this.docData.find(doc => doc.id == d),
           filePath = getRelPath(file.filename, this.libraryName),
@@ -965,27 +1075,50 @@ export default {
         }
       })
 
-      let moveRoot = { type: 'root', children:[], topics: [], fileIds: []}
+      let preRoot = {name: 'src', type: 'dir', dirs: [], children:[], fileIds: []},
+        curRoot = {name: 'src', type: 'dir', dirs: [], children:[], fileIds: []}
       editFile.forEach(d =>{
         if(d.type == '') return
-        let curfile = this.docData.find(doc => doc.id == d.curid),
-          prefile = this.docData.find(doc => doc.id == d.preid)
-        
+        let prefile = this.docData.find(doc => doc.id == d.preid),
+          curfile = this.docData.find(doc => doc.id == d.curid)
+
         if(d.type == 'move'){
-          if(moveRoot.topics.indexOf(curfile.main_topic) == -1){
-            let topicNode = {
-              type: 'topic',
-              topic: curfile.main_topic,
-              children: [[curfile, prefile]]
+          let prefilePath = getRelPath(prefile.filename, this.libraryName),
+            predirs = prefilePath.split('/').slice(1),
+            curfilePath = getRelPath(curfile.filename, this.libraryName),
+            curdirs = curfilePath.split('/').slice(1);
+          if(predirs.length == 2){
+            let fileNode = { type: 'file', name: predirs[1], file: prefile}
+            preRoot.push(fileNode)
+            preRoot.fileIds.push(curfile.id)
+          }else{
+            if(preRoot.dirs.indexOf(predirs[1]) == -1){
+              let dirNode = {name: predirs[1], type: 'dir', children: [prefile], fileIds: [curfile.id]}
+              preRoot.children.push(dirNode)
+              preRoot.dirs.push(predirs[1])
             }
-            moveRoot.children.push(topicNode)
-            moveRoot.topics.push(curfile.main_topic)
-            moveRoot.fileIds.push(curfile.id)
+            else{
+              let dirNode = preRoot.children.find(f => f.name == predirs[1])
+              dirNode.children.push(prefile)
+              dirNode.fileIds.push(curfile.id)
+            }
+          }
+          if(curdirs.length == 2){
+            let fileNode = { type: 'file', name: curdirs[1], file: curfile}
+            curRoot.push(fileNode)
+            curRoot.fileIds.push(curfile.id)
           }
           else{
-            moveRoot.children.find(t => t.topic == curfile.main_topic)
-              .children.push([curfile, prefile])
-            moveRoot.fileIds.push(curfile.id)
+            if(curRoot.dirs.indexOf(curdirs[1]) == -1){
+              let dirNode = {name: curdirs[1], type: 'dir', children: [curfile], fileIds: [curfile.id]}
+              curRoot.children.push(dirNode)
+              curRoot.dirs.push(curdirs[1])
+            }
+            else{
+              let dirNode = curRoot.children.find(f => f.name == curdirs[1])
+              dirNode.children.push(curfile)
+              dirNode.fileIds.push(curfile.id)
+            }
           }
         }
         if(d.type == 'modify_add'){
@@ -1070,16 +1203,18 @@ export default {
         d.children = srcfiles.concat(d.children)
       })
       
-      this.diffRoot = { addRoot: addRoot, delRoot: delRoot, moveRoot: moveRoot}
+      this.diffRoot = { addRoot: addRoot, delRoot: delRoot, preRoot: preRoot, curRoot: curRoot}
       console.log('diffRoot:', this.diffRoot)
     },
     clearDataAndView(){
       this.curVersion = null
+      this.preVersion = null
       this.curTreeData = null
       this.selectedTopic = -1
       this.diffRoot = null
       this.curSelectedFileId = -1
       this.preSelectedFileId = -1
+      this.drawFlag = true
       d3.select('.cur-tree').style('visibility','hidden')
       d3.select('.cur-tree').style('padding','0px')
       d3.select('.diff-tree').style('visibility','hidden')
@@ -1118,6 +1253,8 @@ export default {
       this.clearDataAndView()
       d3.select('.diff-tree').style('visibility','visible')
       d3.select('.diff-tree').style('padding','5px')
+      this.curVersion = d.curVer
+      this.preVersion = d.preVer
       this.$axios
         .get("topics/getDiffDocs", {preVer: d.preVer, curVer: d.curVer})
         .then(({data}) => {
@@ -1161,7 +1298,7 @@ export default {
     });
   },
   mounted() {
-    this.curHeight = Math.floor(this.$refs.root.clientHeight) - 15;
+    this.curHeight = Math.floor(this.$refs.root.clientHeight) - 60;
     this.curWidth = Math.floor(this.$refs.root.clientWidth) - 10;
     this.diffHeight = Math.floor(this.$refs.root.clientHeight) - 60;
     this.diffWidth = Math.floor(this.$refs.root.clientWidth) - 10;

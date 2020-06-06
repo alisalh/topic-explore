@@ -6,7 +6,6 @@
 import * as d3 from "d3";
 import * as d3Lasso from "d3-lasso"
 import { CLUSTER_COLOR } from "../utils/constant.js";
-import TSNE from 'tsne-js';
 
 export default {
   name: "component_name",
@@ -161,28 +160,28 @@ export default {
   },
   created() {
     // control panel响应事件
-    this.$bus.$on("version-compared", d =>{
-      this.preVersion = d.preVer
-      this.curVersion = d.curVer
-      d3.select('.scatter-plot>*').remove()
+    // this.$bus.$on("version-compared", d =>{
+    //   this.preVersion = d.preVer
+    //   this.curVersion = d.curVer
+    //   d3.select('.scatter-plot>*').remove()
 
-      this.$axios
-        .get("topics/getDiffDocs", {preVer: this.preVersion, curVer: this.curVersion})
-        .then(({data}) => {
-          this.diffData = data
-          this.dataAdapter()
-          if(this.diffVecs.length < 2) return
-          this.$axios
-            .post('http://localhost:8000/topic/TSNE', {diffVecs: this.diffVecs})
-            .then(({data}) =>{
-              data.forEach((point,i) => {
-                this.diffVecs[i]['point'] = point
-              })
-              this.draw(this.diffVecs)
-              this.$bus.$emit('diffs-show', this.diffVecs)
-            })
-      });
-    })
+    //   this.$axios
+    //     .get("topics/getDiffDocs", {preVer: this.preVersion, curVer: this.curVersion})
+    //     .then(({data}) => {
+    //       this.diffData = data
+    //       this.dataAdapter()
+    //       if(this.diffVecs.length < 2) return
+    //       this.$axios
+    //         .post('http://localhost:8000/topic/TSNE', {diffVecs: this.diffVecs})
+    //         .then(({data}) =>{
+    //           data.forEach((point,i) => {
+    //             this.diffVecs[i]['point'] = point
+    //           })
+    //           this.draw(this.diffVecs)
+    //           this.$bus.$emit('diffs-show', this.diffVecs)
+    //         })
+    //   });
+    // })
     this.$bus.$on('curVersion-selected', d =>{
       this.clearData()
       d3.select('.scatter-plot>*').remove()
