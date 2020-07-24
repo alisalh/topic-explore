@@ -18,7 +18,7 @@ export default {
     draw(data){
       d3.select('.parallel-coordinates>*').remove()
 
-      var margin = {top: 30, right: 50, bottom: 40, left: 30}
+      var margin = {top: 10, right: 53, bottom: 60, left: 30}
       var svg = d3.select('.parallel-coordinates')
         .append('svg')
         .attr('width', this.width)
@@ -64,10 +64,10 @@ export default {
         })
         .append("text")
         .style("text-anchor", "start")
-        .text(d => 'topic_'+(d+1))
-        .attr('dx', '-1.8em')
-        .attr('dy', '0.5em')
-        .attr("transform", "rotate(90)")
+        .text(d => 'topic '+(d+1))
+        .attr('dx', '1.0em')
+        .attr('dy', '1.0em')
+        .attr("transform", "translate(0, "+ (this.height-margin.bottom) +")rotate(65)")
         .attr('fill', 'black')
 
       lineG.selectAll('.line')
@@ -96,10 +96,7 @@ export default {
         d3.selectAll('.p-line').attr('opacity', 1)
       else{
         d3.selectAll('.p-line').attr('opacity', 0)
-        d3.selectAll('.p-line').filter(line => {
-          
-          return d.indexOf(line.id) != -1
-        }).attr('opacity', line => {console.log(line); return 1})
+        d3.selectAll('.p-line').filter(line => d.indexOf(line.id) != -1).attr('opacity', 1)
       }
     })
 

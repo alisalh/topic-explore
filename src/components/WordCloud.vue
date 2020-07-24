@@ -13,7 +13,8 @@ export default {
       width: 0,
       height: 0,
       svgWidth: 0,
-      svgHeight: 0
+      svgHeight: 0,
+      selectedTopic: -1
     }
   },
   props: ['topicData', "topicColormap"],
@@ -56,7 +57,10 @@ export default {
         .append('text')
         .style('font-size', d => d.size + 'px')
         .style('font-family', d => d.font)
-        .style('fill', 'black')
+        .style('fill', (d,i) => {
+          if(i == 0) return this.topicColormap(this.selectedTopic)
+          else return 'black'
+        })
         .attr('text-anchor', 'middle')
         .attr('transform', d => 'translate(' + [d.x, d.y] + ')rotate(' + d.rotate + ')')
         .text(d => d.text)
@@ -72,6 +76,7 @@ export default {
     this.svgHeight = this.height - margin.top - margin.bottom;
 
     this.$bus.$on('topic-selected', d =>{
+      this.selectedTopic = d
       let topicWords = [], fontColor = this.topicColormap(d)
       topicWords = this.topicData[d].words.map(d => ({
         'keyword': d.keyword, 

@@ -3,7 +3,7 @@
     <div class="cur-tree" ref="root1" ></div> 
     <div class="diff-tree" ref="root2">
       <el-tabs type="card" v-model="activeName" @tab-click="drawDiffTree(diffRoot)">
-        <el-tab-pane label="content" name="first">
+        <el-tab-pane label="feature" name="first">
             <div class='add-tree'></div>
             <div class='del-tree'></div>
         </el-tab-pane>
@@ -699,15 +699,18 @@ export default {
     },
     drawMoveTree(preData, curData){
       d3.select(".move-tree>svg").remove()
+      d3.select('.file-detail>svg').remove()
       if(preData.children.length == 0){
         d3.select('.move-tree').append('svg') 
           .attr("width", this.diffWidth).attr("height", this.diffHeight)
           .append('text').text('No Moving Files!').attr('text-anchor', 'middle')
           .attr('font-size', '20px').style('fill', '#ccc')
           .attr('x', this.diffWidth/2).attr('y', this.diffHeight/2)
+
+        d3.select('.file-detail').style('height', '0px').style('border-top', 'none')
         return
       }
-
+      d3.select('.file-detail').style('height', '200px').style('border-top', '#ddd 1px solid')
       let vm = this
       var svgHeight = this.diffHeight/2+40, svgWidth = this.diffWidth
       var margin = {top: 30, right: 5, bottom: 30, left: 5},
@@ -1258,6 +1261,7 @@ export default {
       d3.select('.diff-tree').style('visibility','hidden')
       d3.select('.diff-tree').style('padding','0px')
       d3.select('.cur-tree>*').remove();
+      d3.select('.file-detail').style('height', '0px').style('border-top', 'none')
       this.clearDiffTree()
     },
     clearDiffTree(){
@@ -1375,8 +1379,8 @@ export default {
     }
     .file-detail{
       overflow: auto;
-      height: 200px;
-      border-top: #ddd 1px solid;
+      // height: 200px;
+      // border-top: #ddd 1px solid;
       padding: 2px;
     }
   }

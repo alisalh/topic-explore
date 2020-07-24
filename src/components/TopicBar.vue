@@ -34,8 +34,8 @@ export default {
       })),
       selectedTopic: null,
       selectedVersion: '',
-      topics: ['topic_1', 'topic_2', 'topic_3', 'topic_4', 'topic_5', 'topic_6', 'topic_7', 'topic_8', 
-               'topic_9', 'topic_10', 'topic_11', 'topic_12', 'topic_13', 'topic_14', 'topic_15', 'topic_16']
+      topics: ['topic 1', 'topic 2', 'topic 3', 'topic 4', 'topic 5', 'topic 6', 'topic 7', 'topic 8', 
+               'topic 9', 'topic 10', 'topic 11', 'topic 12', 'topic 13', 'topic 14', 'topic 15', 'topic 16']
     };
   },
   props: ["topicsGroup", "versions", "topicNum"],
@@ -119,6 +119,10 @@ export default {
         .domain([0, this.versions.length])
         .range([0, 120]);
 
+      this.barData.sort(function(a, b) {
+        return a.topicId - b.topicId;
+      });
+      
       this.barData.forEach(d => {
         d.value = 0;
         d.opacity = 1;
@@ -130,10 +134,6 @@ export default {
         if(topic.key == -1) return     // 不考虑-1主题
         let verNum = topic.val.filter(ver => ver.val.length != 0).length;    // 版本对应的文件数不为0
         this.barData[topic.key].value = widthScale(verNum);
-      });
-
-      this.barData.sort(function(a, b) {
-        return a.topicId - b.topicId;
       });
     }
   },

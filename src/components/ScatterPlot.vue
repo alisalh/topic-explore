@@ -46,13 +46,13 @@ export default {
         let norm = 0;
         if(doc) norm = this.getNorm(doc.topicDistribution);
        
-          this.diffVecs.push({
-            id: doc.id,
-            name: doc.filename,
-            topic: doc.main_topic,
-            vec: doc.topicDistribution.map(d => -d),
-            type: 'del'
-          });
+        this.diffVecs.push({
+          id: doc.id,
+          name: doc.filename,
+          topic: doc.main_topic,
+          vec: doc.topicDistribution.map(d => -d),
+          type: 'del'
+        });
       })
 
       // 增加文件均为正值
@@ -61,36 +61,41 @@ export default {
         let norm = 0;
         if(doc) norm = this.getNorm(doc.topicDistribution);
        
-          this.diffVecs.push({
-            id: doc.id,
-            name: doc.filename,
-            topic: doc.main_topic,
-            vec: doc.topicDistribution,
-            type: 'add'
-          });
+        this.diffVecs.push({
+          id: doc.id,
+          name: doc.filename,
+          topic: doc.main_topic,
+          vec: doc.topicDistribution,
+          type: 'add'
+        });
       })
 
       // 修改文件前后版本相减
       editIds.forEach(item =>{
-        if(!item[2]) return
-        let preDoc = this.preData.find(d => d.id == item[0]);
-        let curDoc = this.curData.find(d => d.id == item[1]);
+        if(item.type != 'modify_add' || item.type != 'modify') return
+        let preDoc = this.preData.find(d => d.id == item.preid);
+        let curDoc = this.curData.find(d => d.id == item.curid);
         let norm = 0, vec, main_topic;
         if(preDoc && curDoc){
           vec = curDoc.topicDistribution.map((d, i) => d - preDoc.topicDistribution[i]);
           norm = this.getNorm(vec);
-          main_topic = vec.indexOf(d3.max(vec, d => Math.abs(d)))
         }
-        if(norm > 0)
+        if(item.type == 'modify_add') 
           this.diffVecs.push({
-              // preId: preDoc.id,
-              // preName: preDoc.filename,
-              id: curDoc.id,
-              name: curDoc.filename,
-              topic: main_topic,
-              vec: vec,
-              type: 'edit'
-            })
+            id: curDoc.id,
+            name: curDoc.filename,
+            topic: curDoc.main_topic,
+            vec: vec,
+            type: 'add'
+          })
+        if(item.type == 'modify_del') 
+          this.diffVecs.push({
+            id: preDoc.id,
+            name: preDoc.filename,
+            topic: preDoc.main_topic,
+            vec: vec,
+            type: 'del'
+          })
       })
     },
     draw(data){
@@ -127,26 +132,21 @@ export default {
         })
         .attr('font-size', '10px')
         .style('fill', d => this.topicColormap(d.topic))
-        .on('click', d => {
-          this.$bus.$emit('selected-diffs-show', [d.id ? d.id : d.curId])
-          console.log(d.type, d.vec)
+
+      var lasso = d3Lasso.lasso()
+        .items(d3.selectAll('.marker')) 
+        .targetArea(d3.select('.scatter-plot'))
+        .on('start', function(){
+          vm.selectedDiffs = []
+        })
+        .on('end', function(){
+          lasso.selectedItems().each(d => {
+            vm.selectedDiffs.push(d.id ? d.id : d.curId)
+          })
+          vm.$bus.$emit('selected-diffs-show', vm.selectedDiffs)
         })
 
-      // var lasso = d3Lasso.lasso()
-      //   .items(d3.selectAll('.marker')) 
-      //   .targetArea(d3.select('.scatter-plot'))
-      //   .on('start', function(){
-      //     vm.selectedDiffs = []
-      //   })
-      //   .on('end', function(){
-      //     lasso.selectedItems().each(d => {
-      //       console.log(d.type, d.vec)
-      //       vm.selectedDiffs.push(d.id ? d.id : d.curId)
-      //     })
-      //     vm.$bus.$emit('selected-diffs-show', vm.selectedDiffs)
-      //   })
-
-      // svg.call(lasso)
+      svg.call(lasso)
     },
     clearData(){
       this.preVersion = null
@@ -160,28 +160,26 @@ export default {
   },
   created() {
     // control panel响应事件
-    // this.$bus.$on("version-compared", d =>{
-    //   this.preVersion = d.preVer
-    //   this.curVersion = d.curVer
-    //   d3.select('.scatter-plot>*').remove()
+    this.$bus.$on("version-compared", d =>{
+      this.preVersion = d.preVer
+      this.curVersion = d.curVer
+      d3.select('.scatter-plot>*').remove()
 
-    //   this.$axios
-    //     .get("topics/getDiffDocs", {preVer: this.preVersion, curVer: this.curVersion})
-    //     .then(({data}) => {
-    //       this.diffData = data
-    //       this.dataAdapter()
-    //       if(this.diffVecs.length < 2) return
-    //       this.$axios
-    //         .post('http://localhost:8000/topic/TSNE', {diffVecs: this.diffVecs})
-    //         .then(({data}) =>{
-    //           data.forEach((point,i) => {
-    //             this.diffVecs[i]['point'] = point
-    //           })
-    //           this.draw(this.diffVecs)
-    //           this.$bus.$emit('diffs-show', this.diffVecs)
-    //         })
-    //   });
-    // })
+      this.$axios
+        .get("topics/getDiffDocs", {preVer: d.preVer, curVer: d.curVer})
+        .then(({data}) => {
+          this.diffData = data
+          this.dataAdapter()
+          if(this.diffVecs.length < 2) return
+          this.$axios
+            .post('http://localhost:8000/topic/TSNE', {diffVecs: this.diffVecs})
+            .then(({data}) =>{
+              data.forEach((point,i) => this.diffVecs[i]['point'] = point)
+              this.draw(this.diffVecs)
+              this.$bus.$emit('diffs-show', this.diffVecs)
+            })
+      });
+    })
     this.$bus.$on('curVersion-selected', d =>{
       this.clearData()
       d3.select('.scatter-plot>*').remove()
