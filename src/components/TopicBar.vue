@@ -74,8 +74,8 @@ export default {
       this.selectedVersion = val;
       this.barData.forEach(d => {
         d.value = 0;
-        d.opacity = 1;
-        d.isSelected = false;
+        // d.opacity = 1;
+        // d.isSelected = false;
       });
 
       // 按topic id排序
@@ -123,11 +123,16 @@ export default {
         return a.topicId - b.topicId;
       });
       
-      this.barData.forEach(d => {
-        d.value = 0;
-        d.opacity = 1;
-        d.isSelected = false;
-      });
+      if(this.selectedTopic != null)
+        this.barData.forEach(d => {
+          d.value = 0;
+        });
+      else
+        this.barData.forEach(d => {
+          d.value = 0;
+          d.opacity = 1;
+          d.isSelected = false;
+        });
 
       // bar长度与主题对应的版本数相关
       this.topicsGroup.forEach(topic => {

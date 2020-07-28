@@ -160,20 +160,22 @@ export default {
           // 点击当前选中版本表示取消选择
           if (d === this.selectedVersion) {
             this.selectedVersion = null;
-             this.$bus.$emit('lineVersion-reseted', null);      // 取消选择当前版本
-          } else {
+            this.$bus.$emit('lineVersion-reseted', null);      // 取消选择当前版本
+          }else{
             gridLine.filter(ver => ver === d).attr("opacity", 0.7);
             this.selectedVersion = d;
             this.$bus.$emit('lineVersion-selected', d);        // 选中当前版本
           }
         });
 
-      // 点击空白处还原
-      svg.on("click", () => {
-        this.selectedTopic = null;
-        this.resetLineStatus();
-        this.$bus.$emit("lineTopic-reseted", null);
-      });
+      // // 点击空白处还原
+      // svg.on("click", () => {
+      //   this.selectedTopic = null;
+      //   this.selectedVersion = null;
+      //   this.resetLineStatus();
+      //   this.$bus.$emit('lineVersion-reseted', null); 
+      //   this.$bus.$emit("lineTopic-reseted", null);
+      // });
 
       // 添加brush的折线图
       // 设置norm显示的刻度
@@ -233,7 +235,7 @@ export default {
         gridLine.attr("opacity", 0);
         this.selectedVersion = null;
         this.$bus.$emit("lineVersion-reseted", null);
-        this.resetLineStatus();
+        // this.resetLineStatus();
       }
 
       // 画刷结束时更新linechart

@@ -29,12 +29,13 @@
         ></line-chart>
       </div>
       <div class="second-row bl-card-shadow">
-        <file-tree
+        <file-sunburst
           :topicColormap="topicColormap"
           :docData="docVerData&&docVerData.files"
           :libraryName="libraryName"
-        ></file-tree>
-        <div class="cluster">
+          :topicNum="topicNum"
+        ></file-sunburst>
+        <!-- <div class="cluster">
           <scatter-plot
             :docData="docVerData&&docVerData.files"
             :topicColormap="topicColormap"
@@ -44,7 +45,7 @@
             :topicColormap="topicColormap"
           >
           </parallel-coordinates>
-        </div>
+        </div> -->
       </div>
     </div>
     <div class="right-panel bl-card-shadow">
@@ -58,7 +59,7 @@
 import * as d3 from "d3";
 import _ from "lodash";
 import LineChart from "./components/LineChart.vue";
-import FileTree from "./components/FileTree.vue";
+import FileSunburst from "./components/FileSunburst.vue";
 import WordCloud from './components/WordCloud.vue'
 import TopicBar from "./components/TopicBar.vue";
 import ScatterPlot from "./components/ScatterPlot.vue";
@@ -86,7 +87,7 @@ export default {
   },
   components: {
     LineChart,
-    FileTree,
+    FileSunburst,
     WordCloud,
     TopicBar,
     ScatterPlot,
@@ -104,7 +105,7 @@ export default {
 
       // 添加-1主题颜色
       domain.push(-1)
-      color.push('gray')
+      color.push('#c8c8c8')
 
       return d3
         .scaleOrdinal()
@@ -245,26 +246,26 @@ html {
       flex: 1;
     }
     .second-row {
-      flex: 1.3;
+      flex: 1.5;
       display: flex;
       margin-top: 3px;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
-      .file-tree {
-        flex: 1.2;
-        border-right: 5px solid #ececec;
-        box-shadow: 0 0 0 0 rgba(0, 0, 0, .2);
-      }
-      .cluster {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        .scatter-plot{
-          flex: 1.5;
-        }
-        .parallel-coordinates{
-          flex: 1;
-        }
-      }
+      // .file-sunburst {
+      //   flex: 1.2;
+      //   border-right: 5px solid #ececec;
+      //   box-shadow: 0 0 0 0 rgba(0, 0, 0, .2);
+      // }
+      // .cluster {
+      //   flex: 1;
+      //   display: flex;
+      //   flex-direction: column;
+      //   .scatter-plot{
+      //     flex: 1.5;
+      //   }
+      //   .parallel-coordinates{
+      //     flex: 1;
+      //   }
+      // }
     }
   }
   .right-panel {
