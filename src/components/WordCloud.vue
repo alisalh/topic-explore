@@ -75,7 +75,20 @@ export default {
     this.svgWidth = this.width - margin.left - margin.right;
     this.svgHeight = this.height - margin.top - margin.bottom;
 
+    // 主题bar响应事件
     this.$bus.$on('topic-selected', d =>{
+      this.selectedTopic = d
+      let topicWords = [], fontColor = this.topicColormap(d)
+      topicWords = this.topicData[d].words.map(d => ({
+        'keyword': d.keyword, 
+        'weight': d.weight, 
+        'color': fontColor
+      }))
+      this.draw(topicWords)
+    })
+
+    // 文件sunburst响应事件
+    this.$bus.$on('pieTopic-selected', d =>{
       this.selectedTopic = d
       let topicWords = [], fontColor = this.topicColormap(d)
       topicWords = this.topicData[d].words.map(d => ({

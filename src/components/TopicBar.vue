@@ -163,6 +163,9 @@ export default {
     this.$bus.$on('curVersion-reseted', () =>{
       this.curVersionReseted()
     })
+    this.$bus.$on('version-compared', () =>{
+      this.curVersionReseted()
+    })
 
     // lineChart响应事件
     this.$bus.$on("lineVersion-selected", d => {
@@ -171,15 +174,15 @@ export default {
     this.$bus.$on("lineVersion-reseted", () => {
       this.curVersionReseted();
     });
-    this.$bus.$on("lineTopic-reseted", () => {
-      this.selectedTopic = null;
-      this.barData.forEach(d => {
-        if(d.value > 0){
-          d.opacity = 1;
-          d.isSelected = false;
-        }
-      });
-    })
+    // this.$bus.$on("lineTopic-reseted", () => {
+    //   this.selectedTopic = null;
+    //   this.barData.forEach(d => {
+    //     if(d.value > 0){
+    //       d.opacity = 1;
+    //       d.isSelected = false;
+    //     }
+    //   });
+    // })
   }
 
 };
