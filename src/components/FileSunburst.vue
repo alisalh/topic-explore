@@ -34,7 +34,12 @@ export default {
      curClickFlag: false,
      preClickFlag: false,
      selectedTopic: null,
-     hiddenOpacity: 0.2
+     addedTopic: null,
+     deletedTopic: null,
+     editedTopic: null,
+     movedTopic: null,
+     noCompareOpacity: 0.5,
+     hiddenOpacity: 0.1
     };
   },
   computed: {},
@@ -135,27 +140,53 @@ export default {
             let path = this.calFilePath(d.data.name)
             pathG.append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle")
               .attr('font-size', '15px').text(path)
+            
+            if(this.editFlag){
+              for(let item of this.diffData.edit){
+                if(item.curid == d.data.id){
+                  let preDoc = this.docData.find(doc => doc.id == item.preid)
+                  let path = this.calFilePath(preDoc.filename)
+                  d3.select('.pre').select('.path').append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle").attr('font-size', '15px').text(path)
+                  let preNode = d3.select('.pre').selectAll('.node').filter(n => n.data.id == item.preid).style("stroke-width", 2)
+                }
+              }
+            }
+            
           } 
         })
         .on('mouseleave', d =>{
           if(!this.curClickFlag){
             pathG.selectAll('text').remove()
+            if(this.editFlag)
+              d3.select('.pre').select('.path').selectAll('text').remove()
           } 
         })
         .on('click', d => {
           this.curClickFlag = true
 
-          // 高亮选中的文件
-          nodes.style("stroke-width", 0.5).attr('opacity', this.hiddenOpacity)
-          for(let node of d.descendants())
-            nodes.filter(n => n == node).style("stroke-width", 1).attr('opacity', 1)
-          for(let node of d.ancestors())
-            nodes.filter(n => n == node).style("stroke-width", 1).attr('opacity', 1)
-          
-          pieG.selectAll('*').remove()
-          versionG.selectAll('text').remove()
+          let path = this.calFilePath(d.data.name)
+          pathG.selectAll('text').remove()
+          pathG.append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle")
+            .attr('font-size', '15px').text(path)
 
-          if(this.addFlag){
+          // 高亮选中的文件
+          if(this.selectedTopic != null){
+            nodes.style("stroke-width", 0.5).attr('opacity', n =>{
+              if(n.data.topic == this.selectedTopic || n.data.type == 'dir') return this.noCompareOpacity
+              else return this.hiddenOpacity
+            })
+          }
+          else if(this.addFlag){
+            let add = this.diffData.add
+            nodes.style("stroke-width", 0.5).attr('opacity', n =>{
+              if(this.addedTopic != null){
+                if((add.indexOf(n.data.id)!=-1 && n.data.topic == this.addedTopic) || n.data.type == 'dir') return this.noCompareOpacity
+                else return this.hiddenOpacity
+              }else{
+                if(add.indexOf(n.data.id)!=-1 || n.data.type == 'dir') return this.noCompareOpacity
+                else return this.hiddenOpacity
+              } 
+            })
             d3.select('.other').select('.lineG').selectAll('.line')
               .attr('opacity', l => {
                 if(l.id != d.data.id) return 0
@@ -193,6 +224,8 @@ export default {
               })
           }
           else{
+            nodes.style("stroke-width", 0.5).attr('opacity', this.noCompareOpacity)
+
             // 关键字和平行坐标数据
             let vecs = [], words = []
             for(let node of d.leaves()){
@@ -203,6 +236,14 @@ export default {
             this.drawWords(words, textG)
             if(d.data.type == 'file')this.$bus.$emit('file-selected', d.data.name)
           }
+        
+          for(let node of d.descendants())
+            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+          for(let node of d.ancestors())
+            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+          
+          pieG.selectAll('*').remove()
+          versionG.selectAll('text').remove()
           
           d3.event.stopPropagation()
         })
@@ -214,6 +255,7 @@ export default {
         nodes.style("stroke-width", 0.5).attr('opacity', 1)
 
         if(this.addFlag){
+          this.addedTopic = null
           let add = this.diffData.add
           this.drawPieChart(add, pieG, 'add') 
           nodes.filter(n => n.data.type == 'file' && add.indexOf(n.data.id) == -1).attr('opacity', this.hiddenOpacity)
@@ -337,27 +379,46 @@ export default {
             let path = this.calFilePath(d.data.name)
             pathG.append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle")
               .attr('font-size', '15px').text(path)
+
+            if(this.editFlag){
+              for(let item of this.diffData.edit){
+                if(item.preid == d.data.id){
+                  let curDoc = this.docData.find(doc => doc.id == item.curid)
+                  let path = this.calFilePath(curDoc.filename)
+                  d3.select('.cur').select('.path').append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle").attr('font-size', '15px').text(path)
+                }
+              }
+            }
           }
         })
         .on('mouseleave', d =>{
           if(!this.preClickFlag){
             pathG.selectAll('text').remove()
+            if(this.editFlag)
+              d3.select('.cur').select('.path').selectAll('text').remove()
           }
         })
         .on('click', d => {
           this.preClickFlag = true
 
            // 高亮选中的文件
-          nodes.style("stroke-width", 0.5).attr('opacity', this.hiddenOpacity)
-          for(let node of d.descendants())
-            nodes.filter(n => n == node).style("stroke-width", 1).attr('opacity', 1)
-          for(let node of d.ancestors())
-            nodes.filter(n => n == node).style("stroke-width", 1).attr('opacity', 1)
-          
-          pieG.selectAll('*').remove()  
-          versionG.selectAll('text').remove()
-
-          if(this.delFlag){
+          if(this.selectedTopic != null){
+            nodes.style("stroke-width", 0.5).attr('opacity', n =>{
+              if(n.data.topic == this.selectedTopic || n.data.type == 'dir') return this.noCompareOpacity
+              else return this.hiddenOpacity
+            })
+          }
+          else if(this.delFlag){
+            let del = this.diffData.del
+            nodes.style("stroke-width", 0.5).attr('opacity', n =>{
+              if(this.deletedTopic != null){
+                if((del.indexOf(n.data.id)!=-1 && n.data.topic == this.deletedTopic) || n.data.type == 'dir') return this.noCompareOpacity
+                else return this.hiddenOpacity
+              }else{
+                if(del.indexOf(n.data.id)!=-1 || n.data.type == 'dir') return this.noCompareOpacity
+                else return this.hiddenOpacity
+              } 
+            })
             d3.select('.other').select('.lineG').selectAll('.line')
               .attr('opacity', l => {
                 if(l.id != d.data.id) return 0
@@ -394,6 +455,8 @@ export default {
               })
           }
           else{
+            nodes.style("stroke-width", 0.5).attr('opacity', this.noCompareOpacity)
+
             // 关键字和平行坐标数据
             let vecs = [], words = []
             for(let node of d.leaves()){
@@ -406,6 +469,15 @@ export default {
             if(d.data.type == 'file') this.$bus.$emit('file-selected', d.data.name)
 
           }
+
+          for(let node of d.descendants())
+            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+          for(let node of d.ancestors())
+            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+          
+          pieG.selectAll('*').remove()  
+          versionG.selectAll('text').remove()
+
           d3.event.stopPropagation()
         })
 
@@ -416,6 +488,7 @@ export default {
           nodes.style("stroke-width", 0.5).attr('opacity', 1)
 
           if(this.delFlag){
+            this.deletedTopic = null
             let del = this.diffData.del
             this.drawPieChart(del, pieG, 'del') 
             nodes.filter(n => n.data.type == 'file' && del.indexOf(n.data.id) == -1).attr('opacity', this.hiddenOpacity)
@@ -549,11 +622,11 @@ export default {
       }
     },
     drawIcons(data){
-      let addFile = data.add, delFile = data.del, editFile = data.edit
+      let addFile = data.add, delFile = data.del, editFile = data.edit, moveFile = data.edit
       let icons = [{type: 'added', val: addFile.length, text: "\uf067"}, 
         {type: 'deleted', val: delFile.length, text: "\uf068"},
         {type: 'edited', val: editFile.length, text: "\uf040"}, 
-        {type: 'moved', val: 0, text: "\uf074"},
+        {type: 'moved', val: moveFile.length, text: "\uf074"},
         {type: 'undo', val: 0, text: "\uf0e2"},]
 
       var total = addFile.length + delFile.length + editFile.length
@@ -567,6 +640,21 @@ export default {
           .on('click', () =>{
             if(icons[i].type == 'undo'){                   //还原
               iconG.selectAll('g').attr('opacity', 1)
+              d3.select('.other').select('.lineG').selectAll('.line').remove()
+
+              // 前一版本
+              d3.select('.pre').selectAll('.node').style("stroke-width", 0.5).attr('opacity', 1)
+              d3.select('.pre').select('.pie').selectAll('*').remove()
+              d3.select('.pre').select('.words').selectAll('text').remove()
+              d3.select('.pre').select('.path').selectAll('text').remove()
+              this.drawInfomation(this.preInfo, d3.select('.pre').select('.version'))
+
+              // 后一版本
+              d3.select('.cur').selectAll('.node').style("stroke-width", 0.5).attr('opacity', 1)
+              d3.select('.cur').select('.pie').selectAll('*').remove()
+              d3.select('.cur').select('.words').selectAll('text').remove()
+              d3.select('.cur').select('.path').selectAll('text').remove()
+              this.drawInfomation(this.curInfo, d3.select('.cur').select('.version'))
             }else{                                         //查看一类文件
               iconG.selectAll('g').attr('opacity', 0.2)
               iconG.select('.'+icons[i].type).attr('opacity', 1)
@@ -629,6 +717,8 @@ export default {
       this.preInfo = null
       this.curClickFlag = false
       this.preClickFlag = false
+      this.addedTopic = null
+      this.deletedTopic = null
     },
     calFilePath(data){
       let strs = data.split('/'), path ='' 
@@ -668,7 +758,8 @@ export default {
                 if(ids.indexOf(l.id) != -1) return 1
                 else return 0
               })
-            if(version == this.curVersion)
+            if(version == this.curVersion){
+              this.addedTopic = parseInt(d.data)
               d3.select('.cur').selectAll('.node')
                 .attr('opacity', n =>{
                   if(n.data.type == 'dir') return 1
@@ -677,7 +768,10 @@ export default {
                     else return this.hiddenOpacity
                   }
                 })
-            if(version == this.preVersion)
+            }
+              
+            if(version == this.preVersion){
+              this.deletedTopic = parseInt(d.data)
               d3.select('.pre').selectAll('.node')
                 .attr('opacity', n =>{
                   if(n.data.type == 'dir') return 1
@@ -686,6 +780,7 @@ export default {
                     else return this.hiddenOpacity
                   }
                 })
+            }
           }
           if(this.editFlag){
             let ids = []
@@ -828,10 +923,59 @@ export default {
           d3.select('.pre').select('.pie').selectAll('*').remove()
           this.drawInfomation(this.preInfo, d3.select('.pre').select('.version'))
         }
+        if(this.moveFlag){
+          d3.select('.cur').selectAll('.node').attr('opacity', 1)
+          d3.select('.pre').selectAll('.node').attr('opacity', 1)
+        }
       }
     },
     moveFlag(val){
       if(val){
+        let move = this.diffData.edit, pre = [], cur = []
+        for(let item of move){
+          let preDoc = this.docData.find(doc => doc.id == item.preid),
+            curDoc = this.docData.find(doc => doc.id == item.curid)
+
+          pre.push(item.preid)
+          cur.push(item.curid)
+        }
+        d3.select('.cur').selectAll('.node')
+          .attr('opacity', n => {
+            if(n.data.type == 'dir') return 1
+            else{
+              if(cur.indexOf(n.data.id) != -1) return 1
+              else return this.hiddenOpacity
+            }
+          })
+        d3.select('.pre').selectAll('.node')
+          .attr('opacity', n => {
+            if(n.data.type == 'dir') return 1
+            else{
+              if(pre.indexOf(n.data.id) != -1) return 1
+              else return this.hiddenOpacity
+            }
+          })
+        d3.select('.other').select('.lineG').selectAll('.line').remove()
+        d3.select('.pre').select('.version').selectAll('text').remove()
+        d3.select('.cur').select('.version').selectAll('text').remove()
+      }
+      else{
+        if(this.delFlag){
+          d3.select('.cur').selectAll('.node').attr('opacity', 1)
+          d3.select('.cur').select('.pie').selectAll('*').remove()
+          this.drawInfomation(this.curInfo, d3.select('.cur').select('.version'))
+        }
+        if(this.addFlag){
+          d3.select('.pre').selectAll('.node').attr('opacity', 1)
+          d3.select('.pre').select('.pie').selectAll('*').remove()
+          this.drawInfomation(this.preInfo, d3.select('.pre').select('.version'))
+        }
+        if(this.editFlag){
+          d3.select('.cur').selectAll('.node').attr('opacity', 1)
+          d3.select('.cur').select('.pie').selectAll('*').remove()
+          d3.select('.pre').selectAll('.node').attr('opacity', 1)
+          d3.select('.pre').select('.pie').selectAll('*').remove()
+        }
       }
     }
   },
