@@ -71,6 +71,10 @@ export default {
       //pie chart
       var pieG = svg.append('g').attr('class', 'pie')
 
+      //dir path
+      var dirG = svg.append('g').attr('class', 'dir')
+        .attr('transform', 'translate(' + this.curWidth / 2 + ',' + this.curHeight/3 + ')')
+
       var root = d3.hierarchy(data);
       root.sum(function(d) { return !d.children && d.type=='file' ? 1 : 0;})
         .sort(function(a, b) { 
@@ -151,7 +155,41 @@ export default {
                 }
               }
             }
-            
+
+            if(this.moveFlag){
+              let cur = [], pre = [], movePre = []
+              for(let item of this.diffData.edit){
+                cur.push(item.curid)
+                pre.push(item.preid)
+              }
+              // 当前高亮
+              for(let node of d.leaves()){
+                if(cur.indexOf(node.data.id) != -1){
+                  nodes.filter(n => n == node).style("stroke-width", 2)
+                  for(let node_ of node.ancestors())
+                    nodes.filter(n => n == node_).style("stroke-width", 2)
+                  movePre.push(pre[cur.indexOf(node.data.id)])
+                }
+              }
+              if(d.data.type == 'dir') this.drawDirs([d.data.name], dirG)
+              else this.drawDirs([d.data.name.substr(0, d.data.name.lastIndexOf('/'))], dirG)
+
+              //前一版本高亮
+              let dirs = []
+              for(let preid of movePre){
+                let ancestors = null
+                d3.select('.pre').selectAll('.node').filter(n => n.data.id == preid).style("stroke-width", n => { 
+                  ancestors = n.ancestors(); 
+                  dirs.push(n.data.name.substr(0, n.data.name.lastIndexOf('/')));
+                  return 2
+                })
+                for(let node of ancestors){
+                  d3.select('.pre').selectAll('.node').filter(n => n == node).style("stroke-width", 2)
+                }
+              }
+              dirs = Array.from(new Set(dirs))
+              this.drawDirs(dirs, d3.select('.pre').select('.dir'))
+            }
           } 
         })
         .on('mouseleave', d =>{
@@ -161,11 +199,20 @@ export default {
               d3.select('.pre').selectAll('.node').style("stroke-width", 0.5)
               d3.select('.pre').select('.path').selectAll('text').remove()
             }
-              
+            if(this.moveFlag){
+              nodes.style("stroke-width", 0.5)
+              dirG.selectAll('text').remove()
+              d3.select('.pre').select('.dir').selectAll('text').remove()
+              d3.select('.pre').selectAll('.node').style("stroke-width", 0.5)
+              d3.select('.pre').select('.path').selectAll('text').remove()
+            }  
           } 
         })
         .on('click', d => {
           this.curClickFlag = true
+
+          pieG.selectAll('*').remove()
+          versionG.selectAll('text').remove()
 
           let path = this.calFilePath(d.data.name)
           pathG.selectAll('text').remove()
@@ -173,13 +220,7 @@ export default {
             .attr('font-size', '15px').text(path)
 
           // 高亮选中的文件
-          if(this.selectedTopic != null){
-            nodes.style("stroke-width", 0.5).attr('opacity', n =>{
-              if(n.data.topic == this.selectedTopic || n.data.type == 'dir') return this.noCompareOpacity
-              else return this.hiddenOpacity
-            })
-          }
-          else if(this.addFlag){
+          if(this.addFlag){
             let add = this.diffData.add
             nodes.style("stroke-width", 0.5).attr('opacity', n =>{
               if(this.addedTopic != null){
@@ -248,9 +289,20 @@ export default {
                 else return 0
               })
           }
-          else{
-            nodes.style("stroke-width", 0.5).attr('opacity', this.noCompareOpacity)
+          else if(this.moveFlag){
 
+          }
+          else{
+            if(this.selectedTopic != null){
+              nodes.style("stroke-width", 0.5).attr('opacity', n =>{
+                if(n.data.topic == this.selectedTopic || n.data.type == 'dir') return this.noCompareOpacity
+                else return this.hiddenOpacity
+              })
+            }
+            else{
+              nodes.style("stroke-width", 0.5).attr('opacity', this.noCompareOpacity)
+            }
+            
             // 关键字和平行坐标数据
             let vecs = [], words = []
             for(let node of d.leaves()){
@@ -266,9 +318,6 @@ export default {
             nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
           for(let node of d.ancestors())
             nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
-          
-          pieG.selectAll('*').remove()
-          versionG.selectAll('text').remove()
           
           d3.event.stopPropagation()
         })
@@ -345,6 +394,10 @@ export default {
       //pie chart
       var pieG = svg.append('g').attr('class', 'pie')
 
+       //dir path
+      var dirG = svg.append('g').attr('class', 'dir')
+        .attr('transform', 'translate(' + this.curWidth / 2 + ',' + (this.curHeight/2-15) + ')')
+
       var root = d3.hierarchy(data);
       root.sum(function(d) { return !d.children && d.type=='file' ? 1 : 0;})
         .sort(function(a, b) { 
@@ -416,6 +469,41 @@ export default {
                 }
               }
             }
+
+            if(this.moveFlag){
+              let cur = [], pre = [], moveCur = []
+              for(let item of this.diffData.edit){
+                cur.push(item.curid)
+                pre.push(item.preid)
+              }
+              // 当前高亮
+              for(let node of d.leaves()){
+                if(pre.indexOf(node.data.id) != -1){
+                  nodes.filter(n => n == node).style("stroke-width", 2)
+                  for(let node_ of node.ancestors())
+                    nodes.filter(n => n == node_).style("stroke-width", 2)
+                  moveCur.push(cur[pre.indexOf(node.data.id)])
+                }
+              }
+              if(d.data.type == 'dir') this.drawDirs([d.data.name], dirG)
+              else this.drawDirs([d.data.name.substr(0, d.data.name.lastIndexOf('/'))], dirG)
+
+              // 后一版本高亮
+              let dirs = []
+              for(let curid of moveCur){
+                let ancestors = null
+                d3.select('.cur').selectAll('.node').filter(n => n.data.id == curid).style("stroke-width", n => { 
+                  ancestors = n.ancestors(); 
+                  dirs.push(n.data.name.substr(0, n.data.name.lastIndexOf('/')));
+                  return 2
+                })
+                for(let node of ancestors){
+                  d3.select('.cur').selectAll('.node').filter(n => n == node).style("stroke-width", 2)
+                }
+              }
+              dirs = Array.from(new Set(dirs))
+              this.drawDirs(dirs, d3.select('.cur').select('.dir'))
+            }
           }
         })
         .on('mouseleave', d =>{
@@ -425,19 +513,22 @@ export default {
               d3.select('.cur').selectAll('.node').style("stroke-width", 0.5)
               d3.select('.cur').select('.path').selectAll('text').remove()
             }
+            if(this.moveFlag){
+              nodes.style("stroke-width", 0.5)
+              dirG.selectAll('text').remove()
+              d3.select('.cur').select('.dir').selectAll('text').remove()
+              d3.select('.cur').selectAll('.node').style("stroke-width", 0.5)
+              d3.select('.cur').select('.path').selectAll('text').remove()
+            }  
           }
         })
         .on('click', d => {
           this.preClickFlag = true
+          pieG.selectAll('*').remove()  
+          versionG.selectAll('text').remove()
 
            // 高亮选中的文件
-          if(this.selectedTopic != null){
-            nodes.style("stroke-width", 0.5).attr('opacity', n =>{
-              if(n.data.topic == this.selectedTopic || n.data.type == 'dir') return this.noCompareOpacity
-              else return this.hiddenOpacity
-            })
-          }
-          else if(this.delFlag){
+          if(this.delFlag){
             let del = this.diffData.del
             nodes.style("stroke-width", 0.5).attr('opacity', n =>{
               if(this.deletedTopic != null){
@@ -506,7 +597,15 @@ export default {
               })
           }
           else{
-            nodes.style("stroke-width", 0.5).attr('opacity', this.noCompareOpacity)
+            if(this.selectedTopic != null){
+              nodes.style("stroke-width", 0.5).attr('opacity', n =>{
+                if(n.data.topic == this.selectedTopic || n.data.type == 'dir') return this.noCompareOpacity
+                else return this.hiddenOpacity
+              })
+            }
+            else {
+              nodes.style("stroke-width", 0.5).attr('opacity', this.noCompareOpacity)
+            }
 
             // 关键字和平行坐标数据
             let vecs = [], words = []
@@ -518,16 +617,12 @@ export default {
             this.drawWords(words, textG)
 
             if(d.data.type == 'file') this.$bus.$emit('file-selected', d.data.name)
-
           }
 
           for(let node of d.descendants())
             nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
           for(let node of d.ancestors())
             nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
-          
-          pieG.selectAll('*').remove()  
-          versionG.selectAll('text').remove()
 
           d3.event.stopPropagation()
         })
@@ -599,7 +694,7 @@ export default {
         .range([margin.top+10, height-10])
       
       var xScale = d3.scaleLinear()
-        .domain([-1, 1])
+        .domain([0, 1])
         .range([margin.left+40, width-10])
 
       axisG.selectAll('.axis')
@@ -612,13 +707,11 @@ export default {
           if(d == 0)
             d3.select(this)
               .call(d3.axisTop().scale(xScale)
-                .tickValues([-1, 0, 1])
-                .tickFormat(d3.format(".0f"))
-              )
+                .tickValues([0, 0.5, 1]))
               .call(g => g.selectAll(".domain").remove())
           else
             d3.select(this)
-              .call(d3.axisTop().scale(xScale).tickValues([-1, 0, 1]))
+              .call(d3.axisTop().scale(xScale).tickValues([0, 0.5, 1]))
               .call(g => g.selectAll(".domain").remove())
               .call(g => g.selectAll(".tick").selectAll('text').remove())
         })
@@ -837,29 +930,28 @@ export default {
           }
           if(this.editFlag){
             this.editedTopic = parseInt(d.data)
-
-            let ids = []
+            let ids = [], pre = [], cur = []
             for(let doc of topicDict[d.data]) ids.push(doc.id)
-            let preid = [], curid = []
             
             // 平行坐标
             d3.select('.other').select('.lineG').selectAll('.line')
               .attr('opacity', l =>{
-                let lid = l.id.split('-')   //平行坐标的id组成：preid-curid
-                if(ids.indexOf(parseInt(lid[0])) != -1 || ids.indexOf(parseInt(lid[1])) != -1) {
-                  preid.push(parseInt(lid[0]))
-                  curid.push(parseInt(lid[1]))
+                let preid = parseInt(l.id.split('-')[0]), curid = parseInt(l.id.split('-')[1])
+                if(ids.indexOf(preid) != -1 || ids.indexOf(curid) != -1) {
+                  pre.push(preid)
+                  cur.push(curid)
                   return 1
                 }
                 else return 0
               })
+            console.log(cur, pre)
             
             // 高亮前一版本的文件
             d3.select('.pre').selectAll('.node')
               .attr('opacity', n =>{
                 if(n.data.type == 'dir') return 1
                 else{
-                  if(preid.indexOf(n.data.id) != -1) return 1
+                  if(pre.indexOf(n.data.id) != -1) return 1
                   else return this.hiddenOpacity
                 }
               })
@@ -869,7 +961,7 @@ export default {
               .attr('opacity', n =>{
                 if(n.data.type == 'dir') return 1
                 else{
-                  if(curid.indexOf(n.data.id) != -1) return 1
+                  if(cur.indexOf(n.data.id) != -1) return 1
                   else return this.hiddenOpacity
                 }
               })
@@ -880,6 +972,13 @@ export default {
         })
       pieG.append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle")
         .attr('dy', '0.5em').attr('font-size', '20px').text(type+": "+data.length)
+    }, 
+    drawDirs(data, dirG){
+      dirG.selectAll('text').remove()
+      for(let i=0; i<data.length; i++){
+        let dirPath = this.calFilePath(data[i])
+        dirG.append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle").attr('font-size', '15px').attr('dy', i*1.5+'em').text(dirPath)
+      }
     }
   },
   watch:{
@@ -914,7 +1013,7 @@ export default {
             if(n.data.type == 'dir') return 1
             else{
               if(del.indexOf(n.data.id) != -1) {
-                vecs.push({'id': n.data.id, 'vec': n.data.vec.map(v => -v), 'topic': n.data.topic})  // 平行坐标数据
+                vecs.push({'id': n.data.id, 'vec': n.data.vec, 'topic': n.data.topic})  // 平行坐标数据
                 return 1
               }
               else return this.hiddenOpacity
@@ -933,16 +1032,12 @@ export default {
       if(val){       
         let edit = this.diffData.edit, pre = [], cur = [], vecs = []
         for(let item of edit){
+          pre.push(item.preid)
+          cur.push(item.curid)
           let preDoc = this.docData.find(doc => doc.id == item.preid),
             curDoc = this.docData.find(doc => doc.id == item.curid)
-          // 后台数据处理
-          let vec = curDoc.topicDistribution.map((p, i) => p - preDoc.topicDistribution[i])
-          if((new Set(vec)).size != 1){
-            pre.push(item.preid)
-            cur.push(item.curid)
-            let vecAbs = vec.map(v => Math.abs(v))
-            vecs.push({'id': item.preid+'-'+item.curid, 'vec': vec, 'topic': vecAbs.indexOf(Math.max(...vecAbs))})
-          }
+          vecs.push({'id': item.preid+'-'+item.curid, 'vec': preDoc.topicDistribution, 'topic': preDoc.main_topic})
+          vecs.push({'id': item.preid+'-'+item.curid, 'vec': curDoc.topicDistribution, 'topic': curDoc.main_topic})
         }
         d3.select('.cur').selectAll('.node')
           .attr('opacity', n => {
@@ -978,10 +1073,6 @@ export default {
           d3.select('.pre').select('.pie').selectAll('*').remove()
           this.drawInfomation(this.preInfo, d3.select('.pre').select('.version'))
         }
-        if(this.moveFlag){
-          d3.select('.cur').selectAll('.node').attr('opacity', 1)
-          d3.select('.pre').selectAll('.node').attr('opacity', 1)
-        }
       }
     },
     moveFlag(val){
@@ -1013,6 +1104,8 @@ export default {
         d3.select('.other').select('.lineG').selectAll('.line').remove()
         d3.select('.pre').select('.version').selectAll('text').remove()
         d3.select('.cur').select('.version').selectAll('text').remove()
+        d3.select('.pre').select('.pie').selectAll('*').remove()
+        d3.select('.cur').select('.pie').selectAll('*').remove()
       }
       else{
         if(this.delFlag){
@@ -1024,12 +1117,6 @@ export default {
           d3.select('.pre').selectAll('.node').attr('opacity', 1)
           d3.select('.pre').select('.pie').selectAll('*').remove()
           this.drawInfomation(this.preInfo, d3.select('.pre').select('.version'))
-        }
-        if(this.editFlag){
-          d3.select('.cur').selectAll('.node').attr('opacity', 1)
-          d3.select('.cur').select('.pie').selectAll('*').remove()
-          d3.select('.pre').selectAll('.node').attr('opacity', 1)
-          d3.select('.pre').select('.pie').selectAll('*').remove()
         }
       }
     }
@@ -1139,7 +1226,7 @@ export default {
     border-right: 5px solid #ececec;
   }
   .other{
-    flex: 1;
+    flex: 0.8;
   }
 }
 </style>
