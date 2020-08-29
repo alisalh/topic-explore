@@ -86,7 +86,6 @@ export default {
     this.height = Math.floor(this.$refs.root.clientHeight) - 20;
     this.width = Math.floor(this.$refs.root.clientWidth);
 
-    // scatter plot响应事件
     this.$bus.$on('diffs-show', d =>{
       this.draw(d)
     })

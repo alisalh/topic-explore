@@ -209,7 +209,6 @@ html {
   }
 }
 #app {
-  font-family: "Avenir", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -moz-user-select: none;
@@ -219,6 +218,9 @@ html {
   width: 100%;
   color: #2c3e50;
   display: flex;
+  .axis{
+    font-family: Georgia, serif;
+  }
   .left-panel {
     height: 100%;
     flex: 1;
@@ -227,6 +229,7 @@ html {
     flex-direction: column;
     .args-wrapper {
       flex: 1;
+      font-family: Georgia, serif;
     }
     .topic-bar {
       margin-top:3px;
@@ -247,7 +250,6 @@ html {
     }
     .second-row {
       flex: 1.5;
-      display: flex;
       margin-top: 3px;
       box-shadow: 0 2px 12px 0 rgba(0, 0, 0, .1);
       // .file-sunburst {
@@ -269,16 +271,8 @@ html {
     }
   }
   .right-panel {
-    display: flex;
-    flex-direction: column;
     flex: 2;
     overflow: auto;
-    .code-wrapper {
-      flex: 1.5;
-    }
-    .parallel-coordinates {
-      flex: 1;
-    }
   }
 }
 </style>

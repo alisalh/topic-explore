@@ -63,6 +63,7 @@ export default {
               .style("text-anchor", "end")
               .attr("dx", "-.8em")
               .attr("dy", ".15em")
+              .attr('color', 'black')
               .attr("transform", "rotate(-65)"));
       // y轴
       var yAxis = g =>
@@ -77,7 +78,7 @@ export default {
               .attr("x", 3)
               .attr("text-anchor", "start")
               .attr("font-weight", "bold")
-              .text("number of files"));
+              .text("topic assignment"));
       svg
         .append("g")
         .attr("class", "axis lineaxis--x")
@@ -91,10 +92,11 @@ export default {
         .attr("class", "x-label")
         .attr("transform", "translate("+(this.width-60)+","+this.height+")")
         .append("text")
-        .text("versions")
+        .text("version")
         .attr("text-anchor", "start")
         .attr("font-weight", "bold")
         .attr("font-size", "12px")
+        .attr("font-family","Georgia, serif")
         .attr('color', "#2c3e50")
         
       // 画线
@@ -138,7 +140,7 @@ export default {
         .attr("d", d => {
           xOffset = x(d);
           return d3.line()([
-            [xOffset, margin.top + brushHeight + gap],
+            [xOffset, margin.top + brushHeight + gap + 10],
             [xOffset, this.height - margin.bottom]
           ]);
         });
@@ -406,8 +408,8 @@ export default {
       // 与前后版本的差值大于均值则显示
       for (let i = 1; i < this.normData.length - 1; i++) {
         if (
-          this.normData[i].val - this.normData[i - 1].val > (mean+1.5) &&
-          this.normData[i].val - this.normData[i + 1].val > (mean+1.5)
+          this.normData[i].val - this.normData[i - 1].val > (mean + 1.7) &&
+          this.normData[i].val - this.normData[i + 1].val > (mean + 1.7)
         ) {
           this.showVersions.push(this.versions[i]);
         }

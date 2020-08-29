@@ -66,7 +66,7 @@ export default {
 
       //file path
       var pathG = svg.append('g').attr('class', 'path')
-        .attr('transform', 'translate(' + this.curWidth / 2 + ',' + (this.curHeight - 4*margin.bottom) + ')')
+        .attr('transform', 'translate(' + this.curWidth / 2 + ',' + (this.curHeight - 5*margin.bottom) + ')')
       
       //pie chart
       var pieG = svg.append('g').attr('class', 'pie')
@@ -108,6 +108,27 @@ export default {
         y.range([this.curWidth/3, this.curWidth/3+nodeHeight])
         textG.attr('transform', 'translate(' + this.curWidth / 2 + ',' + this.curHeight / 2 + ')')
         pieG.attr('transform', 'translate(' + this.curWidth / 2 + ',' + this.curHeight / 2 + ')')
+      }
+
+      // 添加文字
+      var middleArcLine = d =>{
+        var halfPi = Math.PI/2,
+          angles = [x(d.x0) - halfPi, x(d.x1) - halfPi],
+          r = Math.max(0, (y(d.y0) + y(d.y1)) / 2)
+        var midAngle = (angles[0] + angles[1]) / 2,
+          invertDire = midAngle > 0 && midAngle < Math.PI
+        if(invertDire){ angles.reverse()}
+        var path = d3.path()
+        path.arc(0, 0, r, angles[0], angles[1], invertDire)
+        return path.toString()
+      }
+      var textFits = d =>{
+        var charSpace = 6
+        var deltaAngle = x(d.x1) - x(d.x0),
+          r = Math.max(0, (y(d.y0) + y(d.y1)) / 2),
+          perimeter = r * deltaAngle
+        var dirName = d.data.name.substr(d.data.name.lastIndexOf('/')+1)
+        return dirName.length * charSpace < perimeter
       }
 
       var partition = d3.partition();
@@ -157,8 +178,9 @@ export default {
             }
 
             if(this.moveFlag){
+              pathG.selectAll('text').remove()
               let cur = [], pre = [], movePre = []
-              for(let item of this.diffData.edit){
+              for(let item of this.diffData.move){
                 cur.push(item.curid)
                 pre.push(item.preid)
               }
@@ -235,8 +257,10 @@ export default {
               .attr('opacity', l => {
                 if(l.id != d.data.id) return 0
               })
-            if(d.data.type == 'file') 
+            if(d.data.type == 'file') {
+              this.$bus.$emit('file-topic-selected', d.data.topic)
               this.$bus.$emit('compared-file-selected', {'preName': null, 'curName': d.data.name})
+            }
             this.drawWords(d.data.words, textG)
           }
           else if(this.editFlag){
@@ -278,6 +302,7 @@ export default {
               d3.select('.pre').select('.path').selectAll('text').remove()
               d3.select('.pre').select('.path').append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle").attr('font-size', '15px').text(this.calFilePath(n.data.name))
               this.$bus.$emit('compared-file-selected', {'preName': n.data.name, 'curName': d.data.name})
+              this.$bus.$emit('file-topic-selected', d.data.topic)
               return 1
             })
             
@@ -290,7 +315,40 @@ export default {
               })
           }
           else if(this.moveFlag){
+            pathG.selectAll('text').remove()
+            this.preClickFlag = true
+            let cur = [], pre = [], movePre = []
+            for(let item of this.diffData.move){
+              cur.push(item.curid)
+              pre.push(item.preid)
+            }
+            // 当前高亮
+            for(let node of d.leaves()){
+              if(cur.indexOf(node.data.id) != -1){
+                nodes.filter(n => n == node).style("stroke-width", 2)
+                for(let node_ of node.ancestors())
+                  nodes.filter(n => n == node_).style("stroke-width", 2)
+                movePre.push(pre[cur.indexOf(node.data.id)])
+              }
+            }
+            if(d.data.type == 'dir') this.drawDirs([d.data.name], dirG)
+            else this.drawDirs([d.data.name.substr(0, d.data.name.lastIndexOf('/'))], dirG)
 
+            //前一版本高亮
+            let dirs = []
+            for(let preid of movePre){
+              let ancestors = null
+              d3.select('.pre').selectAll('.node').filter(n => n.data.id == preid).style("stroke-width", n => { 
+                ancestors = n.ancestors(); 
+                dirs.push(n.data.name.substr(0, n.data.name.lastIndexOf('/')));
+                return 2
+              })
+              for(let node of ancestors){
+                d3.select('.pre').selectAll('.node').filter(n => n == node).style("stroke-width", 2)
+              }
+            }
+            dirs = Array.from(new Set(dirs))
+            this.drawDirs(dirs, d3.select('.pre').select('.dir'))
           }
           else{
             if(this.selectedTopic != null){
@@ -311,22 +369,49 @@ export default {
             }
             this.drawParallel(vecs)
             this.drawWords(words, textG)
-            if(d.data.type == 'file')this.$bus.$emit('file-selected', d.data.name)
+            if(d.data.type == 'file'){
+              this.$bus.$emit('file-topic-selected', d.data.topic)
+              this.$bus.$emit('file-selected', d.data.name)
+            }
           }
-        
-          for(let node of d.descendants())
-            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
-          for(let node of d.ancestors())
-            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+
+          if(!this.moveFlag){
+            for(let node of d.descendants())
+              nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+            for(let node of d.ancestors())
+              nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+          }
           
           d3.event.stopPropagation()
         })
+
+      // 添加文字的node
+      var hiddenNodes = nodeG.selectAll('.slice')
+        .filter(d => d.data.type == 'dir')
+        .append('path')
+        .attr('class', 'hiddenNode')
+        .attr('id', (_, i) => `curhiddenArc${i}`)
+        .attr('d', middleArcLine)
+        .style('fill', 'none')
+      var text = nodeG.selectAll('.slice')
+        .filter(d => d.data.type == 'dir')
+        .append('text')
+        .attr('display', d => textFits(d) ? null : 'none')
+        .attr('dy', '.2em')
+      text.append('textPath')
+        .attr('startOffset','50%')
+        .attr('xlink:href', (_, i) => `#curhiddenArc${i}` )
+        .text(d => d.data.name.substr(d.data.name.lastIndexOf('/')+1))
+        .style('text-anchor', 'middle')
+        .attr('font-family', 'Georgia, serif')
+        .attr('font-size', '12px');
       
       svg.on('click', ()=>{
         this.curClickFlag = false
         textG.selectAll('text').remove()
         pathG.selectAll('text').remove()
-        nodes.style("stroke-width", 0.5).attr('opacity', 1)
+        if(!this.moveFlag)
+          nodes.style("stroke-width", 0.5).attr('opacity', 1)
 
         if(this.addFlag){
           this.addedTopic = null
@@ -356,6 +441,14 @@ export default {
           this.drawPieChart(preid, d3.select('.pre').select('.pie'), 'edit')
 
           d3.select('.other').select('.lineG').selectAll('.line').attr('opacity', 1)
+        }
+        else if(this.moveFlag){
+          this.preClickFlag = false
+          nodes.style("stroke-width", 0.5)
+          dirG.selectAll('text').remove()
+          d3.select('.pre').select('.dir').selectAll('text').remove()
+          d3.select('.pre').selectAll('.node').style("stroke-width", 0.5)
+          d3.select('.pre').select('.path').selectAll('text').remove()
         }
         else{
           this.drawParallel(null)
@@ -433,6 +526,27 @@ export default {
         pieG.attr('transform', 'translate(' + this.curWidth / 2 + ',' + this.curHeight / 2 + ')')
       }
 
+      // 添加文字
+      var middleArcLine = d =>{
+        var halfPi = Math.PI/2,
+          angles = [x(d.x0) - halfPi, x(d.x1) - halfPi],
+          r = Math.max(0, (y(d.y0) + y(d.y1)) / 2)
+        var midAngle = (angles[0] + angles[1]) / 2,
+          invertDire = midAngle > 0 && midAngle < Math.PI
+        if(invertDire){ angles.reverse()}
+        var path = d3.path()
+        path.arc(0, 0, r, angles[0], angles[1], invertDire)
+        return path.toString()
+      }
+      var textFits = d =>{
+        var charSpace = 6
+        var deltaAngle = x(d.x1) - x(d.x0),
+          r = Math.max(0, (y(d.y0) + y(d.y1)) / 2),
+          perimeter = r * deltaAngle
+        var dirName = d.data.name.substr(d.data.name.lastIndexOf('/')+1)
+        return dirName.length * charSpace < perimeter
+      }
+
       var partition = d3.partition();
       var arc = d3.arc()
         .startAngle(function(d) { return Math.max(0, Math.min(2 * Math.PI, x(d.x0))); })
@@ -471,8 +585,9 @@ export default {
             }
 
             if(this.moveFlag){
+              pathG.selectAll('text').remove()
               let cur = [], pre = [], moveCur = []
-              for(let item of this.diffData.edit){
+              for(let item of this.diffData.move){
                 cur.push(item.curid)
                 pre.push(item.preid)
               }
@@ -527,6 +642,11 @@ export default {
           pieG.selectAll('*').remove()  
           versionG.selectAll('text').remove()
 
+          let path = this.calFilePath(d.data.name)
+          pathG.selectAll('text').remove()
+          pathG.append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle")
+            .attr('font-size', '15px').text(path)
+
            // 高亮选中的文件
           if(this.delFlag){
             let del = this.diffData.del
@@ -543,7 +663,10 @@ export default {
               .attr('opacity', l => {
                 if(l.id != d.data.id) return 0
               })
-            if(d.data.type == 'file') this.$bus.$emit('compared-file-selected', {'preName': d.data.name, 'curName': null})
+            if(d.data.type == 'file') {
+              this.$bus.$emit('file-topic-selected', d.data.topic)
+              this.$bus.$emit('compared-file-selected', {'preName': d.data.name, 'curName': null})
+            }
             this.drawWords(d.data.words, textG)
           }
           else if(this.editFlag){
@@ -585,6 +708,7 @@ export default {
               d3.select('.cur').select('.path').selectAll('text').remove()
               d3.select('.cur').select('.path').append('text').attr('font-family', 'Georgia, serif').style("text-anchor", "middle").attr('font-size', '15px').text(this.calFilePath(n.data.name))
               this.$bus.$emit('compared-file-selected', {'preName': d.data.name, 'curName': n.data.name})
+              this.$bus.$emit('file-topic-selected', d.data.topic)
               return 1
             })
             
@@ -595,6 +719,42 @@ export default {
                 if(l.id.split('-')[0] == d.data.id) return 1
                 else return 0
               })
+          }
+          else if(this.moveFlag){
+              pathG.selectAll('text').remove()
+              this.curClickFlag = true
+              let cur = [], pre = [], moveCur = []
+              for(let item of this.diffData.move){
+                cur.push(item.curid)
+                pre.push(item.preid)
+              }
+              // 当前高亮
+              for(let node of d.leaves()){
+                if(pre.indexOf(node.data.id) != -1){
+                  nodes.filter(n => n == node).style("stroke-width", 2)
+                  for(let node_ of node.ancestors())
+                    nodes.filter(n => n == node_).style("stroke-width", 2)
+                  moveCur.push(cur[pre.indexOf(node.data.id)])
+                }
+              }
+              if(d.data.type == 'dir') this.drawDirs([d.data.name], dirG)
+              else this.drawDirs([d.data.name.substr(0, d.data.name.lastIndexOf('/'))], dirG)
+
+              // 后一版本高亮
+              let dirs = []
+              for(let curid of moveCur){
+                let ancestors = null
+                d3.select('.cur').selectAll('.node').filter(n => n.data.id == curid).style("stroke-width", n => { 
+                  ancestors = n.ancestors(); 
+                  dirs.push(n.data.name.substr(0, n.data.name.lastIndexOf('/')));
+                  return 2
+                })
+                for(let node of ancestors){
+                  d3.select('.cur').selectAll('.node').filter(n => n == node).style("stroke-width", 2)
+                }
+              }
+              dirs = Array.from(new Set(dirs))
+              this.drawDirs(dirs, d3.select('.cur').select('.dir'))
           }
           else{
             if(this.selectedTopic != null){
@@ -616,61 +776,96 @@ export default {
             this.drawParallel(vecs)
             this.drawWords(words, textG)
 
-            if(d.data.type == 'file') this.$bus.$emit('file-selected', d.data.name)
+            if(d.data.type == 'file') {
+              this.$bus.$emit('file-topic-selected', d.data.topic)
+              this.$bus.$emit('file-selected', d.data.name)
+            }
           }
 
-          for(let node of d.descendants())
-            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
-          for(let node of d.ancestors())
-            nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
-
+          if(!this.moveFlag){
+            for(let node of d.descendants())
+              nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+            for(let node of d.ancestors())
+              nodes.filter(n => n == node).style("stroke-width", 1.5).attr('opacity', 1)
+          }
+          
           d3.event.stopPropagation()
         })
 
-        svg.on('click', ()=>{
-          this.preClickFlag = false
-          textG.selectAll('text').remove()
-          pathG.selectAll('text').remove()
+      // 添加文字的node
+      var hiddenNodes = nodeG.selectAll('.slice')
+        .filter(d => d.data.type == 'dir')
+        .append('path')
+        .attr('class', 'hiddenNode')
+        .attr('id', (_, i) => `prehiddenArc${i}`)
+        .attr('d', middleArcLine)
+        .style('fill', 'none')
+      var text = nodeG.selectAll('.slice')
+        .filter(d => d.data.type == 'dir')
+        .append('text')
+        .attr('display', d => textFits(d) ? null : 'none')
+        .attr('dy', '.2em')
+      text.append('textPath')
+        .attr('startOffset','50%')
+        .attr('xlink:href', (_, i) => `#prehiddenArc${i}` )
+        .text(d => d.data.name.substr(d.data.name.lastIndexOf('/')+1))
+        .style('text-anchor', 'middle')
+        .attr('font-family', 'Georgia, serif')
+        .attr('font-size', '12px');
+
+      svg.on('click', ()=>{
+        this.preClickFlag = false
+        textG.selectAll('text').remove()
+        pathG.selectAll('text').remove()
+        if(!this.moveFlag)
           nodes.style("stroke-width", 0.5).attr('opacity', 1)
 
-          if(this.delFlag){
-            this.deletedTopic = null
-            let del = this.diffData.del
-            this.drawPieChart(del, pieG, 'del') 
-            nodes.filter(n => n.data.type == 'file' && del.indexOf(n.data.id) == -1).attr('opacity', this.hiddenOpacity)
-            d3.select('.other').select('.lineG').selectAll('.line').attr('opacity', 1)
-          }
-          else if(this.editFlag){
-            this.editedTopic = null
-            let edit = this.diffData.edit, preid = [], curid = []
-            for(let item of edit) {preid.push(item.preid); curid.push(item.curid)}
-            nodes.filter(n => n.data.type == 'file' && preid.indexOf(n.data.id) == -1).attr('opacity', this.hiddenOpacity)
-            this.drawPieChart(preid, pieG, 'edit')
-            
-            // 恢复后一个版本
-            this.curClickFlag = false
-            d3.select('.cur').select('.words').selectAll('text').remove()
-            d3.select('.cur').select('.path').selectAll('text').remove()
-            d3.select('.cur').selectAll('.node').style("stroke-width", 0.5).attr('opacity', n =>{
-              if(n.data.type == 'dir') return 1
-              else{
-                if(curid.indexOf(n.data.id) != -1) return 1
-                else return this.hiddenOpacity
-              }
-            })
-            this.drawPieChart(curid, d3.select('.cur').select('.pie'), 'edit')
-
-            d3.select('.other').select('.lineG').selectAll('.line').attr('opacity', 1)
-          }
-          else{
-            this.drawParallel(null)
-            this.drawInfomation(this.preInfo, versionG)
-            if(this.selectedTopic != null){
-              nodes.filter(n => n.data.type == 'file' && n.data.topic != this.selectedTopic)
-                .attr('opacity', this.hiddenOpacity)
+        if(this.delFlag){
+          this.deletedTopic = null
+          let del = this.diffData.del
+          this.drawPieChart(del, pieG, 'del') 
+          nodes.filter(n => n.data.type == 'file' && del.indexOf(n.data.id) == -1).attr('opacity', this.hiddenOpacity)
+          d3.select('.other').select('.lineG').selectAll('.line').attr('opacity', 1)
+        }
+        else if(this.editFlag){
+          this.editedTopic = null
+          let edit = this.diffData.edit, preid = [], curid = []
+          for(let item of edit) {preid.push(item.preid); curid.push(item.curid)}
+          nodes.filter(n => n.data.type == 'file' && preid.indexOf(n.data.id) == -1).attr('opacity', this.hiddenOpacity)
+          this.drawPieChart(preid, pieG, 'edit')
+          
+          // 恢复后一个版本
+          this.curClickFlag = false
+          d3.select('.cur').select('.words').selectAll('text').remove()
+          d3.select('.cur').select('.path').selectAll('text').remove()
+          d3.select('.cur').selectAll('.node').style("stroke-width", 0.5).attr('opacity', n =>{
+            if(n.data.type == 'dir') return 1
+            else{
+              if(curid.indexOf(n.data.id) != -1) return 1
+              else return this.hiddenOpacity
             }
+          })
+          this.drawPieChart(curid, d3.select('.cur').select('.pie'), 'edit')
+
+          d3.select('.other').select('.lineG').selectAll('.line').attr('opacity', 1)
+        }
+        else if(this.moveFlag){
+          this.curClickFlag = false
+          nodes.style("stroke-width", 0.5)
+          dirG.selectAll('text').remove()
+          d3.select('.cur').select('.dir').selectAll('text').remove()
+          d3.select('.cur').selectAll('.node').style("stroke-width", 0.5)
+          d3.select('.cur').select('.path').selectAll('text').remove()
+        }
+        else{
+          this.drawParallel(null)
+          this.drawInfomation(this.preInfo, versionG)
+          if(this.selectedTopic != null){
+            nodes.filter(n => n.data.type == 'file' && n.data.topic != this.selectedTopic)
+              .attr('opacity', this.hiddenOpacity)
           }
-        })
+        }
+      })
     },
     drawParallel(data){
        d3.select('.other > svg').remove()
@@ -734,21 +929,26 @@ export default {
     },
     drawWords(data, textG){
       textG.selectAll('text').remove()
+      let newData = this.countWords(data)
 
       var width = 0, height = 0;
       if(this.libraryName == 'vue') width = 180, height = 180;
       if(this.libraryName == 'd3') width = 220, height = 220;
 
+      var minWeight = d3.min(newData, d => d.num),
+        maxWeight = d3.max(newData, d => d.num);
+      var fontSizeScale = d3.scaleLinear().domain([minWeight, maxWeight]).range([10, 30])
+
       // 词云布局
       var layout = d3Cloud()
         .timeInterval(10)
         .size([width, height])
-        .words(data.map(d => ({'keyword': d})))
+        .words(newData)
         .font('Georgia, serif')
-        .fontSize(d => Math.floor(Math.random() * (30 - 10) ) + 10)
-        .text(d => d.keyword)
+        .fontSize(d => fontSizeScale(d.num))
+        .text(d => d.word)
         .spiral('archimedean') // "archimedean" or "rectangular"
-        .padding(4)
+        .padding(3)
         .rotate(0)
         .on('end', show)
         .start()
@@ -766,8 +966,24 @@ export default {
           .text(d => d.text)
       }
     },
+    countWords(data){
+      let wordDict = new Array()
+      data.forEach(d =>{
+        if(!wordDict.hasOwnProperty(d))
+          wordDict[d] = 1
+        else
+          wordDict[d] += 1
+      })
+
+      let words = Object.keys(wordDict).sort(function(a, b){return wordDict[a] - wordDict[b]})
+      let newData = new Array()
+      for(let i=0; i<words.length; i++){
+        newData.push({word: words[i], num: wordDict[words[i]]})
+      }
+      return newData
+    },
     drawIcons(data){
-      let addFile = data.add, delFile = data.del, editFile = data.edit, moveFile = data.edit
+      let addFile = data.add, delFile = data.del, editFile = data.edit, moveFile = data.move
       let icons = [{type: 'added', val: addFile.length, text: "\uf067"}, 
         {type: 'deleted', val: delFile.length, text: "\uf068"},
         {type: 'edited', val: editFile.length, text: "\uf040"}, 
@@ -792,6 +1008,7 @@ export default {
               d3.select('.pre').select('.pie').selectAll('*').remove()
               d3.select('.pre').select('.words').selectAll('text').remove()
               d3.select('.pre').select('.path').selectAll('text').remove()
+              d3.select('.pre').select('.dir').selectAll('text').remove()
               this.drawInfomation(this.preInfo, d3.select('.pre').select('.version'))
 
               // 后一版本
@@ -799,6 +1016,7 @@ export default {
               d3.select('.cur').select('.pie').selectAll('*').remove()
               d3.select('.cur').select('.words').selectAll('text').remove()
               d3.select('.cur').select('.path').selectAll('text').remove()
+              d3.select('.cur').select('.dir').selectAll('text').remove()
               this.drawInfomation(this.curInfo, d3.select('.cur').select('.version'))
             }else{                                         //查看一类文件
               iconG.selectAll('g').attr('opacity', 0.2)
@@ -813,7 +1031,7 @@ export default {
           })
         groupG.append('text').attr('font-family', 'FontAwesome')
           .attr('font-size', '20px').text(icons[i].text)
-        groupG.append('text').attr('font-family', 'Avenir')
+        groupG.append('text').attr('font-family', 'Georgia, serif')
           .attr('font-size', '12px').attr('dx', '2em').attr('dy', '-0.3em').text(icons[i].type)
 
         if(icons[i].type != 'undo') {         //添加每一类文件的数目
@@ -878,7 +1096,8 @@ export default {
       pieG.selectAll('*').remove()
       var topicDict = {}
       for(let id of data){
-        let doc = this.docData.find(d => d.id == id), topic = doc.main_topic
+        let doc = this.docData.find(d => d.id == id)
+        let topic = doc.main_topic
         if(!topicDict.hasOwnProperty(topic))
           topicDict[topic] = [doc]
         else topicDict[topic].push(doc)
@@ -1077,7 +1296,7 @@ export default {
     },
     moveFlag(val){
       if(val){
-        let move = this.diffData.edit, pre = [], cur = []
+        let move = this.diffData.move, pre = [], cur = []
         for(let item of move){
           let preDoc = this.docData.find(doc => doc.id == item.preid),
             curDoc = this.docData.find(doc => doc.id == item.curid)
@@ -1167,6 +1386,15 @@ export default {
     this.$bus.$on('version-compared', d =>{
       this.curVersion = d.curVer
       this.preVersion = d.preVer
+
+      d3.select('.cur').selectAll('.node').attr('opacity', 1).style("stroke-width", 0.5)
+      d3.select('.cur').select('.path').selectAll('text').remove()
+      d3.select('.cur').select('.words').selectAll('text').remove()
+      this.curClickFlag = false
+      this.selectedTopic = null
+      this.drawParallel(null)
+      this.drawInfomation(this.curInfo, d3.select('.cur').select('.version'))
+
       this.$axios
         .get("topics/getFileHierarchyByVersion", {version: d.preVer})
         .then(({data}) => {

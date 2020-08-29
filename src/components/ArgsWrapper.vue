@@ -161,6 +161,9 @@ export default {
 </script>
 
 <style lang="less">
+span, input{
+  font-family: Georgia, serif;
+}
 .args-wrapper {
   height: 100%;
   font-size: 14px;
@@ -195,7 +198,9 @@ export default {
       margin-left: 10px;
       font-size: 14px;
       width: 87%;
+      font-family: Georgia, serif;
     }
+    
   }
 }
 </style>

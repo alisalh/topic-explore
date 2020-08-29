@@ -6,7 +6,7 @@
         <input
           type="text"
           v-model="topics[item.topicId]"
-          style="width: 72px; height: 15px; color: #4B4949; border: none; padding-left: 2px; font-family: Avenir, Helvetica, Arial, sans-serif; font-size: 14px;"/>
+          style="width: 72px; height: 15px; color: #4B4949; border: none; padding-left: 2px; font-family: Georgia, serif; font-size: 14px;"/>
       </div>
       <div class="bar">
         <div 
@@ -35,7 +35,7 @@ export default {
       selectedTopic: null,
       selectedVersion: '',
       topics: ['topic 1', 'topic 2', 'topic 3', 'topic 4', 'topic 5', 'topic 6', 'topic 7', 'topic 8', 
-               'topic 9', 'topic 10', 'topic 11', 'topic 12', 'topic 13', 'topic 14', 'topic 15', 'topic 16']
+               'topic 9', 'topic 10', 'topic 11', 'topic 12', 'topic 13', 'topic 14', 'topic 15']
     };
   },
   props: ["topicsGroup", "versions", "topicNum"],

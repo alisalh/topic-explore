@@ -69,37 +69,59 @@ export default {
 <style lang='less'>
 .code-wrapper{
     height: 100%;
-    font-weight: bold;
+    width: 100%;
     font-size: 15px;
+    
+    .hljs{
+        padding-left: 5px;
+        font-family: Georgia, serif;
+        // font-weight: 550;
+    }
+
     #curtitle{
         padding-top: 5px;
         background: #eee;
         text-align: center;
+        font-family: Georgia, serif;
+        // font-weight: bold;
     }
     #pretitle{
         padding: 5px;
         background: #eee;
         text-align: center;
+        font-family: Georgia, serif;
+        // font-weight: bold;
     }
     // #cur-code{
-    //     padding: 10px;
+    //     overflow: auto;
     // }
     #diff-code{
         .d2h-file-wrapper{
             margin-bottom: 0cm;
         }
         .d2h-diff-tbody > tr > td{
-            height: 100%;
+           line-height: none;
         }
         .d2h-code-linenumber {
             position: relative;
             display: flex;
             width: 100%;
+            border: none;
+            height: 22px;
             .line-num1{
-                width: 0px;
+                width: 25px;
             }
             .line-num2{
-                width: 20px;
+                width: 25px;
+            }
+            .d2h-info{
+                background-color: #f1f8ff;
+            }
+            .d2h-del{
+                background-color: #ffdce0;
+            }
+            .d2h-ins{
+                background-color: #cdffd8;
             }
         }
         .d2h-file-wrapper{
@@ -107,10 +129,23 @@ export default {
         }
         .d2h-file-diff{
             overflow: unset;
+            border: none;
+            .d2h-del.d2h-change{
+                background-color: #ffeef0;
+            }
+            .d2h-ins.d2h-change{
+                background-color: #e6ffed;
+            }
         }
         .d2h-code-line {
             margin-left: 0;
             font-size: 15px;
+            ins{
+                background-color: #acf2bd;
+            }
+            del{
+                background-color: #fdb8c0;
+            }
         }
     }
 }
